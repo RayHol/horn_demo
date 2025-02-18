@@ -38,13 +38,13 @@
 #onboarding {
   align-items: center;
   text-align: center;
-  background-image: url('/assets/OnboardBG.png');
+  background-image: url('./assets/OnboardBG.png');
   background-repeat: no-repeat;
   background-position: center center;
 }
 
 #howToPlay {
-  background-image: url('/assets/HTPBG.png');
+  background-image: url('./assets/HTPBG.png');
   background-repeat: no-repeat;
   background-position: center center;
 }
@@ -168,7 +168,7 @@
    CONGRATULATIONS OVERLAY STYLES
    ============================== */
 #congrats {
-    background-image: url('/assets/CongratsBG.png');
+    background-image: url('./assets/CongratsBG.png');
     background-repeat: no-repeat;
     background-position: center center;
     background-size: cover;
