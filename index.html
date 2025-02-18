@@ -75,7 +75,7 @@
     <!-- HTML Overlay for AR -->
     <div id="onboarding" class="overlay">
       <header>
-        <img src="/assets/HMGLogo-Header.png" alt="HMG Logo" class="onboarding-logo">
+        <img src="../assets/HMGLogo-Header.png" alt="HMG Logo" class="onboarding-logo">
       </header>
       <main class="onboarding-content">
         <h1 class="onboarding-title">Animals Everywhere</h1>
@@ -95,17 +95,17 @@
         <!-- Instruction 1 -->
         <div class="instruction">
           <div class="instruction-icon">
-            <img src="/assets/icon-number.png" alt="Step 1" class="number-icon">
+            <img src="../assets/icon-number.png" alt="Step 1" class="number-icon">
             <p class="instruction-text">Tap the screen to dig a hole.</p>
           </div>
-          <img src="/assets/HTPImage.png" alt="Digging a hole" class="instruction-image">
+          <img src="../assets/HTPImage.png" alt="Digging a hole" class="instruction-image">
         </div>
 
         <!-- Instruction 2 (Reversed layout) -->
         <div class="instruction reverse">
-            <img src="/assets/HTPImage-2.png" alt="Planting seeds" class="instruction-image">
+            <img src="../assets/HTPImage-2.png" alt="Planting seeds" class="instruction-image">
             <div class="instruction-icon">
-              <img src="/assets/icon-number-2.png" alt="Step 2" class="number-icon">
+              <img src="../assets/icon-number-2.png" alt="Step 2" class="number-icon">
               <p class="instruction-text">Select the seeds, aim and tap in each hole to plant them.</p>
             </div>
         </div>
@@ -113,10 +113,10 @@
         <!-- Instruction 3 -->
         <div class="instruction">
             <div class="instruction-icon">
-              <img src="/assets/icon-number-3.png" alt="Step 3" class="number-icon">
+              <img src="../assets/icon-number-3.png" alt="Step 3" class="number-icon">
               <p class="instruction-text">Tap the screen to tip the watering can and water the seedlings.</p>
             </div>
-            <img src="/assets/HTPImage-3.png" alt="Watering plants" class="instruction-image">
+            <img src="../assets/HTPImage-3.png" alt="Watering plants" class="instruction-image">
         </div>
       </main>
 
@@ -129,7 +129,7 @@
     ============================ -->
     <div id="congrats" class="overlay hidden">
       <main class="congrats-content">
-          <img src="/assets/Badge.png" alt="Badge" class="congrats-badge">
+          <img src="../assets/Badge.png" alt="Badge" class="congrats-badge">
           <h1>Congratulations!</h1>
           <p class="congrats-message">You did it! Well done.</p>
       </main>
@@ -147,13 +147,13 @@
         <p id="hint">Tap the screen to use the shovel to dig a hole</p>
         <button id="throwButton" style="padding: 10px 20px; width: 90%; height: 80%; position: absolute; bottom: 15%; left: 50%; right: 50%; translate: -50%; display: block; background-color: none; border: none; opacity: 0%;">Dig Hole</button>
         <button id="seedButton" onclick="swapSeeds()" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 50%; transform:translate(-50%); display: block; background: transparent; border: none; opacity: 100%;">
-          <img src="/assets/Plant_BTN.png" alt="">
+          <img src="../assets/Plant_BTN.png" alt="">
         </button>
         <button id="waterButton" onclick="swapWater()" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; right: 0; display: block; background: transparent; border: none; opacity: 100%;">
-          <img src="/assets/Water_BTN.png" alt="">
+          <img src="../assets/Water_BTN.png" alt="">
         </button>
         <button id="shovelButton" onclick="swapShovel()" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 0; display: block; background: transparent; border: none; opacity: 100%;">
-          <img src="/assets/Dig_BTN.png" alt="">
+          <img src="../assets/Dig_BTN.png" alt="">
         </button>
         <button id="arButton" style="padding: 10px 20px; width: 200px; position: absolute; bottom: 10px; left: 50%; right: 50%; translate: -50%; display: none;">Enter AR</button>
       </header>
@@ -168,11 +168,11 @@
       <a-assets>
         <a-asset-item
           id="soil-glb"
-          src="/assets/DugSoil.glb"
+          src="../assets/DugSoil.glb"
         ></a-asset-item>
         <a-asset-item
           id="seed-glb"
-          src="/assets/Sunflower_seed.glb"
+          src="../assets/Sunflower_seed.glb"
         ></a-asset-item>
         <a-asset-item
           id="sunflower-glb"
@@ -180,19 +180,19 @@
         ></a-asset-item>
         <a-asset-item
           id="seedpack-glb"
-          src="/assets/SeedPacket.glb"
+          src="../assets/SeedPacket.glb"
         ></a-asset-item>
         <a-asset-item
           id="wateringcan-glb"
-          src="/assets/WateringCan.glb"
+          src="../assets/WateringCan.glb"
         ></a-asset-item>
         <a-asset-item
           id="shovel-glb"
-          src="/assets/low_poly_shovel.glb"
+          src="../assets/low_poly_shovel.glb"
         ></a-asset-item>
         <a-asset-item
           id="bee-glb"
-          src="/assets/Bee_04_animation.glb"
+          src="../assets/Bee_04_animation.glb"
         ></a-asset-item>
       </a-assets>
 
