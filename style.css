@@ -111,7 +111,7 @@ Here is my css code I have an issue where on some screen devices the buttons for
 
 /* Onboarding Content (Centers Everything) */
 .onboarding-content {
-    margin-top: 100px;
+    margin-top: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
