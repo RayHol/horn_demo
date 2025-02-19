@@ -22,20 +22,18 @@
 .overlay {
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Ensures footer is always at the bottom */
+    justify-content: space-between;
     align-items: center;
     text-align: center;
-    background-size: contain;
-    background-attachment: fixed;
+    background-size: cover;
     background-repeat: no-repeat;
     background-position: center center;
     width: 100vw;
     height: 100vh;
-    max-height: 100%;
     position: absolute;
     top: 0;
     left: 0;
-    padding: 5vh 5vw; /* Adds padding to prevent content from getting too close to the edges */
+    padding: 5vh 5vw;
     overflow: hidden;
 }
 
@@ -50,17 +48,17 @@
 
 #congrats {
     background-image: url('./assets/CongratsBG.png');
-    display: none; /* Ensure it starts hidden */
+    display: none;
 }
 
 /* ==============================
-   Buttons
+   Buttons (Fixed for Scaling)
    ============================== */
 .button, .congrats-button {
     font-family: 'BentonSans', sans-serif;
-    font-size: clamp(16px, 3vw, 24px); /* Resizes text based on screen */
-    width: clamp(160px, 25vw, 220px);  /* Adjusts button width */
-    height: clamp(40px, 6vh, 53px);    /* Adjusts button height */
+    font-size: 24px;
+    width: 220px;
+    height: 53px;
     padding: 10px 14px;
     color: white;
     background-color: #BD3B00;
@@ -83,8 +81,8 @@
     border: none;
     border-radius: 12px;
     padding: 10px 13px;
-    width: clamp(40px, 10vw, 53px);
-    height: clamp(35px, 8vh, 48px);
+    width: 53px;
+    height: 48px;
     box-shadow: 0px 4px 0px 0px #962F00;
     cursor: pointer;
 }
@@ -93,18 +91,17 @@
    ONBOARDING OVERLAY STYLES
    ============================== */
 .onboarding-logo {
-    margin: 8vh auto;
+    margin: 80px auto;
     max-width: 150px;
-    margin-bottom: 4vh;
+    margin-bottom: 40px;
     display: block;
 }
 
 .onboarding-title {
     font-family: 'Amatic', sans-serif;
-    font-size: clamp(40px, 6vw, 80px);
+    font-size: 60px;
     color: #3A2E27;
-    margin: 0;
-    margin-bottom: 4vh;
+    margin-bottom: 40px;
 }
 
 .onboarding-content {
@@ -121,15 +118,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    margin-top: 3vh;
+    margin-top: 30px;
 }
 
 #howToPlay h1 {
     font-family: 'Amatic SC', sans-serif;
-    font-size: clamp(20px, 4vw, 27px);
+    font-size: 27px;
     color: #3A2E27;
     text-align: center;
-    margin: 0;
 }
 
 /* ==============================
@@ -156,20 +152,21 @@
 
 .instruction p {
     font-family: 'BentonSans Book', sans-serif;
-    font-size: clamp(14px, 2.5vw, 16px);
+    font-size: 16px;
     color: #3A2E27;
-    margin: 0;
-    align-items: left;
 }
 
-/* Footer (Dynamically positioned) */
+/* ==============================
+   Footer (Fixed to Prevent Buttons Being Cut Off)
+   ============================== */
 #howToPlay footer,
 #congrats footer {
     width: 100%;
     display: flex;
     justify-content: center;
-    margin-top: auto; /* Pushes the footer dynamically to the bottom */
-    padding-bottom: 5vh; /* Ensures spacing at the bottom */
+    padding-bottom: 5vh;
+    margin-top: auto;
+    position: relative; /* Ensure the footer remains visible */
 }
 
 /* ==============================
@@ -181,33 +178,33 @@
     justify-content: flex-start;
     align-items: center;
     flex-grow: 0;
-    transform: translateY(10vh); /* Adjust placement */
+    transform: translateY(10vh);
 }
 
 #congrats h1 {
     font-family: 'Amatic SC', sans-serif;
-    font-size: clamp(35px, 5vw, 50px);
+    font-size: 50px;
     color: #FCEFE1;
     margin: 0px;
 }
 
 .congrats-message {
     font-family: 'BentonSans', sans-serif;
-    font-size: clamp(18px, 2.5vw, 24px);
+    font-size: 24px;
     color: #FCEFE1;
     margin: 10px 0 20px 0;
 }
 
 /* Badge Styling */
 .congrats-badge {
-    width: clamp(80px, 15vw, 112px);
+    width: 112px;
     height: auto;
     margin-bottom: 0px;
     transform: translateY(-20px);
 }
 
 /* ==============================
-   Hint Window
+   Hint Window (Fixed Position)
    ============================== */
 #hint {
     font-family: 'BentonSans', sans-serif;
@@ -261,7 +258,6 @@ html body .a-dialog-ok-button {
     font-family: 'BentonSans', sans-serif;
     font-size: 24px;
     font-weight: 400;
-    padding: 0 16px;
     background-color: #FFFFFF;
     border: none;
     border-radius: 4px;
