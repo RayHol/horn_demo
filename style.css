@@ -16,39 +16,31 @@
   src: url('../static/fonts/Amatic SC Regular.ttf') format('truetype');
 }
 
+
 /* ==============================
    General Overlay Styling
    ============================== */
-/* For browsers that support dynamic viewport units */
-@supports (height: 100dvh) {
-  .overlay {
-    height: 100dvh;
-  }
-}
 .overlay {
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Ensure header is at the top and footer is at the bottom */
   background-size: cover;
   background-attachment: fixed;
-  /* Use dynamic viewport units if supported, so that the height matches the visible area */
-  height: 100dvh;
+  height: 100vh;
   width: 100vw;
   z-index: 9999;
   position: absolute;
   top: 0;
   left: 0;
+  overflow: hidden;
 }
 
 /* Background images for overlays */
 #onboarding {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100vw;
-  position: absolute;
-  top: 0;
-  left: 0;
+  align-items: center;
+  text-align: center;
+  background-image: url('./assets/OnboardBG.png');
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 #howToPlay {
@@ -58,21 +50,19 @@
 }
 
 /* ==============================
-   Buttons (Scales for different screen sizes)
+   Buttons
    ============================== */
-.button, 
-.congrats-button {
+.button {
   font-family: 'BentonSans', sans-serif;
-  font-size: clamp(16px, 4vw, 24px); /* Dynamically scales font size */
+  font-size: 24px;
   font-weight: 400;
   color: white;
   background-color: #BD3B00;
   border: none;
   border-radius: 12px;
   padding: 12px 16px;
-  width: min(80%, 220px); /* Ensures buttons resize properly */
-  height: auto;
-  min-height: 50px;
+  width: 220px;
+  height: 53px;
   box-shadow: 0px 4px 0px 0px #962F00;
   cursor: pointer;
 }
@@ -109,16 +99,13 @@
     margin-bottom: 40px;
 }
 
-#onboarding header {
-  margin-top: 80px;  /* Adjust header position */
-}
+/* Onboarding Content (Centers Everything) */
 .onboarding-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;  /* Center content vertically */
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
+
 
 /* ==============================
    How to Play Overlay Styling
@@ -138,6 +125,7 @@
   text-align: center;
   margin: 0;
 }
+
 
 /* ==============================
    How to Play - Instructions Layout
@@ -169,16 +157,12 @@
   align-items: left;
 }
 
-/* Footer (Ensures buttons remain on screen on all devices) */
-#howToPlay footer,
-#congrats footer {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 10px;
-  z-index: 1001;   
+/* Footer */
+#howToPlay footer {
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 30px;
 }
-
 
 /* ==============================
    CONGRATULATIONS OVERLAY STYLES
@@ -209,6 +193,7 @@
     flex-grow: 0; 
 }
 
+
 /* Congratulations Title */
 #congrats h1 {
     font-family: 'Amatic SC', sans-serif;
@@ -225,14 +210,30 @@
     margin: 10px 0 20px 0;
 }
 
-/* Ensuring buttons don't fall off the screen */
+/* Footer & Button Styling */
 #congrats footer {
     width: 100%;
     display: flex;
     justify-content: center;
-    position: absolute;
-    bottom: 5vh; /* Ensures visibility on smaller screens */
-    padding-bottom: 10px;
+    padding-bottom: 30px;
+    position: absolute; 
+    bottom: 30px; 
+}
+
+
+.congrats-button {
+    font-family: 'BentonSans', sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: #C14400;
+    background-color: #FCEFE1;
+    border: 3px solid #E7D4A3;
+    border-radius: 12px;
+    padding: 12px 16px;
+    width: 220px;
+    height: 53px;
+    box-shadow: 0px 4px 0px 0px #E7D4A3;
+    cursor: pointer;
 }
 
 .congrats-badge {
@@ -260,6 +261,7 @@
   display: flex;
 }
 
+
 /* ==============================
    Aframe UI Elements (Hidden)
    ============================== */
@@ -268,7 +270,7 @@
   display: none;
 }
 
-/* Aframe dialog formatting override */
+/* Aframe dialoag formating overide*/
 html body .a-dialog,
 html body .a-dialog-content {
     font-family: 'BentonSans', sans-serif;
@@ -286,6 +288,7 @@ html body .a-dialog-content {
     position: relative;
     padding: 0 10%; 
     box-sizing: border-box; 
+  
 }
 
 html body .a-dialog-allow-button,
