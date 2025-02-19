@@ -44,6 +44,7 @@
 #onboarding {
   align-items: center;
   text-align: center;
+justify-content: center;
   background-image: url('./assets/OnboardBG.png');
   background-repeat: no-repeat;
   background-position: center center;
