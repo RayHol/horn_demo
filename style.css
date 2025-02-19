@@ -162,10 +162,10 @@
     width: 100%;
     display: flex;
     justify-content: center;
-    position: absolute;
-    bottom: 5vh; /* Moves button up slightly on smaller screens */
+    margin-top: auto;  /* Push footer to the bottom */
     padding-bottom: 10px;
 }
+
 
 /* ==============================
    CONGRATULATIONS OVERLAY STYLES
