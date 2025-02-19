@@ -176,6 +176,9 @@
     bottom: 5vh; /* Moves button up slightly on smaller screens */
     padding-bottom: 10px;
 }
+#congrats .congrats-button {
+    transform: translateY(-20px); /* Adjust as needed */
+}
 
 /* ==============================
    CONGRATULATIONS OVERLAY STYLES
