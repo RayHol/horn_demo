@@ -1,4 +1,3 @@
-Here is my css code I have an issue where on some screen devices the buttons for the lets go on the how to play overlay and the go home on the congratulations overlay is to far below the bottom of the screen, I need these to be in the same position as the are now bet for other device screens:
 /* ==============================
    Font Imports
    ============================== */
@@ -112,7 +111,7 @@ Here is my css code I have an issue where on some screen devices the buttons for
 /* Onboarding Content (Centers Everything) */
 .onboarding-content {
    position: relative;
-   top: -50px; 
+   top: -10px; 
     margin-top: 10px;
     display: flex;
     flex-direction: column;
