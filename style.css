@@ -42,12 +42,13 @@
 
 /* Background images for overlays */
 #onboarding {
-  position: relative;       /* Allow positioning of child elements */
-  height: 100vh;
-  width: 100vw;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 #howToPlay {
@@ -109,20 +110,14 @@
 }
 
 #onboarding header {
-  position: absolute;
-  top: 80px;                /* Adjust this value as needed */
-  width: 100%;
-  text-align: center;
+  margin-top: 80px;  /* Adjust header position */
 }
-
-/* Onboarding Content (Centers Everything) */
 .onboarding-content {
-  flex: 1;                  /* Takes up available space */
+  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;  /* Centres content vertically */
-  align-items: center;      /* Centres content horizontally */
-  text-align: center;
+  justify-content: center;  /* Center content vertically */
+  align-items: center;
 }
 
 /* ==============================
