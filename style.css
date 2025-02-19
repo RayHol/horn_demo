@@ -22,15 +22,16 @@
 .overlay {
   display: flex;
   flex-direction: column;
+  justify-content: space-between; /* Ensure header is at the top and footer is at the bottom */
   background-size: cover;
   background-attachment: fixed;
-  height: 100vh;
+  /* Use dynamic viewport units if supported, so that the height matches the visible area */
+  height: 100dvh;
   width: 100vw;
   z-index: 9999;
   position: absolute;
   top: 0;
   left: 0;
-  overflow: hidden;
 }
 
 /* Background images for overlays */
@@ -162,10 +163,6 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  position: fixed;  
-  left: 0;
-  right: 0;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
   padding: 10px;
   z-index: 1001;   
 }
