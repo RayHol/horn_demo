@@ -43,14 +43,12 @@ Here is my css code I have an issue where on some screen devices the buttons for
 
 /* Background images for overlays */
 #onboarding {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100vw;
-  position: absolute;
-  top: 0;
-  left: 0;
-}f
+  align-items: center;
+  text-align: center;
+  background-image: url('./assets/OnboardBG.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+}
 
 #howToPlay {
   background-image: url('./assets/HTPBG.png');
@@ -112,11 +110,9 @@ Here is my css code I have an issue where on some screen devices the buttons for
 
 /* Onboarding Content (Centers Everything) */
 .onboarding-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;  /* Center content vertically */
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 /* ==============================
