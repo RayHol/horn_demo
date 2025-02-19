@@ -19,6 +19,12 @@
 /* ==============================
    General Overlay Styling
    ============================== */
+/* For browsers that support dynamic viewport units */
+@supports (height: 100dvh) {
+  .overlay {
+    height: 100dvh;
+  }
+}
 .overlay {
   display: flex;
   flex-direction: column;
