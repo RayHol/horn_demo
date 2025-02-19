@@ -159,11 +159,15 @@
 /* Footer (Ensures buttons remain on screen on all devices) */
 #howToPlay footer,
 #congrats footer {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-top: auto;  /* Push footer to the bottom */
-    padding-bottom: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  position: fixed;  
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+  padding: 10px;
+  z-index: 1001;   
 }
 
 
