@@ -16,80 +16,73 @@
   src: url('../static/fonts/Amatic SC Regular.ttf') format('truetype');
 }
 
+
 /* ==============================
    General Overlay Styling
    ============================== */
 .overlay {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    text-align: center;
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center center;
-    width: 100vw;
-    height: 100vh;
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 5vh 5vw;
-    overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-size: cover;
+  background-attachment: fixed;
+  height: 100vh;
+  width: 100vw;
+  z-index: 9999;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
 }
 
 /* Background images for overlays */
 #onboarding {
-    background-image: url('./assets/OnboardBG.png');
+  align-items: center;
+  text-align: center;
+  background-image: url('./assets/OnboardBG.png');
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 #howToPlay {
-    background-image: url('./assets/HTPBG.png');
-}
-
-#congrats {
-    background-image: url('./assets/CongratsBG.png');
-    display: none;
+  background-image: url('./assets/HTPBG.png');
+  background-repeat: no-repeat;
+  background-position: center center;
 }
 
 /* ==============================
-   Buttons (Fixed for Scaling)
+   Buttons
    ============================== */
-.button, .congrats-button {
-    font-family: 'BentonSans', sans-serif;
-    font-size: 24px;
-    width: 220px;
-    height: 53px;
-    padding: 10px 14px;
-    color: white;
-    background-color: #BD3B00;
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0px 4px 0px 0px #962F00;
-    cursor: pointer;
+.button {
+  font-family: 'BentonSans', sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: white;
+  background-color: #BD3B00;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  width: 220px;
+  height: 53px;
+  box-shadow: 0px 4px 0px 0px #962F00;
+  cursor: pointer;
 }
 
-.congrats-button {
-    background-color: #FCEFE1;
-    color: #C14400;
-    border: 3px solid #E7D4A3;
-    box-shadow: 0px 4px 0px 0px #E7D4A3;
-}
-
-/* Back Button */
 .back-button {
-    background-color: #BD3B00;
-    border: none;
-    border-radius: 12px;
-    padding: 10px 13px;
-    width: 53px;
-    height: 48px;
-    box-shadow: 0px 4px 0px 0px #962F00;
-    cursor: pointer;
+  background-color: #BD3B00;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 13px;
+  width: 53px;
+  height: 48px;
+  box-shadow: 0px 4px 0px 0px #962F00;
+  cursor: pointer;
 }
 
 /* ==============================
    ONBOARDING OVERLAY STYLES
-   ============================== */
+============================== */
+
+/* Onboarding Logo */
 .onboarding-logo {
     margin: 80px auto;
     max-width: 150px;
@@ -97,90 +90,111 @@
     display: block;
 }
 
+/* Onboarding Title */
 .onboarding-title {
     font-family: 'Amatic', sans-serif;
     font-size: 60px;
     color: #3A2E27;
+    margin: 0;
     margin-bottom: 40px;
 }
 
+/* Onboarding Content (Centers Everything) */
 .onboarding-content {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
+
 /* ==============================
-   HOW TO PLAY OVERLAY STYLES
+   How to Play Overlay Styling
    ============================== */
 #howToPlay header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    margin-top: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  margin-top: 30px;
 }
 
 #howToPlay h1 {
-    font-family: 'Amatic SC', sans-serif;
-    font-size: 27px;
-    color: #3A2E27;
-    text-align: center;
+  font-family: 'Amatic SC', sans-serif;
+  font-size: 27px;
+  color: #3A2E27;
+  text-align: center;
+  margin: 0;
 }
+
 
 /* ==============================
    How to Play - Instructions Layout
    ============================== */
 .how-to-play {
-    flex: 1;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    align-items: center;
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
 }
 
 .instruction {
-    display: flex;
-    align-items: center;
-    width: 100%;
+  display: flex;
+  align-items: center;
+  width: 100%;
 }
 
 .instruction img {
-    margin-right: 16px;
+  margin-right: 16px;
 }
 
 .instruction p {
-    font-family: 'BentonSans Book', sans-serif;
-    font-size: 16px;
-    color: #3A2E27;
+  font-family: 'BentonSans Book', sans-serif;
+  font-size: 16px;
+  color: #3A2E27;
+  margin: 0;
+  align-items: left;
 }
 
-/* ==============================
-   Footer (Fixed to Prevent Buttons Being Cut Off)
-   ============================== */
-#howToPlay footer,
-#congrats footer {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding-bottom: 5vh;
-    margin-top: auto;
-    position: relative; /* Ensure the footer remains visible */
+/* Footer */
+#howToPlay footer {
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 30px;
 }
 
 /* ==============================
    CONGRATULATIONS OVERLAY STYLES
    ============================== */
+#congrats {
+    background-image: url('./assets/CongratsBG.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100vh; 
+    width: 100vw;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 .congrats-content {
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    justify-content: flex-start; 
     align-items: center;
-    flex-grow: 0;
-    transform: translateY(10vh);
+    transform: translateY(0px);
+    flex-grow: 0; 
 }
 
+
+/* Congratulations Title */
 #congrats h1 {
     font-family: 'Amatic SC', sans-serif;
     font-size: 50px;
@@ -188,6 +202,7 @@
     margin: 0px;
 }
 
+/* Congratulations Message */
 .congrats-message {
     font-family: 'BentonSans', sans-serif;
     font-size: 24px;
@@ -195,48 +210,74 @@
     margin: 10px 0 20px 0;
 }
 
-/* Badge Styling */
+/* Footer & Button Styling */
+#congrats footer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 30px;
+    position: absolute; 
+    bottom: 30px; 
+}
+
+
+.congrats-button {
+    font-family: 'BentonSans', sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: #C14400;
+    background-color: #FCEFE1;
+    border: 3px solid #E7D4A3;
+    border-radius: 12px;
+    padding: 12px 16px;
+    width: 220px;
+    height: 53px;
+    box-shadow: 0px 4px 0px 0px #E7D4A3;
+    cursor: pointer;
+}
+
 .congrats-badge {
-    width: 112px;
+    width: 112px; 
     height: auto;
-    margin-bottom: 0px;
+    margin-bottom: 0px; 
     transform: translateY(-20px);
 }
 
-/* ==============================
-   Hint Window (Fixed Position)
-   ============================== */
+/* Hint window */
 #hint {
-    font-family: 'BentonSans', sans-serif;
-    background-color: #C14400;
-    border: 2px solid #FFFFFF;
-    border-radius: 12px;
-    color: #ffffff;
-    padding: 0.5rem;
-    text-align: center;
-    position: absolute;
-    top: 2vh;
-    left: 50%;
-    translate: -50%;
-    width: 75%;
-    display: flex;
+  font-family: 'BentonSans', sans-serif;
+  background-color: #C14400;
+  border: 2px solid #FFFFFF;
+  border-radius: 12px;
+  color: #ffffff;
+  padding: 0.5rem;
+  text-align: center; 
+  position: absolute; 
+  top: 0px; 
+  left: 45%; 
+  right: 50%; 
+  translate: -50%; 
+  width: 75%; 
+  display: flex;
 }
+
 
 /* ==============================
    Aframe UI Elements (Hidden)
    ============================== */
 .a-enter-vr-button,
 .a-enter-ar-button {
-    display: none;
+  display: none;
 }
 
-/* Aframe Dialog Formatting */
+/* Aframe dialoag formating overide*/
 html body .a-dialog,
 html body .a-dialog-content {
     font-family: 'BentonSans', sans-serif;
     border-radius: 10px;
     font-size: 4px;
     font-weight: 400;
+    line-height: 19.2px;
     background-color: #D64D1B;
     color: #FFFFFF;
     text-align: center;
@@ -245,8 +286,9 @@ html body .a-dialog-content {
     width: 100%;
     height: 100%;
     position: relative;
-    padding: 0 10%;
-    box-sizing: border-box;
+    padding: 0 10%; 
+    box-sizing: border-box; 
+  
 }
 
 html body .a-dialog-allow-button,
@@ -258,11 +300,16 @@ html body .a-dialog-ok-button {
     font-family: 'BentonSans', sans-serif;
     font-size: 24px;
     font-weight: 400;
+    line-height: 20.88px;
+    letter-spacing: 0.03em;
+    padding: 0 16px;
     background-color: #FFFFFF;
     border: none;
     border-radius: 4px;
     color: #D64D1B;
     cursor: pointer;
+    display: inline-block;
+    text-transform: uppercase;
     width: 80%;
     max-width: 327px;
     height: 44px;
@@ -273,5 +320,6 @@ html body .a-dialog-ok-button {
    Utility Classes
    ============================== */
 .hidden {
-    display: none;
+  display: none;
 }
+
