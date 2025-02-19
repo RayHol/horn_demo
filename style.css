@@ -173,7 +173,7 @@
     width: 100%;
     display: flex;
     justify-content: center;
-    bottom: 5vh; 
+    bottom: 10vh; 
     padding-bottom: 10px;
 }
 #congrats .congrats-button {
