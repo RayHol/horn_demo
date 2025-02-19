@@ -173,12 +173,11 @@
     width: 100%;
     display: flex;
     justify-content: center;
-    bottom: 5vh; /* Moves button up slightly on smaller screens */
+    bottom: 5vh; 
     padding-bottom: 10px;
 }
 #congrats .congrats-button {
-    transform: translateY(-20px); /* Adjust as needed */
-}
+    transform: translateY(-40px); 
 
 /* ==============================
    CONGRATULATIONS OVERLAY STYLES
