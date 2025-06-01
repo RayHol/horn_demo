@@ -10,65 +10,68 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Animals Everywhere</title>
+
+    <!-- External Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Roboto:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+      .a-enter-vr-button{
+        display: none;
+      }
+      .a-enter-ar-button{
+        display: none;
+      }
+    </style>
+    <!-- Packages -->
+    <script src="ammo.wasm.js"></script>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://unpkg.com/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/IdeaSpaceVR/aframe-particle-system-component@latest/dist/aframe-particle-system-component.min.js"></script>
+
+    <!-- Local Components -->
+    <script src="ar-utils.js"></script>
+    <script src="actor-utils.js"></script>
+    <script src="planting-utils.js"></script>
+    <script src="physics-utils.js"></script>
+
+    <script>
+      function closeOnboarding() {
+        document.getElementById('onboarding').style.display = "none"
+        openHowToPlay()
+      }
+      function openOnboarding() {
+        document.getElementById('onboarding').style.display = "flex"
+      }
+      function closeCongratulations() {
+        document.getElementById('congrats').style.display = "none"
+      }
+      function openCongratulations() {
+        document.getElementById('congrats').style.display = "flex"
+      }
+      function openHowToPlay() {
+        document.getElementById('howToPlay').style.display = "flex"
+      }
+      function closeHowToPlay() {
+        document.getElementById('howToPlay').style.display = "none";
+      }
+    </script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XT4SMTQCY2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-XT4SMTQCY2');
+    </script>
+
   </head>
-
-  <!-- External Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .a-enter-vr-button{
-      display: none;
-    }
-    .a-enter-ar-button{
-      display: none;
-    }
-  </style>
-  <!-- Packages -->
-  <script src="ammo.wasm.js"></script>
-  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-  <script src="https://unpkg.com/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
-  <script src="https://unpkg.com/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/IdeaSpaceVR/aframe-particle-system-component@latest/dist/aframe-particle-system-component.min.js"></script>
-
-  <!-- Local Components -->
-  <script src="ar-utils.js"></script>
-  <script src="actor-utils.js"></script>
-  <script src="planting-utils.js"></script>
-  <script src="physics-utils.js"></script>
-
-  <script>
-    function closeOnboarding() {
-      document.getElementById('onboarding').style.display = "none"
-      openHowToPlay()
-    }
-    function openOnboarding() {
-      document.getElementById('onboarding').style.display = "flex"
-    }
-    function closeCongratulations() {
-      document.getElementById('congrats').style.display = "none"
-    }
-    function openCongratulations() {
-      document.getElementById('congrats').style.display = "flex"
-    }
-    function openHowToPlay() {
-      document.getElementById('howToPlay').style.display = "flex"
-    }
-    function closeHowToPlay() {
-      document.getElementById('howToPlay').style.display = "none";
-    }
-  </script>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XT4SMTQCY2"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-XT4SMTQCY2');
-  </script>
 
   <body>
     <video autoplay style="width: 100vw; height: 100vh; object-fit: cover;"></video>
@@ -78,8 +81,8 @@
         <img src="./assets/HMGLogo-Header.png" alt="HMG Logo" class="onboarding-logo">
       </header>
       <main class="onboarding-content">
-        <h1 class="onboarding-title">Animals Everywhere</h1>
-        <button onclick="closeOnboarding()" class="button">Start</button>
+        <h1 class="onboarding-title">Animals Everywhere!</h1>
+        <button onclick="closeOnboarding()" class="button" aria-label="Start the game">Start</button>
       </main>
     </div>
     <div id="howToPlay" class="overlay hidden">
@@ -146,14 +149,14 @@
         </button>
         <p id="hint">Tap the screen to use the shovel to dig a hole</p>
         <button id="throwButton" style="padding: 10px 20px; width: 90%; height: 80%; position: absolute; bottom: 15%; left: 50%; right: 50%; translate: -50%; display: block; background-color: none; border: none; opacity: 0%;">Dig Hole</button>
-        <button id="seedButton" onclick="swapSeeds()" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 50%; transform:translate(-50%); display: block; background: transparent; border: none; opacity: 100%;">
-          <img src="./assets/Plant_BTN.png" alt="">
+        <button id="seedButton" onclick="swapSeeds()" aria-label="Select seeds" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 50%; transform:translate(-50%); display: block; background: transparent; border: none; opacity: 100%;">
+          <img src="./assets/Plant_BTN.png" alt="Plant seeds button">
         </button>
-        <button id="waterButton" onclick="swapWater()" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; right: 0; display: block; background: transparent; border: none; opacity: 100%;">
-          <img src="./assets/Water_BTN.png" alt="">
+        <button id="waterButton" onclick="swapWater()" aria-label="Select watering can" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; right: 0; display: block; background: transparent; border: none; opacity: 100%;">
+          <img src="./assets/Water_BTN.png" alt="Water plants button">
         </button>
-        <button id="shovelButton" onclick="swapShovel()" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 0; display: block; background: transparent; border: none; opacity: 100%;">
-          <img src="./assets/Dig_BTN.png" alt="">
+        <button id="shovelButton" onclick="swapShovel()" aria-label="Select shovel" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 0; display: block; background: transparent; border: none; opacity: 100%;">
+          <img src="./assets/Dig_BTN.png" alt="Dig hole button">
         </button>
         <button id="arButton" style="padding: 10px 20px; width: 200px; position: absolute; bottom: 10px; left: 50%; right: 50%; translate: -50%; display: none;">Enter AR</button>
       </header>
