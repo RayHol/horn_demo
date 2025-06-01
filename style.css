@@ -103,20 +103,21 @@
     -webkit-text-stroke-width: 0.3px;
     -webkit-text-stroke-color: var(--Texts-textMain, #3A2E27);
     font-family: "Amatic SC";
-    font-size: 10px;
+    font-size: 80px;
     font-style: normal;
     font-weight: 700;
     line-height: 90%;
     width: 100%;
-    margin: -100px auto 10px auto;
+    margin: -10px auto 10px auto;
 }
 
 /* Button styling */
 .button {
     width: 220px;
+    min-width: 104px;
     padding: 12px 16px;
     border-radius: 12px;
-    background: var(--Button-primary, #BD3B00);
+    background: var(--Button-primary, #C14400);
     box-shadow: 0px 4px 0px 0px var(--Button-shadow, #962F00);
     color: var(--Texts-textWhite, #FCEFE1);
     text-align: center;
