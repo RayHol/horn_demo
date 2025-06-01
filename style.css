@@ -1,9 +1,28 @@
 /* ==============================
+   CSS Variables
+   ============================== */
+:root {
+    --Texts-textMain: #3A2E27;
+    --Texts-textWhite: #FCEFE1;
+    --Button-primary: #BD3B00;
+    --Button-shadow: #962F00;
+}
+
+/* ==============================
    Font Imports
    ============================== */
 @font-face {
-  font-family: 'BentonSans';
-  src: url('../static/fonts/BentonSansCompBlackRegular.otf') format('truetype');
+  font-family: 'BentonSans Comp Black';
+  src: url('./assets/fonts/BentonSansCompBlackRegular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Amatic SC';
+  src: url('./assets/fonts/AmaticSC-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
 }
 
 @font-face {
@@ -32,7 +51,7 @@
   background-size: cover;
   background-attachment: fixed;
   /* Use dynamic viewport units if supported, so that the height matches the visible area */
-  height: 100dvh;
+  height: 100vh;
   width: 100vw;
   z-index: 9999;
   position: absolute;
@@ -42,12 +61,73 @@
 
 /* Background images for overlays */
 #onboarding {
-  justify-content: flex-start;
-  align-items: center;
-  text-align: center;
-  background-image: url('./assets/OnboardBG.png');
-  background-repeat: no-repeat;
-  background-position: center center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    background-image: url('./assets/OnboardBG.png');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+}
+
+/* Fix for mobile Safari */
+@supports (-webkit-touch-callout: none) {
+    #onboarding {
+        min-height: -webkit-fill-available;
+    }
+}
+
+/* Ensure content is properly centered and spaced on all devices */
+.onboarding-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 600px;
+    padding: 24px 16px;
+}
+
+/* Logo styling exactly as per Figma */
+.onboarding-logo {
+    width: 85px;
+    height: 40px;
+    display: block;
+    margin-top: 60px;
+}
+
+/* Title styling */
+.onboarding-title {
+    color: var(--Texts-textMain, #3A2E27);
+    text-align: center;
+    -webkit-text-stroke-width: 0.3px;
+    -webkit-text-stroke-color: var(--Texts-textMain, #3A2E27);
+    font-family: "Amatic SC";
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 90%;
+    width: 100%;
+    margin: -100px auto 10px auto;
+}
+
+/* Button styling */
+.button {
+    width: 220px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: var(--Button-primary, #BD3B00);
+    box-shadow: 0px 4px 0px 0px var(--Button-shadow, #962F00);
+    color: var(--Texts-textWhite, #FCEFE1);
+    text-align: center;
+    font-family: "BentonSans Comp Black", sans-serif;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 120%;
+    border: none;
+    cursor: pointer;
+    margin-top: -300px;
 }
 
 #howToPlay {
@@ -61,19 +141,36 @@
    ============================== */
 .button, 
 .congrats-button {
-  font-family: 'BentonSans', sans-serif;
-  font-size: clamp(16px, 4vw, 24px); /* Dynamically scales font size */
-  font-weight: 400;
-  color: white;
-  background-color: #BD3B00;
+  color: var(--Texts-textWhite);
+  text-align: center;
+  font-family: "Roboto", sans-serif;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 120%;
+  background-color: var(--Button-primary);
   border: none;
-  border-radius: 12px;
-  padding: 12px 16px;
-  width: min(80%, 220px); /* Ensures buttons resize properly */
+  border-radius: 16px;
+  padding: 16px 32px;
+  min-width: 200px;
+  max-width: 280px;
   height: auto;
-  min-height: 50px;
-  box-shadow: 0px 4px 0px 0px #962F00;
+  min-height: 56px;
+  box-shadow: 0px 4px 0px 0px var(--Button-shadow);
   cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: none;
+  margin-top: 20px;
+}
+
+.button:hover {
+    transform: translateY(2px);
+    box-shadow: 0px 2px 0px 0px var(--Button-shadow);
+}
+
+.button:active {
+    transform: translateY(4px);
+    box-shadow: none;
 }
 
 .back-button {
@@ -91,31 +188,19 @@
    ONBOARDING OVERLAY STYLES
 ============================== */
 
-/* Onboarding Logo */
-.onboarding-logo {
-    margin: 80px auto;
-    max-width: 150px;
-    margin-bottom: 40px;
-    display: block;
-}
-
 /* Onboarding Title */
 .onboarding-title {
-    font-family: 'Amatic', sans-serif;
-    font-size: 60px;
-    color: #3A2E27;
-    margin: 0;
-    margin-bottom: 40px;
-}
-
-/* Onboarding Content (Centers Everything) */
-.onboarding-content {
-   position: relative;
-   top: -10px; 
-    margin-top: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    color: var(--Texts-textMain, #3A2E27);
+    text-align: center;
+    -webkit-text-stroke-width: 0.3px;
+    -webkit-text-stroke-color: var(--Texts-textMain, #3A2E27);
+    font-family: "Amatic SC";
+    font-size: 80px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 90%;
+    width: 100%;
+    margin: -300px auto 40px auto;
 }
 
 /* ==============================
@@ -318,4 +403,18 @@ html body .a-dialog-ok-button {
    ============================== */
 .hidden {
   display: none;
+} 
+
+/* Center the onboarding content properly */
+.onboarding-content {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
 } 
