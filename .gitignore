@@ -1,0 +1,20 @@
+# Node.js related
+node_modules/
+package-lock.json
+package.json
+
+# Server files
+server.js
+
+# Environment variables
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock 
