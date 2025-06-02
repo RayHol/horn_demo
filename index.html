@@ -41,10 +41,6 @@
     <script src="physics-utils.js"></script>
 
     <script>
-      function closeOnboarding() {
-        document.getElementById('onboarding').style.display = "none"
-        openHowToPlay()
-      }
       function openOnboarding() {
         document.getElementById('onboarding').style.display = "flex"
       }
@@ -82,7 +78,7 @@
       </header>
       <main class="onboarding-content">
         <h1 class="onboarding-title">Animals Everywhere!</h1>
-        <button onclick="closeOnboarding()" class="button" aria-label="Start the game">Start</button>
+        <button onclick="window.location.href='menu.html'" class="button" aria-label="Start the game">Start</button>
       </main>
     </div>
     <div id="howToPlay" class="overlay hidden">
