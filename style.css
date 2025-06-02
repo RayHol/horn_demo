@@ -85,7 +85,12 @@
     align-items: center;
     width: 100%;
     max-width: 600px;
-    padding: 24px 16px;
+    padding: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: auto;
+    margin-right: auto;
+    transform: translateX(0px); /* Adjust this value to move content left/right */
 }
 
 /* Logo styling exactly as per Figma */
@@ -103,20 +108,24 @@
     -webkit-text-stroke-width: 0.3px;
     -webkit-text-stroke-color: var(--Texts-textMain, #3A2E27);
     font-family: "Amatic SC";
-    font-size: 10px;
+    font-size: 80px;
     font-style: normal;
     font-weight: 700;
     line-height: 90%;
     width: 100%;
-    margin: -100px auto 10px auto;
+    margin-top: -280px;
+    margin-bottom: 40px;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 /* Button styling */
-.button {
+#onboarding .button {
     width: 220px;
+    min-width: 104px;
     padding: 12px 16px;
     border-radius: 12px;
-    background: var(--Button-primary, #BD3B00);
+    background: var(--Button-primary, #C14400);
     box-shadow: 0px 4px 0px 0px var(--Button-shadow, #962F00);
     color: var(--Texts-textWhite, #FCEFE1);
     text-align: center;
@@ -127,7 +136,8 @@
     line-height: 120%;
     border: none;
     cursor: pointer;
-    margin-top: -300px;
+    margin: 0;
+    align-self: center;
 }
 
 #howToPlay {
@@ -160,7 +170,6 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-transform: none;
-  margin-top: 20px;
 }
 
 .button:hover {
@@ -187,21 +196,6 @@
 /* ==============================
    ONBOARDING OVERLAY STYLES
 ============================== */
-
-/* Onboarding Title */
-.onboarding-title {
-    color: var(--Texts-textMain, #3A2E27);
-    text-align: center;
-    -webkit-text-stroke-width: 0.3px;
-    -webkit-text-stroke-color: var(--Texts-textMain, #3A2E27);
-    font-family: "Amatic SC";
-    font-size: 80px;
-    font-style: normal;
-    font-weight: 700;
-    line-height: 90%;
-    width: 100%;
-    margin: -300px auto 40px auto;
-}
 
 /* ==============================
    How to Play Overlay Styling
@@ -403,18 +397,4 @@ html body .a-dialog-ok-button {
    ============================== */
 .hidden {
   display: none;
-} 
-
-/* Center the onboarding content properly */
-.onboarding-content {
-    position: relative;
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 0 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
 } 
