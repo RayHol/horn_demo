@@ -5,6 +5,20 @@
       // WebXR requires https: to work so ensure redirected if needed.
       if (location.hostname !== "localhost" && window.location.protocol === "http:" )
         window.location.protocol = "https:";
+      
+      // Auto-start AR if coming from games page
+      window.addEventListener('load', function() {
+        if (window.location.hash === '#start-ar') {
+          document.getElementById('onboarding').style.display = 'none';
+          setTimeout(() => {
+            try {
+              document.querySelector('a-scene').enterAR();
+            } catch (error) {
+              console.error('Error entering AR:', error);
+            }
+          }, 1000);
+        }
+      });
     </script>
 
     <meta charset="UTF-8" />
