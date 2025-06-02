@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animals Everywhere! - Animals</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="menu.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Dynamic viewport height support */
+        @supports (height: 100dvh) {
+            body {
+                height: 100dvh;
+            }
+        }
+
+        /* Fix for mobile Safari */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                min-height: -webkit-fill-available;
+            }
+        }
+
+        body {
+            background-image: url('./assets/Animals_bkg.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 12px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0px 4px 0px 0px var(--button-shadow);
+        }
+
+        .back-button:hover {
+            transform: translateY(2px);
+            box-shadow: 0px 2px 0px 0px var(--button-shadow);
+        }
+
+        .back-button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .back-button img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .title {
+            font-family: "Amatic SC", sans-serif;
+            font-size: 27px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-color);
+            margin-top: 20px;
+            width: 100%;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.location.href='menu.html'" aria-label="Back to menu">
+        <img src="./assets/Arrow2.png" alt="Back">
+    </button>
+    <h1 class="title">Animals</h1>
+</body>
+</html> 

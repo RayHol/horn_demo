@@ -6,11 +6,119 @@
     <title>Animals Everywhere! - Menu</title>
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="menu.css">
+    <style>
+        .settings-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .settings-dialog {
+            background: var(--button-bg);
+            border-radius: 24px;
+            padding: 40px;
+            position: relative;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-dialog h2 {
+            font-family: "Amatic SC", sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 20px;
+        }
+
+        .settings-dialog h3 {
+            font-family: "BentonSans", system-ui, sans-serif;
+            font-size: 24px;
+            color: var(--text-color);
+            margin-bottom: 30px;
+        }
+
+        .close-button {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 12px;
+        }
+
+        .close-button img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .settings-icons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .settings-icon {
+            width: 64px;
+            height: 64px;
+            padding: 12px;
+            background: var(--button-bg);
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+        }
+
+        .how-to-play-button {
+            background: var(--primary-color);
+            color: var(--cream-text);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-family: 'BentonSans Comp Black', sans-serif;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0px 4px 0px 0px var(--button-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 auto;
+        }
+
+        .how-to-play-button:hover {
+            transform: translateY(2px);
+            box-shadow: 0px 2px 0px 0px var(--button-shadow);
+        }
+
+        .how-to-play-button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+    </style>
 </head>
 <body>
     <div class="menu-container">
-        <button class="settings-button" aria-label="Settings">
+        <button class="settings-button" onclick="showSettings()" aria-label="Settings">
             <img src="./assets/Settings.png" alt="Settings">
+        </button>
+
+        <button class="back-button" onclick="window.location.href='index.html'" aria-label="Back to start">
+            <img src="./assets/Arrow2.png" alt="Back">
         </button>
 
         <div class="content-wrapper">
@@ -28,22 +136,22 @@
                     </button>
 
                     <div class="button-grid">
-                        <button class="secondary-button">
+                        <button class="secondary-button" onclick="window.location.href='map.html'">
                             <img src="./assets/Map.png" alt="" class="button-icon">
                             Map
                         </button>
-                        <button class="secondary-button">
+                        <button class="secondary-button" onclick="window.location.href='badges.html'">
                             <img src="./assets/Badge1.png" alt="" class="button-icon">
                             Badges
                         </button>
                     </div>
 
-                    <button class="full-button">
+                    <button class="full-button" onclick="window.location.href='animals.html'">
                         <img src="./assets/Animals.png" alt="" class="button-icon">
                         Animals
                     </button>
 
-                    <button class="full-button">
+                    <button class="full-button" onclick="window.location.href='leaderboard.html'">
                         <img src="./assets/Leaderboard.png" alt="" class="button-icon">
                         Leaderboards
                     </button>
@@ -55,5 +163,35 @@
             </footer>
         </div>
     </div>
+
+    <!-- Settings Overlay -->
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-dialog">
+            <button class="close-button" onclick="hideSettings()" aria-label="Close settings">
+                <img src="./assets/Close2.png" alt="Close">
+            </button>
+            <h2>Settings</h2>
+            <h3>Hello, NectarNinja12!</h3>
+            <div class="settings-icons">
+                <img src="./assets/Note.png" alt="Music" class="settings-icon">
+                <img src="./assets/Unmute.png" alt="Sound" class="settings-icon">
+                <img src="./assets/Haptics.png" alt="Haptics" class="settings-icon">
+            </div>
+            <button class="how-to-play-button" onclick="window.location.href=''">
+                <span>?</span>
+                How to play
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function showSettings() {
+            document.getElementById('settingsOverlay').style.display = 'flex';
+        }
+
+        function hideSettings() {
+            document.getElementById('settingsOverlay').style.display = 'none';
+        }
+    </script>
 </body>
 </html> 
