@@ -85,7 +85,12 @@
     align-items: center;
     width: 100%;
     max-width: 600px;
-    padding: 24px 16px;
+    padding: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: auto;
+    margin-right: auto;
+    transform: translateX(0px); /* Adjust this value to move content left/right */
 }
 
 /* Logo styling exactly as per Figma */
@@ -108,7 +113,10 @@
     font-weight: 700;
     line-height: 90%;
     width: 100%;
-    margin: -400px auto 40px auto;
+    margin-top: -280px;
+    margin-bottom: 40px;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 /* Button styling */
@@ -128,7 +136,8 @@
     line-height: 120%;
     border: none;
     cursor: pointer;
-    margin-top: 50px;
+    margin: 0;
+    align-self: center;
 }
 
 #howToPlay {
@@ -388,18 +397,4 @@ html body .a-dialog-ok-button {
    ============================== */
 .hidden {
   display: none;
-} 
-
-/* Center the onboarding content properly */
-.onboarding-content {
-    position: relative;
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 0 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
 } 
