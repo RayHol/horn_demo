@@ -25,6 +25,12 @@
       .a-enter-ar-button {
         display: none;
       }
+
+      /* Override the background image for this page's onboarding section */
+      #onboarding {
+        background-image: none !important;
+        background-color: #FCF6EF !important;
+      }
     </style>
 
     <!-- Packages -->
@@ -42,6 +48,20 @@
     <script defer src="main.js"></script>
 
     <script>
+      function updateGameNickname() {
+        const userData = JSON.parse(localStorage.getItem('userData'));
+        const gameNickname = document.getElementById('gameNickname');
+        
+        if (userData && userData.nickname) {
+            gameNickname.textContent = userData.nickname;
+        } else {
+            gameNickname.textContent = 'EXPLORER';
+        }
+      }
+
+      // Call updateNickname when page loads
+      document.addEventListener('DOMContentLoaded', updateGameNickname);
+
       function closeOnboarding() {
         document.getElementById('onboarding').style.display = "none";
         document.getElementById('ar-game-container').style.display = "block";
@@ -64,7 +84,7 @@
 
   <body>
     <!-- Onboarding Overlay -->
-    <div id="onboarding" class="overlay" style="display: flex;">
+    <div id="onboarding" class="overlay" style="display: flex; background-color: #FCF6EF;">
       <header>
         <button class="back-button" onclick="window.location.href='games.html'" style="position: absolute; left: 4%; top: 2%;">
           <img src="./assets/Arrow.png" alt="Back">
@@ -72,7 +92,7 @@
         <img src="./assets/HMGLogo-Header.png" alt="HMG Logo" class="onboarding-logo">
       </header>
       <main class="onboarding-content">
-        <h1 class="onboarding-title">Sunflower Game</h1>
+        <h1 class="onboarding-title" style="font-size: 32px;">Hey <span id="gameNickname">EXPLORER</span>!<br>Let's play the sunflower game</h1>
         <button onclick="closeOnboarding()" class="button">Start</button>
       </main>
     </div>
