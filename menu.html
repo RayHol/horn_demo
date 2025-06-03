@@ -138,7 +138,7 @@
             <div class="content-inner">
                 <h1 class="title">ANIMALS<br>EVERYWHERE!</h1>
                 
-                <h2 class="subtitle">THE ANIMALS HAVE GOTTEN LOOSE AT THE HORNIMAN!</h2>
+                <h2 class="subtitle">HEY <span id="menuNickname">EXPLORER</span>!<br>THE ANIMALS HAVE GOTTEN LOOSE AT THE HORNIMAN!</h2>
                 
                 <p class="description">Use your camera to find all of them, complete mini-games and climb the leaderboard.</p>
 
@@ -184,7 +184,7 @@
                 <img src="./assets/close_button.png" alt="Close">
             </button>
             <h2>Settings</h2>
-            <h3>Hello, NectarNinja12!</h3>
+            <h3>Hello, <span id="userNickname">Guest</span>!</h3>
             <div class="settings-icons">
                 <img src="./assets/Note.png" alt="Music" class="settings-icon">
                 <img src="./assets/Unmute.png" alt="Sound" class="settings-icon">
@@ -198,8 +198,26 @@
     </div>
 
     <script>
+        function updateNickname() {
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            const settingsNickname = document.getElementById('userNickname');
+            const menuNickname = document.getElementById('menuNickname');
+            
+            if (userData && userData.nickname) {
+                settingsNickname.textContent = userData.nickname;
+                menuNickname.textContent = userData.nickname;
+            } else {
+                settingsNickname.textContent = 'Guest';
+                menuNickname.textContent = 'EXPLORER';
+            }
+        }
+
+        // Call updateNickname when page loads
+        document.addEventListener('DOMContentLoaded', updateNickname);
+
         function showSettings() {
             document.getElementById('settingsOverlay').style.display = 'flex';
+            updateNickname();
         }
 
         function hideSettings() {
