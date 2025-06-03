@@ -213,13 +213,16 @@ body {
 /* Footer */
 footer {
     width: 100%;
-    text-align: center;
-    padding: 20px 0;
-    margin-top: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 20px;
+    margin-bottom: 250px;
 }
 
 .footer-logo {
-    height: 40px;
+    height: 30px;
+    width: auto;
 }
 
 /* Settings Button */
