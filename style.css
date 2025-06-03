@@ -18,23 +18,6 @@
   font-style: normal;
 }
 
-@font-face {
-  font-family: 'Amatic SC';
-  src: url('./assets/fonts/AmaticSC-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'BentonSans Book';
-  src: url('../static/fonts/BentonSans Book.otf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Amatic';
-  src: url('../static/fonts/Amatic SC Regular.ttf') format('truetype');
-}
-
 /* ==============================
    General Overlay Styling
    ============================== */

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sunflower Game - Animals Everywhere!</title>
+
+    <script>
+      // WebXR requires https: to work so ensure redirected if needed.
+      if (location.hostname !== "localhost" && window.location.protocol === "http:" )
+        window.location.protocol = "https:";
+    </script>
+
+    <!-- External Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Roboto:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+      .a-enter-vr-button,
+      .a-enter-ar-button {
+        display: none;
+      }
+    </style>
+
+    <!-- Packages -->
+    <script defer src="ammo.wasm.js"></script>
+    <script defer src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script defer src="https://unpkg.com/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script defer src="https://unpkg.com/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/gh/IdeaSpaceVR/aframe-particle-system-component@latest/dist/aframe-particle-system-component.min.js"></script>
+
+    <!-- Local Components -->
+    <script defer src="ar-utils.js"></script>
+    <script defer src="actor-utils.js"></script>
+    <script defer src="planting-utils.js"></script>
+    <script defer src="physics-utils.js"></script>
+    <script defer src="main.js"></script>
+
+    <script>
+      function closeOnboarding() {
+        document.getElementById('onboarding').style.display = "none";
+        document.getElementById('ar-game-container').style.display = "block";
+        openHowToPlay();
+      }
+      function openHowToPlay() {
+        document.getElementById('howToPlay').style.display = "flex";
+      }
+      function closeHowToPlay() {
+        document.getElementById('howToPlay').style.display = "none";
+      }
+      function openCongratulations() {
+        document.getElementById('congrats').style.display = "flex";
+      }
+      function closeCongratulations() {
+        document.getElementById('congrats').style.display = "none";
+      }
+    </script>
+  </head>
+
+  <body>
+    <!-- Onboarding Overlay -->
+    <div id="onboarding" class="overlay" style="display: flex;">
+      <header>
+        <button class="back-button" onclick="window.location.href='games.html'" style="position: absolute; left: 4%; top: 2%;">
+          <img src="./assets/Arrow.png" alt="Back">
+        </button>
+        <img src="./assets/HMGLogo-Header.png" alt="HMG Logo" class="onboarding-logo">
+      </header>
+      <main class="onboarding-content">
+        <h1 class="onboarding-title">Sunflower Game</h1>
+        <button onclick="closeOnboarding()" class="button">Start</button>
+      </main>
+    </div>
+
+    <!-- AR Game Container (Hidden by Default) -->
+    <div id="ar-game-container" style="display: none;">
+      <video autoplay muted playsinline style="width: 100vw; height: 100vh; object-fit: cover;"></video>
+      <div id="overlay" style="position: absolute; z-index: 1;">
+        <header>
+          <button id="help" class="button" onclick="openHowToPlay()" style="position: absolute; right: 4%; top: 2%; width: 2rem; height: 2rem; padding: 0;">
+            ?
+          </button>
+          <button class="back-button" onclick="window.location.href='games.html'" style="position: absolute; left: 4%; top: 2%;">
+            <img src="./assets/Arrow.png" alt="Back">
+          </button>
+          <p id="hint">Tap the screen to use the shovel to dig a hole</p>
+          <button id="throwButton" style="padding: 10px 20px; width: 90%; height: 80%; position: absolute; bottom: 15%; left: 50%; right: 50%; translate: -50%; display: block; background-color: none; border: none; opacity: 0%;">Dig Hole</button>
+          <button id="seedButton" onclick="swapSeeds()" aria-label="Select seeds" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 50%; transform:translate(-50%); display: block; background: transparent; border: none; opacity: 100%;">
+            <img src="./assets/Plant_BTN.png" alt="Plant seeds button">
+          </button>
+          <button id="waterButton" onclick="swapWater()" aria-label="Select watering can" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; right: 0; display: block; background: transparent; border: none; opacity: 100%;">
+            <img src="./assets/Water_BTN.png" alt="Water plants button">
+          </button>
+          <button id="digButton" onclick="swapShovel()" aria-label="Select shovel" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 0; display: block; background: transparent; border: none; opacity: 100%;">
+            <img src="./assets/Dig_BTN.png" alt="Dig hole button">
+          </button>
+          <button id="arButton" style="padding: 10px 20px; width: 200px; position: absolute; bottom: 10px; left: 50%; right: 50%; translate: -50%; display: none;">Enter AR</button>
+        </header>
+      </div>
+
+      <!-- A-Frame Scene -->
+      <a-scene id="scene" 
+        webxr="optionalFeatures: hit-test, dom-overlay; overlayElement: #overlay;" 
+        button-enter-ar="buttonID: #arButton;"
+        ar-hit-test="target:#soil;" 
+        ar-place-once 
+        reflection="directionalLight:#dirlight;"
+        physics="driver: ammo; debug: false; debugDrawMode: 1; iterations: 100; maxSubSteps: 4; fixedTimeStep: 0.01667"
+        renderer="antialias: true; highRefreshRate: true; colorManagement: true; sortObjects: false; logarithmicDepthBuffer: true; physicallyCorrectLights: true; maxCanvasWidth: 1920; maxCanvasHeight: 1920; foveationLevel: 0;"
+        gltf-model="dracoDecoderPath: https://cdn.jsdelivr.net/npm/three@0.129.0/examples/js/libs/draco/gltf/;"
+        vr-mode-ui="enabled: false">
+        
+        <a-assets>
+          <a-asset-item id="soil-glb" src="./assets/DugSoil.glb"></a-asset-item>
+          <a-asset-item id="seed-glb" src="./assets/Sunflower_seed.glb"></a-asset-item>
+          <a-asset-item id="sunflower-glb" src="./assets/SunFlower.glb"></a-asset-item>
+          <a-asset-item id="seedpack-glb" src="./assets/SeedPacket.glb"></a-asset-item>
+          <a-asset-item id="wateringcan-glb" src="./assets/WateringCan.glb"></a-asset-item>
+          <a-asset-item id="shovel-glb" src="./assets/low_poly_shovel.glb"></a-asset-item>
+          <a-asset-item id="bee-glb" src="./assets/Bee_04_animation.glb"></a-asset-item>
+        </a-assets>
+
+        <!-- Camera -->
+        <a-entity id="camera" position="0 1.15 0" rotation="0 0 0" camera mouse-cursor look-controls="magicWindowTrackingEnabled: true;"
+          throw-seed="buttonID: #throwButton; modelID: #seed-glb; soilID: #soil; power: 6; enabled: false;"
+          watercan="buttonID: #throwButton; wateringCanID: #wateringcan; raycasterID: #raycaster; enabled: false;"
+          shovel="buttonID: #throwButton; shovelID: #shovel; raycasterID: #raycaster; enabled: true;">
+          <a-entity id="raycaster" raycaster="objects: .raycast; showLine:true;" position="0 0 0"></a-entity>
+          <a-entity cursor="fuse: true; fuseTimeout: 500" position="0 0 -1" geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03" material="color: orange; shader: flat"></a-entity>
+          
+          <a-entity id="seedpacketcontainer" position="0 -0.3 1" show-on-place-ar visible="true"
+            animation__enter="property: position; from: -0.3 -0.3 1; to: 0 -0.3 -0.5; dur: 500; delay: 150; startEvents: seedsEnter;"
+            animation__leave="property: position; from: 0 -0.3 -0.5; to: 0.3 -0.3 1; dur: 500; startEvents: seedsLeave;">
+            <a-entity id="seedpacket" position="0 0 0" gltf-model="#seedpack-glb" visible="true" show-on-place-ar></a-entity>
+          </a-entity>
+          <a-entity id="wateringcancontainer" position="0 -0.3 1" show-on-place-ar visible="true"
+            animation__enter="property: position; from: -0.3 -0.3 1; to: 0 -0.3 -0.5; dur: 500; delay: 150;  startEvents: waterEnter;"
+            animation__leave="property: position; from: 0 -0.3 -0.5; to: 0.3 -0.3 1; dur: 500; startEvents: waterLeave;">
+            <a-entity id="wateringcan" position="0 0 0" rotation="0 -140 0" gltf-model="#wateringcan-glb" scale="0.75 0.75 0.75" visible="true" show-on-place-ar watering="false"
+              animation__tipping="property: rotation; from: 0 -140 0; to: 60 -140 0; dur: 1200; dir: alternate; startEvents: water;"
+              animation__untipping="property: rotation; from: 60 -140 0; to: 0 -140 0; dur: 1200; dir: alternate; startEvents: stopwater;">
+            </a-entity>
+          </a-entity>
+          <a-entity id="shovelcontainer" position="0 -0.3 -0.5" show-on-place-ar visible="true"
+            animation__enter="property: position; from: -0.3 -0.3 1; to: 0 -0.3 -0.5; dur: 500; delay: 150; startEvents: shovelEnter;"
+            animation__leave="property: position; from: 0 -0.3 -0.5; to: 0.3 -0.3 1; dur: 500; startEvents: shovelLeave;">
+            <a-entity id="shovel" position="-0.05 -0.05 0" rotation="20 90 0" scale="0.3 0.3 0.3" gltf-model="#shovel-glb" visible="true" show-on-place-ar
+              animation__digging1="property: object3D.position.y; from: 0.15; to: 0.05; dur: 400; delay: 200; dir: alternate; startEvents: dig; loop: 1;"
+              animation__digging2="property: rotation; from: 20 90 0; to: 20 90 40; dur: 400; delay: 400; dir: alternate; startEvents: dig; loop: 1;"
+              animation__digging3="property: object3D.position.y; from: 0.15; to: 0.05; dur: 400; delay: 1000; dir: alternate; startEvents: animationcomplete__digging1; loop: 1;"
+              animation__digging4="property: rotation; from: 20 90 0; to: 20 90 40; dur: 400; delay: 1200; dir: alternate; startEvents: animationcomplete__digging1; loop: 1;"></a-entity>
+          </a-entity>
+        </a-entity>
+        
+        <a-entity light="type: ambient; color: #fff"></a-entity>
+        
+        <!-- Scene -->
+        <a-entity id="floor" class="raycast" position="0 -0.5 0" geometry="primitive: box; depth: 1000; width: 1000; height: 1;" visible="false" grip="0.9" material="color: lime;"
+        ammo-body="type: static;" ammo-shape="type: box;" hide-on-enter-ar></a-entity>
+      
+        <a-entity id="bee-holder" position="0 10 0" animation__enter="property: scale; from: 0 0 0; to:  1 1 1; dur: 3000; startEvents: enter; easing: linear;" animation__spin="property: rotation; from: 0 0 0; to:  0 360 0; dur: 2000; autoplay: true; loop: true; easing: linear;">
+          <a-entity id="bee" gltf-model="#bee-glb" position="0 0 -0.25" rotation="0 -90 0" scale="3 3 3" animation-mixer="clip: ArmatureAction"></a-entity>
+        </a-entity>
+      </a-scene>
+    </div>
+
+    <!-- How to Play Overlay -->
+    <div id="howToPlay" class="overlay hidden">
+      <header>
+          <button class="back-button" onclick="closeHowToPlay()">
+              <img src="./assets/Arrow.png" alt="Back">
+          </button>
+          <h1>How to Play</h1>
+          <div class="header-placeholder"></div>
+      </header>
+
+      <main class="how-to-play">
+        <!-- Instruction 1 -->
+        <div class="instruction">
+          <div class="instruction-icon">
+            <img src="./assets/icon-number.png" alt="Step 1" class="number-icon">
+            <p class="instruction-text">Tap the screen to dig a hole.</p>
+          </div>
+          <img src="./assets/HTPImage.png" alt="Digging a hole" class="instruction-image">
+        </div>
+
+        <!-- Instruction 2 (Reversed layout) -->
+        <div class="instruction reverse">
+            <img src="./assets/HTPImage-2.png" alt="Planting seeds" class="instruction-image">
+            <div class="instruction-icon">
+              <img src="./assets/icon-number-2.png" alt="Step 2" class="number-icon">
+              <p class="instruction-text">Select the seeds, aim and tap in each hole to plant them.</p>
+            </div>
+        </div>
+
+        <!-- Instruction 3 -->
+        <div class="instruction">
+            <div class="instruction-icon">
+              <img src="./assets/icon-number-3.png" alt="Step 3" class="number-icon">
+              <p class="instruction-text">Tap the screen to tip the watering can and water the seedlings.</p>
+            </div>
+            <img src="./assets/HTPImage-3.png" alt="Watering plants" class="instruction-image">
+        </div>
+      </main>
+
+      <footer>
+        <button class="button" onclick="closeHowToPlay()">Let's Go</button>
+      </footer>
+    </div>
+
+    <!-- Congratulations Overlay -->
+    <div id="congrats" class="overlay hidden">
+      <main class="congrats-content">
+          <img src="./assets/Badge.png" alt="Badge" class="congrats-badge">
+          <h1>Congratulations!</h1>
+          <p class="congrats-message">You did it! Well done.</p>
+      </main>
+
+      <footer> 
+          <button class="congrats-button" onclick="window.location.href='menu.html'">Go to Home</button>
+      </footer>
+    </div>
+  </body>
+</html> 
