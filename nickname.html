@@ -7,6 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="menu.css">
     <style>
+        body {
+            background-color: #FCF6EF;
+            background-image: none;
+        }
+
         .sr-only {
             position: absolute;
             width: 1px;
@@ -49,7 +54,9 @@
             padding: 15px;
             background: var(--cream-bg);
             border-radius: 12px;
-            font-size: 24px;
+            font-family: 'Amatic SC', cursive;
+            font-size: 48px;
+            font-weight: 700;
             color: var(--text-color);
         }
 
@@ -150,9 +157,14 @@
     </div>
 
     <script>
+        let currentRandomNumber = null;
+
         // Generate random two-digit number
         function generateRandomNumber() {
-            return Math.floor(Math.random() * 90 + 10); // generates number between 10-99
+            if (currentRandomNumber === null) {
+                currentRandomNumber = Math.floor(Math.random() * 90 + 10); // generates number between 10-99
+            }
+            return currentRandomNumber;
         }
 
         // Update nickname preview
@@ -168,6 +180,7 @@
                 return nickname;
             } else {
                 preview.textContent = 'Your nickname will appear here';
+                currentRandomNumber = null; // Reset random number when selections are cleared
                 return '';
             }
         }
