@@ -201,15 +201,13 @@
             return userData;
         }
 
-        // Event listeners
+        // Add event listeners
         document.getElementById('firstNameSelect').addEventListener('change', updateNicknamePreview);
         document.getElementById('secondNameSelect').addEventListener('change', updateNicknamePreview);
-        
         document.getElementById('confirmButton').addEventListener('click', function() {
             const nickname = updateNicknamePreview();
             if (nickname) {
-                const userData = saveUserData(nickname);
-                // Redirect to the main menu or next page
+                saveUserData(nickname);
                 window.location.href = 'menu.html';
             }
         });
