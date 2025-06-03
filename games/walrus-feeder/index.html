@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script>
+      // WebXR requires https: to work so ensure redirected if needed.
+      if (location.hostname !== "localhost" && window.location.protocol === "http:" )
+        window.location.protocol = "https:";
+    </script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+    <title>Animals Everywhere</title>
+<!--     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> -->
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+  </head>
+
+  <!-- External Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .a-enter-vr-button{
+      display: none;
+    }
+    .a-enter-ar-button{
+      display: none;
+    }
+  </style>
+  <!-- Packages -->
+  <script src="ammo.wasm.js"></script>
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.3/dist/aframe-physics-system.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/IdeaSpaceVR/aframe-particle-system-component@latest/dist/aframe-particle-system-component.min.js"></script>
+  
+  <!-- Local Components -->
+  <script src="physics-utils.js"></script>
+  <script src="animation-utils.js"></script>
+  <script src="thrower.js"></script>
+  <script src="placer.js"></script>
+
+  <!--  Overlay functions  -->
+  <script>
+    let howToPage = 0
+    
+    function openHowToPlay() {
+      document.getElementById('howtoplay').classList.remove('hidden')
+    }
+    function closeHowToPlay() {
+      document.getElementById('howtoplay').classList.add('hidden')
+      howToPage = 0;
+      document.getElementById('howtoplayPages').style.left = 0;
+    }
+    function howToPlayNext() {
+      howToPage++
+      document.getElementById('howtoplayPages').style.left = (howToPage * -100) + "%";
+    }
+    function howToPlayPrev() {
+      howToPage--
+      document.getElementById('howtoplayPages').style.left = (howToPage * -100) + "%";
+    }
+    function openCongratulations() {
+      document.getElementById('gamecomplete').classList.remove('hidden')
+    }
+    function closeCongratulations() {
+      document.getElementById('gamecomplete').classList.add('hidden')
+    }
+  </script>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XT4SMTQCY2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XT4SMTQCY2');
+  </script>
+
+  <body>
+    <video autoplay style="width: 100vw; height: 100vh; object-fit: cover;"></video>
+    
+    <!--   How to Play   -->
+    <div id="howtoplay" class="popupWindowFull">
+      <div class="popupContent">
+        <button class="skipButton wordButton" onclick="closeHowToPlay()">
+          Skip
+        </button>
+        <div class="popupTitle amatic-sc-bold">
+          How To Play
+        </div>
+        <div id="howtoplayPages" class="popupPages">
+          <div id="howtoplay1" class="popupPage">
+            <img src="assets/walrushow1.png" style="width: 75%;">
+            <div>
+              <h2>The Horniman's Walrus is very hungry!</h2>
+              <p>Help him build up his fat reserves for winter with his favorite snacks.</p>
+            </div>
+            <div class="buttonRow">
+              <button class="primaryButton popupButton" onclick="howToPlayNext()">Next</button>
+            </div>
+          </div>
+          <div id="howtoplay2" class="popupPage">
+            <img src="assets/walrushow2.png" style="width: 75%;">
+            <p>Swipe up to toss a mollusc to the Walrus.</p>
+            <div class="buttonRow">
+              <button class="secondaryButton popupButton" onclick="howToPlayPrev()">Back</button>
+              <button class="primaryButton popupButton" onclick="howToPlayNext()">Next</button>
+            </div>
+          </div>
+          <div id="howtoplay3" class="popupPage">
+            <img src="assets/walrushow3.png" style="width: 75%;">
+            <p>Aim for the Walrus! It opens its mouth when you're holding something tasty.</p>
+            <div class="buttonRow">
+              <button class="secondaryButton popupButton" onclick="howToPlayPrev()">Back</button>
+              <button class="primaryButton popupButton" onclick="howToPlayNext()">Next</button>
+            </div>
+          </div>
+          <div id="howtoplay4" class="popupPage">
+            <img src="assets/walrushow4.png" style="width: 75%;">
+            <p>Feed the Walrus 4 times to complete the game.</p>
+            <div class="buttonRow">
+              <button class="secondaryButton popupButton" onclick="howToPlayPrev()">Back</button>
+              <button class="primaryButton popupButton" onclick="closeHowToPlay()">Let's go!</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--   Game Complete   -->
+    <div id="gamecomplete" class="popupWindow hidden" style="overflow: unset;">
+      <div class="starRow">
+        <img class="star" src="assets/Star.png">
+        <img class="star" src="assets/Star.png">
+        <img class="star" src="assets/Star.png">
+      </div>
+      <div class="popupContent" style="padding: 1rem 0rem 0rem 0rem;">
+        <div style="width: 100%">
+          <h2 class="amatic-sc-bold" style="margin: 0; font-size: 2.5rem;">Game Complete</h2>
+          <hr style="width: 80%; border: none; background-color: #E7D4A3; color: #E7D4A3; height: 1px;">
+        </div>
+        <p style="font-size: 1.25rem;">Well done! The walrus won't go hungry this winter.</p>
+        <div class="buttonRow">
+          <button class="secondaryButton popupButtonSmall" onclick="">
+            <img src="assets/Share.png" style="object-fit: contain; width: 2rem;">
+          </button>
+          <button class="secondaryButton popupButtonSmall" onclick="">
+            <img src="assets/PlayAgain.png" style="object-fit: contain; width: 2rem;">
+          </button>
+          <button class="primaryButton popupButtonSmall" onclick="window.top.location.href='../../games.html'">Continue</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- HTML Overlay -->
+    <div id="overlay" style="position: absolute; z-index: 1;">
+      <div id="foodCounter" style="display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: 1fr; grid-column-gap: 8px;">
+        <div id="clamImg" class="obscured" style="display: flex;">
+          <img src="assets/mollusc-1.png" style="object-fit: contain; width: 100%; max-height: 100%;" />
+        </div>
+        <div id="codImg" class="obscured" style="display: flex;">
+          <img src="assets/mollusc-4.png" style="object-fit: contain; width: 100%; max-height: 100%;" />
+        </div>
+        <div id="shrimpImg" class="obscured" style="display: flex;">
+          <img src="assets/mollusc-3.png" style="object-fit: contain; width: 100%; max-height: 100%;" />
+        </div>
+        <div id="musselImg" class="obscured" style="display: flex;">
+          <img src="assets/mollusc-2.png" style="object-fit: contain; width: 100%; max-height: 100%;" />
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <button class="secondaryButton squareButton" onclick="openHowToPlay()">
+            <img src="assets/Help.png" style="object-fit: contain; width: 2rem;">
+          </button>
+        </div>
+      </div>
+      <div id="walrusHint">
+        <p class="popupWindow" style="top: 15%; width: 80%; text-align: center; padding: 0.5rem 1rem;">
+          Tap anywhere on the green area to place the walrus on the floor.
+        </p>
+      </div>
+    </div>
+
+    <!-- Aframe Scene -->
+    <a-scene id="scene" webxr="optionalFeatures: hit-test, dom-overlay; overlayElement: #overlay;" button-enter-ar="buttonID: #arButton;"
+    cursor="rayOrigin: mouse; fuse: false;" raycaster="objects: .raycast;"
+    physics=" driver: ammo; debug: false; debugDrawMode: 1; iterations: 100; maxSubSteps: 4; fixedTimeStep: 0.005"
+    renderer="antialias: true; highRefreshRate: true; colorManagement: true; sortObjects: false; logarithmicDepthBuffer: true; physicallyCorrectLights: true; maxCanvasWidth: 1920; maxCanvasHeight: 1920; foveationLevel: 0;"
+    gltf-model="dracoDecoderPath: https://cdn.jsdelivr.net/npm/three@0.129.0/examples/js/libs/draco/gltf/;">
+      
+      <!-- Assets -->
+      <a-assets>
+        <a-asset-item
+          id="walrus-glb"
+          src="assets/walrus.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="bucket-glb"
+          src="assets/bucket.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="clam-glb"
+          src="assets/clam.glb">
+        </a-asset-item>
+        <a-asset-item
+          id="cod-glb"
+          src="assets/cod.glb">
+        </a-asset-item>
+        <a-asset-item
+          id="shrimp-glb"
+          src="assets/shrimp.glb">
+        </a-asset-item>
+        <a-asset-item
+          id="mussel-glb"
+          src="assets/mussel.glb">
+        </a-asset-item>
+      </a-assets>
+
+      <!-- Camera -->
+      <a-entity id="camera" position="0 1.15 0" rotation="0 0 0" camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;">
+        <a-entity id="bucket" gltf-model="#bucket-glb" position="0 -0.65 -0.4" rotation="0 45 0" scale="1 1 1"
+            animation="property: position; to: 0 -0.5 -0.55; loop: false; dur: 1500; startEvents: enter;">
+        </a-entity>
+      </a-entity>
+      
+      <!-- Light & Sound -->
+      <a-entity light="type: ambient; color: #fff; intensity: 4;"></a-entity>
+      
+      <!-- Scene contents -->
+      <a-entity id="floor" position="0 -0.5 0" geometry="primitive: cylinder; radius: 50; height: 1;" visible="false" grip="0.9"
+      ammo-body="type: static; emitCollisionEvents: true;" ammo-shape="type: cylinder;"></a-entity>
+      <a-ring id="placezone" class="raycast" position="0 0 0" rotation="-90 0 0" material="color: green; transparent: true; opacity: 0.5;" 
+        radius-inner="2.5" radius-outer="5"></a-ring>
+      
+      <a-entity id="animal" gltf-model="#walrus-glb" position="0 0 -3.5" rotation="0 0 0" scale="1 1 1" animation-mixer="clip: Idle; loop: repeat; crossFadeDuration: 0.25"
+        animation-events="events: hit, drop, ready; animations: Eating, Miss, OpenMouth; loops: once, once, once; clamps: false, false, once;" ar-place="floorID: #placezone;">
+        <a-entity id="throwergame" position="0 0.75 0.55"></a-entity>
+        <a-entity id="back" position="0 0 -0.75" geometry="primitive: box; width: 50; depth: 1; height: 50;" visible="false"></a-entity>
+      </a-entity>
+      
+    </a-scene>
+  </body>
+
+  <script src="main.js"></script>
+</html>
