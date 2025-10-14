@@ -48,6 +48,12 @@ function swapSeeds() {
     }
 }
 function swapWater() {
+  // Check if watering can is currently animating
+  const watercan = document.getElementById('wateringcan');
+  if (watercan && watercan.getAttribute('watering') === 'true') {
+    return; // Don't allow mode change while watering animation is playing
+  }
+  
   document.getElementById("waterButton").classList.remove('pulse')
     if(currentMode != 1) {
         if(currentMode == 0) {

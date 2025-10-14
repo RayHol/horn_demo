@@ -362,9 +362,15 @@ function spawnDirt(position) {
       if (
         target &&
         target.getAttribute("planted") == "true" &&
-        target.getAttribute("watered") != "2"
+        target.getAttribute("watered") != "2" &&
+        watercan.getAttribute("watering") !== "true"
       ) {
         watercan.setAttribute("watering", true);
+        // Disable water button during animation
+        const waterButton = document.getElementById('waterButton');
+        if (waterButton) {
+          waterButton.disabled = true;
+        }
         scene.object3D.attach(watercan.object3D);
         let worldPosition = new THREE.Vector3();
         target.object3D.getWorldPosition(worldPosition);
@@ -430,6 +436,11 @@ function spawnDirt(position) {
             }
           }
           watercan.setAttribute("watering", false);
+          // Re-enable water button after animation
+          const waterButton = document.getElementById('waterButton');
+          if (waterButton) {
+            waterButton.disabled = false;
+          }
           waterpocket.object3D.attach(watercan.object3D);
           watercan.object3D.position.setX(0);
           watercan.object3D.position.setZ(0);

@@ -83,6 +83,12 @@ button[disabled] {
   box-shadow: 0px 4px 0px 0px #999999;
 }
 
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .back-button {
   background-color: #BD3B00;
   border: none;
