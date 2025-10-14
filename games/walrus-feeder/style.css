@@ -202,5 +202,5 @@ img{
 } 
 
 .obscured {
-  filter: brightness(50%)
+  filter: brightness(20%)
 }

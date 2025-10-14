@@ -53,14 +53,14 @@ document.querySelector('#throwergame').addEventListener('hit', () => {
       case 2:
         document.querySelector('#throwergame').setAttribute('throwergame', {
           throwableGLTF: '#shrimp-glb',
-          throwableScale: '1 1 1'
+          throwableScale: '2.5 2.5 2.5'
         })
         document.querySelector('#codImg').classList.remove('obscured')
         break;
       case 3:
         document.querySelector('#throwergame').setAttribute('throwergame', {
           throwableGLTF: '#mussel-glb',
-          throwableScale: '1 1 1'
+          throwableScale: '2 2 2'
         })
         document.querySelector('#shrimpImg').classList.remove('obscured')
         break;
