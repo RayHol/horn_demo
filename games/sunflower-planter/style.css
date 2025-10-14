@@ -92,6 +92,18 @@ button[disabled] {
   height: 48px;
   box-shadow: 0px 4px 0px 0px #962F00;
   cursor: pointer;
+  color: initial;
+}
+
+.back-button img {
+  filter: none !important;
+  -webkit-filter: none !important;
+  width: 24px !important;
+  height: 24px !important;
+  object-fit: contain !important;
+  color: initial !important;
+  background-color: transparent !important;
+  opacity: 1 !important;
 }
 
 /* ==============================
@@ -128,13 +140,6 @@ button[disabled] {
 /* ==============================
    How to Play Overlay Styling
    ============================== */
-#howToPlay header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  margin-top: 30px;
-}
 
 #howToPlay h1 {
   font-family: 'Amatic SC', sans-serif;
@@ -175,7 +180,7 @@ button[disabled] {
 }
 
 /* Footer (Ensures buttons remain on screen on all devices) */
-#howToPlay footer,
+
 #congrats footer {
     width: 100%;
     display: flex;
@@ -249,22 +254,64 @@ button[disabled] {
     transform: translateY(-20px);
 }
 
+/* Help button */
+#help {
+  background-color: #FCF6EF;
+  border: 2px solid #E7D4A3;
+  border-radius: 12px;
+  box-shadow: 0 4px 0 0 #E7D4A3;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#help:hover {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 0 #E7D4A3;
+}
+
+#help:active {
+  transform: translateY(4px);
+  box-shadow: none;
+}
+
 /* Hint window */
 #hint {
   font-family: 'BentonSans', sans-serif;
-  background-color: #C14400;
-  border: 2px solid #FFFFFF;
+  background-color: #FCF6EF;
+  border: 2px solid #E7D4A3;
   border-radius: 12px;
-  color: #ffffff;
+  box-shadow: 0 4px 0 0 #E7D4A3;
+  color: #3A2E27;
   padding: 0.5rem;
   text-align: center; 
   position: absolute; 
   top: 0px; 
-  left: 45%; 
-  right: 50%; 
-  translate: -50%; 
-  width: 75%; 
+  left: 25%; 
+  translate: -25%; 
+  width: 65%;
+  margin-right: 60px; 
   display: flex;
+}
+
+/* Responsive button positioning for different screen sizes */
+@media (max-height: 600px) {
+  #overlay header div[style*="bottom: max(60px, 10vh)"] {
+    bottom: max(50px, 8vh) !important;
+  }
+}
+
+@media (max-height: 500px) {
+  #overlay header div[style*="bottom: max(60px, 10vh)"] {
+    bottom: max(40px, 6vh) !important;
+  }
+}
+
+@media (max-height: 400px) {
+  #overlay header div[style*="bottom: max(60px, 10vh)"] {
+    bottom: max(30px, 4vh) !important;
+  }
 }
 
 .pulse {

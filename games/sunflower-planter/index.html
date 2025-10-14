@@ -68,22 +68,22 @@
       font-size: 1.8rem;
       color: #333;
     }
-    .how-to-play {
-      flex: 1;
-      padding: 8px 15px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
+     .how-to-play {
+       flex: 1;
+       padding: 8px 15px 80px 15px;
+       display: flex;
+       flex-direction: column;
+       justify-content: space-between;
+       align-items: center;
+       gap: 8px;
+     }
     .instruction {
       width: 100%;
       margin-bottom: 8px;
     }
     .instruction-icon {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 8px;
       margin-bottom: 4px;
     }
@@ -95,19 +95,61 @@
       font-size: 0.9rem;
       margin: 0;
     }
-    .instruction img.instruction-image {
-      max-width: 100%;
-      height: auto;
-      max-height: 100px;
-      object-fit: contain;
-    }
-    .popup-content footer {
-      padding: 8px 15px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 5px;
-    }
+     .instruction img.instruction-image {
+       max-width: 100%;
+       height: auto;
+       max-height: 100px;
+       object-fit: contain;
+     }
+     #howToPlay .popup-content footer {
+       position: absolute !important;
+       bottom: 24px !important;
+       left: 0 !important;
+       right: 0 !important;
+       width: 100% !important;
+       display: flex !important;
+       justify-content: center !important;
+       align-items: center !important;
+       padding: 0 !important;
+       margin: 0 !important;
+       height: 60px !important;
+     }
+     
+     #howToPlay .popup-content footer .main-button {
+       margin: 0 !important;
+       transform: none !important;
+     }
+     
+     #howToPlay .popup-content footer .main-button:hover {
+       transform: none !important;
+     }
+     
+     #howToPlay .popup-content footer .main-button:active {
+       transform: none !important;
+     }
+     
+     #howToPlay .popup-content header {
+       padding-top: 24px !important;
+     }
+     
+     #howToPlay .popup-content header h1 {
+       color: #3A2E27 !important;
+       text-align: center !important;
+       -webkit-text-stroke-width: 0.5px !important;
+       -webkit-text-stroke-color: #3A2E27 !important;
+       font-family: "Amatic SC" !important;
+       font-size: 32px !important;
+       font-style: normal !important;
+       font-weight: 400 !important;
+       line-height: 120% !important;
+     }
+     
+     #howToPlay .popup-content {
+       border-radius: 24px !important;
+       border: 2px solid #E7D4A3 !important;
+       background: #FCF6EF !important;
+       box-shadow: 0 4px 0 0 #E7D4A3 !important;
+     }
     .back-button {
       display: flex;
       align-items: center;
@@ -333,21 +375,21 @@
 
     <div id="overlay" style="position: absolute; z-index: 1; ">
       <header>
-        <button id="help" class="button" onclick="openHowToPlay()" style="position: absolute; right: 4%; top: 2%; width: 2rem; height: 2rem; padding: 0;">
-          ?
+        <button id="help" onclick="openHowToPlay()" style="position: absolute; right: 4%; top: 2%; padding: 12px;">
+          <img src="assets/Help.png" alt="Help" style="width: 24px; height: 24px; object-fit: contain;">
         </button>
         <p id="hint">Tap the screen to use the shovel to dig a hole</p>       
-        <div style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 50%; transform:translate(-50%); display: block; text-align: center;">
+        <div style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: max(60px, 10vh); left: 50%; transform:translate(-50%); display: block; text-align: center;">
           <button id="seedButton" onclick="swapSeeds()" style="background: transparent; border: none; opacity: 100%;" title="Plant Seeds">
             <img src="assets/Plant_BTN.png" alt="Plant Seeds Button">
           </button>
         </div>
-        <div style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; right: 0; display: block; text-align: center;">
+        <div style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: max(60px, 10vh); right: 0; display: block; text-align: center;">
           <button id="waterButton" onclick="swapWater()" style="background: transparent; border: none; opacity: 100%;" title="Water Plants">
             <img src="assets/Water_BTN.png" alt="Water Plants Button">
           </button>
         </div>
-        <div style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 0; display: block; text-align: center;">
+        <div style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: max(60px, 10vh); left: 0; display: block; text-align: center;">
           <button id="shovelButton" onclick="swapShovel()" style="background: transparent; border: none; opacity: 100%;" title="Use Shovel">
             <img src="assets/Dig_BTN.png" alt="Dig with Shovel Button">
           </button>
@@ -407,16 +449,16 @@
       <!-- Camera -->
       <a-entity id="camera" position="0 1.15 0" rotation="0 0 0" camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false;">
         
-        <a-entity id="seedpacketcontainer" position="0 -0.3 1" show-on-place-ar visible="true"
-          animation__enter="property: position; from: -0.3 -0.3 1; to: 0 -0.3 -0.5; dur: 500; delay: 150; startEvents: seedsEnter;"
-          animation__leave="property: position; from: 0 -0.3 -0.5; to: 0.3 -0.3 1; dur: 500; startEvents: seedsLeave;">
+        <a-entity id="seedpacketcontainer" position="0 -0.2 1" show-on-place-ar visible="true"
+          animation__enter="property: position; from: -0.3 -0.2 1; to: 0 -0.2 -0.5; dur: 500; delay: 150; startEvents: seedsEnter;"
+          animation__leave="property: position; from: 0 -0.2 -0.5; to: 0.3 -0.2 1; dur: 500; startEvents: seedsLeave;">
           <a-entity seedpacket id="seedpacket" class="raycast" position="0 0 0" gltf-model="#seedpack-glb" visible="true" show-on-place-ar
             animation__squeeze="property: object3D.scale.x; from: 1; to: 0.8; dur: 200; delay: 0; dir: alternate; startEvents: squeeze; loop: 1;"
             animation__stretch="property: object3D.scale.y; from: 1; to: 1.1; dur: 200; delay: 0; dir: alternate; startEvents: squeeze; loop: 1;"></a-entity>
         </a-entity>
-        <a-entity id="wateringcancontainer" position="0 -0.3 1" show-on-place-ar visible="true"
-          animation__enter="property: position; from: -0.3 -0.3 1; to: 0 -0.3 -0.5; dur: 500; delay: 150;  startEvents: waterEnter;"
-          animation__leave="property: position; from: 0 -0.3 -0.5; to: 0.3 -0.3 1; dur: 500; startEvents: waterLeave;">
+        <a-entity id="wateringcancontainer" position="0 -0.2 1" show-on-place-ar visible="true"
+          animation__enter="property: position; from: -0.3 -0.2 1; to: 0 -0.2 -0.5; dur: 500; delay: 150;  startEvents: waterEnter;"
+          animation__leave="property: position; from: 0 -0.2 -0.5; to: 0.3 -0.2 1; dur: 500; startEvents: waterLeave;">
           <a-entity id="wateringcan" position="0 0 0" rotation="0 -140 0" gltf-model="#wateringcan-glb" scale="0.75 0.75 0.75" visible="true" show-on-place-ar watering="false"
             animation__tipping="property: rotation; from: 0 -140 0; to: 60 -140 0; dur: 1200; dir: alternate; startEvents: water;"
             animation__untipping="property: rotation; from: 60 -140 0; to: 0 -140 0; dur: 1200; dir: alternate; startEvents: stopwater;">
@@ -429,10 +471,10 @@
             </a-entity>
           </a-entity>
         </a-entity>
-        <a-entity id="shovelcontainer" position="0 -0.3 -0.5" show-on-place-ar visible="true"
-          animation__enter="property: position; from: -0.3 -0.3 1; to: 0 -0.3 -0.5; dur: 500; delay: 150; startEvents: shovelEnter;"
-          animation__leave="property: position; from: 0 -0.3 -0.5; to: 0.3 -0.3 1; dur: 500; startEvents: shovelLeave;">
-          <a-entity shovel id="shovel" position="-0.05 -0.05 0" rotation="0 160 20" scale="1 1 1" gltf-model="#shovel-glb" visible="true" show-on-place-ar
+        <a-entity id="shovelcontainer" position="0 -0.2 -0.5" show-on-place-ar visible="true"
+          animation__enter="property: position; from: -0.3 -0.2 1; to: 0 -0.2 -0.5; dur: 500; delay: 150; startEvents: shovelEnter;"
+          animation__leave="property: position; from: 0 -0.2 -0.5; to: 0.3 -0.2 1; dur: 500; startEvents: shovelLeave;">
+          <a-entity shovel id="shovel" position="-0.05 -0.05 0" rotation="0 160 20" scale="0.9 0.9 0.9" gltf-model="#shovel-glb" visible="true" show-on-place-ar
             animation__digging1="property: object3D.position.y; from: 0.15; to: 0.05; dur: 400; delay: 200; dir: alternate; startEvents: dig; loop: 1;"
             animation__digging2="property: rotation; from: 0 180 20; to: -40 180 20; dur: 400; delay: 400; dir: alternate; startEvents: dig; loop: 1;"
             animation__digging3="property: object3D.position.y; from: 0.15; to: 0.05; dur: 400; delay: 1000; dir: alternate; startEvents: animationcomplete__digging1; loop: 1;"
@@ -460,7 +502,7 @@
         <a-entity id="bee3" gltf-model="#bee-glb" position="0.1 0.1 0.2" rotation="0 -90 0" scale="3.5 3.5 3.5" animation-mixer="clip: ArmatureAction"></a-entity>
       </a-entity>
     </a-scene>
+    
+    <script src="main.js"></script>
   </body>
-
-  <script src="main.js"></script>
 </html>

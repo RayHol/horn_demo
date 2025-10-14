@@ -20,7 +20,7 @@ AFRAME.registerComponent("shovel", {
           shovel.object3D.position.setZ(
             intersection.z
           );
-          shovel.object3D.position.setY(0.15);
+          shovel.object3D.position.setY(0.35);
 
           shovel.emit("dig");
 
@@ -92,7 +92,7 @@ AFRAME.registerComponent("seedpacket", {
     // Create dragpad
     this.dragpad = document.createElement('a-entity')
     this.dragpad.setAttribute('id', 'dragpad')
-    this.dragpad.setAttribute('position', '0 -0.25 -0.5')
+    this.dragpad.setAttribute('position', '0 -0.15 -0.5')
     this.dragpad.setAttribute('rotation', '-50 0 0')
     this.dragpad.setAttribute('scale', '0.2 0.2 0.1')
     this.dragpad.setAttribute('geometry', {
@@ -370,7 +370,7 @@ function spawnDirt(position) {
         target.object3D.getWorldPosition(worldPosition);
         watercan.object3D.position.setX(worldPosition.x + 0.125);
         watercan.object3D.position.setZ(worldPosition.z + 0.125);
-        watercan.object3D.position.setY(0.4);
+        watercan.object3D.position.setY(0.6);
         watercan.emit("water");
         waterpour.setAttribute('scale', '0 0 0')
         waterpour.emit("show")
@@ -405,18 +405,18 @@ function spawnDirt(position) {
             if (flowersgrown == 1) {
               bee1.object3D.position.setX(worldPosition.x);
               bee1.object3D.position.setZ(worldPosition.z);
-              bee1.object3D.position.setY(0.5);
+              bee1.object3D.position.setY(0.7);
             }
             if (flowersgrown == 2) {
               bee2.object3D.position.setX(worldPosition.x);
               bee2.object3D.position.setZ(worldPosition.z);
-              bee2.object3D.position.setY(0.5);
+              bee2.object3D.position.setY(0.7);
             }
             if (flowersgrown == 3) {
               setTimeout(() => {
                 bee3.object3D.position.setX(worldPosition.x);
                 bee3.object3D.position.setZ(worldPosition.z);
-                bee3.object3D.position.setY(0.5);
+                bee3.object3D.position.setY(0.7);
                 bee1.emit("enter");
                 bee2.emit("enter");
                 bee3.emit("enter");
