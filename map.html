@@ -97,6 +97,69 @@
             box-shadow: none;
         }
 
+        /* Orientation Warning Overlay */
+        .orientation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .orientation-content {
+            background-color: #FCF6EF;
+            border: 3px solid #E7D4A3;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            max-width: 300px;
+            margin: 1rem;
+            box-shadow: 0px 4px 0px 0px #E7D4A3;
+        }
+
+        .orientation-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: rotateToPortrait 2.5s ease-in-out infinite;
+            transform-origin: 0 100%;
+            display: inline-block;
+        }
+
+        .orientation-content h2 {
+            color: #C14400;
+            font-family: "Amatic SC", sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            margin: 0 0 1rem 0;
+        }
+
+        .orientation-content p {
+            color: #333;
+            font-size: 1.1rem;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        @keyframes rotateToPortrait {
+            0% { transform: rotate(-90deg); opacity: 1; }
+            40% { transform: rotate(0deg); opacity: 1; }
+            60% { transform: rotate(0deg); opacity: 1; }
+            70% { transform: rotate(0deg); opacity: 0; }
+            71% { transform: rotate(-90deg); opacity: 0; }
+            80% { transform: rotate(-90deg); opacity: 1; }
+            100% { transform: rotate(-90deg); opacity: 1; }
+        }
+
+        /* Hidden class for orientation overlay */
+        .hidden {
+            display: none !important;
+        }
+
         .back-button img {
             width: 24px;
             height: 24px;
@@ -108,6 +171,15 @@
         <img src="./assets/Arrow2.png" alt="Back">
     </button>
     
+    <!-- Orientation Warning Overlay -->
+    <div id="orientationOverlay" class="orientation-overlay hidden">
+        <div class="orientation-content">
+            <div class="orientation-icon">📱</div>
+            <h2>Please Rotate Your Device</h2>
+            <p>Hold your device in portrait mode for the best experience</p>
+        </div>
+    </div>
+
     <div class="map-container" id="mapContainer">
         <img src="./assets/Map-image.png" alt="Interactive Map" class="map-image" id="mapImage">
     </div>
@@ -343,9 +415,81 @@
             
         }
         
-        // Initialize the interactive map when the page loads
+        // Orientation Detection
+        class OrientationManager {
+            constructor() {
+                this.orientationOverlay = document.getElementById('orientationOverlay');
+                
+                // Ensure overlay starts hidden
+                if (this.orientationOverlay) {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+                
+                this.init();
+            }
+            
+            init() {
+                // Check initial orientation
+                this.checkOrientation();
+                
+                // Listen for orientation changes
+                window.addEventListener('orientationchange', () => {
+                    // Small delay to ensure the orientation change is complete
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+                
+                // Also listen for resize events as a backup
+                window.addEventListener('resize', () => {
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+            }
+            
+            checkOrientation() {
+                // Multiple detection methods for better accuracy
+                let isLandscape = false;
+                
+                // Method 1: Screen orientation API (most accurate)
+                if (screen.orientation && typeof screen.orientation.angle === 'number') {
+                    isLandscape = screen.orientation.angle === 90 || screen.orientation.angle === 270;
+                }
+                // Method 2: Window dimensions with strict tolerance
+                else if (window.innerWidth > window.innerHeight + 100) {
+                    isLandscape = true;
+                }
+                // Method 3: Media query check
+                else if (window.matchMedia && window.matchMedia('(orientation: landscape)').matches) {
+                    isLandscape = true;
+                }
+                // Method 4: Fallback - only if width is significantly larger
+                else {
+                    isLandscape = window.innerWidth > window.innerHeight + 200;
+                }
+                
+                // Debug logging (remove in production)
+                console.log('Orientation check:', {
+                    screenAngle: screen.orientation ? screen.orientation.angle : 'N/A',
+                    windowSize: `${window.innerWidth}x${window.innerHeight}`,
+                    isLandscape: isLandscape
+                });
+                
+                if (isLandscape) {
+                    this.orientationOverlay.classList.remove('hidden');
+                } else {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+            }
+        }
+
+        // Initialize the interactive map and orientation manager when the page loads
         document.addEventListener('DOMContentLoaded', () => {
             new InteractiveMap();
+            new OrientationManager();
+            
+            // Ensure orientation overlay starts hidden
+            const orientationOverlay = document.getElementById('orientationOverlay');
+            if (orientationOverlay) {
+                orientationOverlay.classList.add('hidden');
+            }
         });
     </script>
 </body>
