@@ -187,78 +187,14 @@ button:disabled {
 
 /* Footer (Ensures buttons remain on screen on all devices) */
 
-#congrats footer {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    bottom: 5vh; 
-    padding-bottom: 10px;
-}
-#congrats .congrats-button {
-    transform: translateY(-40px); 
-}
+/* Removed old congratulations footer styles */
 
 /* ==============================
    CONGRATULATIONS OVERLAY STYLES
    ============================== */
-#congrats {
-    background-image: url('https://cdn.glitch.global/8edb8ccc-1d3b-4b5f-b3c1-4b7d8d39f2fb/CongratsBG.png?v=1739371690530');
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: cover;
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    height: 100vh; 
-    width: 100vw;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
+/* Removed old congratulations styles - now using walrus-style popup classes */
 
-.congrats-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start; 
-    align-items: center;
-    transform: translateY(0px);
-    flex-grow: 0; 
-}
-
-/* Congratulations Title */
-#congrats h1 {
-    font-family: 'Amatic SC', sans-serif;
-    font-size: 50px;
-    color: #FCEFE1;
-    margin: 0px;
-}
-
-/* Congratulations Message */
-.congrats-message {
-    font-family: 'BentonSans', sans-serif;
-    font-size: 24px;
-    color: #FCEFE1;
-    margin: 10px 0 20px 0;
-}
-
-/* Ensuring buttons don't fall off the screen */
-#congrats footer {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    position: absolute;
-    bottom: 5vh; /* Ensures visibility on smaller screens */
-    padding-bottom: 10px;
-}
-
-.congrats-badge {
-    width: 112px; 
-    height: auto;
-    margin-bottom: 0px; 
-    transform: translateY(-20px);
-}
+/* Removed old congratulations styles - now using walrus-style popup classes */
 
 /* Help button */
 #help {

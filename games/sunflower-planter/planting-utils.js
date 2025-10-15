@@ -6,7 +6,7 @@ AFRAME.registerComponent("shovel", {
     const shovelPocket = document.getElementById("shovelcontainer");
     
     document.getElementById("floor").addEventListener("click", (e) => {
-      if(currentMode === 2) {
+      if(window.currentMode === 2) {
         const hit = e.detail.intersection.object.el.id
         console.log(hit)
         const intersection = e.detail.intersection.point
@@ -125,7 +125,7 @@ AFRAME.registerComponent("seedpacket", {
     }.bind(this));
     
 //     document.getElementById("seedpacket").addEventListener("click", (e) => {
-//       if(currentMode === 0) {
+//       if(window.currentMode === 0) {
 //         let newSeed = document.createElement("a-entity");
 //         newSeed.setAttribute("gltf-model", "#seed-glb");
 //         newSeed.setAttribute("position", {
@@ -400,25 +400,25 @@ function spawnDirt(position) {
             target
               .querySelector(".sunflower")
               .setAttribute("visible", "true");
-            if (flowersgrown < 3) {
+            if (window.flowersgrown < 3) {
               document.getElementById("hint").innerHTML =
                 "Congrats! You grew a sunflower. Grow 3 to try and attract a bee";
               document.getElementById("shovelButton").classList.add('pulse')
             } else {
               
             }
-            flowersgrown++;
-            if (flowersgrown == 1) {
+            window.flowersgrown++;
+            if (window.flowersgrown == 1) {
               bee1.object3D.position.setX(worldPosition.x);
               bee1.object3D.position.setZ(worldPosition.z);
               bee1.object3D.position.setY(0.7);
             }
-            if (flowersgrown == 2) {
+            if (window.flowersgrown == 2) {
               bee2.object3D.position.setX(worldPosition.x);
               bee2.object3D.position.setZ(worldPosition.z);
               bee2.object3D.position.setY(0.7);
             }
-            if (flowersgrown == 3) {
+            if (window.flowersgrown == 3) {
               setTimeout(() => {
                 bee3.object3D.position.setX(worldPosition.x);
                 bee3.object3D.position.setZ(worldPosition.z);

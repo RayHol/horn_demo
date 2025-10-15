@@ -19,18 +19,18 @@ video.setAttribute('playsinline', '');
 navigator.mediaDevices.getUserMedia(constraints)
     .then((stream) => {video.srcObject = stream});
 
-let flowersgrown = 0
-let currentMode = 2
+window.flowersgrown = 0
+window.currentMode = 2
 function swapSeeds() {
   document.getElementById("seedButton").classList.remove('pulse')
-    if(currentMode != 0) {
-        if(currentMode == 1) {
+    if(window.currentMode != 0) {
+        if(window.currentMode == 1) {
             document.getElementById('wateringcancontainer').emit('waterLeave')
         }
-        if(currentMode == 2) {
+        if(window.currentMode == 2) {
             document.getElementById('shovelcontainer').emit('shovelLeave')
         }
-        currentMode = 0
+        window.currentMode = 0
         document.getElementById('seedpacketcontainer').emit('seedsEnter')
         document.getElementById('seedpacket').setAttribute('seedpacket', {
             enabled: true,
@@ -55,14 +55,14 @@ function swapWater() {
   }
   
   document.getElementById("waterButton").classList.remove('pulse')
-    if(currentMode != 1) {
-        if(currentMode == 0) {
+    if(window.currentMode != 1) {
+        if(window.currentMode == 0) {
             document.getElementById('seedpacketcontainer').emit('seedsLeave')
         }
-        if(currentMode == 2) {
+        if(window.currentMode == 2) {
             document.getElementById('shovelcontainer').emit('shovelLeave')
         }
-        currentMode = 1
+        window.currentMode = 1
         document.getElementById('wateringcancontainer').emit('waterEnter')
         document.getElementById('seedpacket').setAttribute('seedpacket', {
             enabled: false,
@@ -81,14 +81,14 @@ function swapWater() {
 }
 function swapShovel() {
   document.getElementById("shovelButton").classList.remove('pulse')
-    if(currentMode != 2) {
-        if(currentMode == 0) {
+    if(window.currentMode != 2) {
+        if(window.currentMode == 0) {
             document.getElementById('seedpacketcontainer').emit('seedsLeave')
         }
-        if(currentMode == 1) {
+        if(window.currentMode == 1) {
             document.getElementById('wateringcancontainer').emit('waterLeave')
         }
-        currentMode = 2
+        window.currentMode = 2
         document.getElementById('shovelcontainer').emit('shovelEnter')
         document.getElementById('seedpacket').setAttribute('seedpacket', {
             enabled: false,

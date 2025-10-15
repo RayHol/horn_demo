@@ -101,6 +101,90 @@
        max-height: 100px;
        object-fit: contain;
      }
+     
+     /* Walrus-style popup classes */
+     .popupWindow {
+       background-color: #FCF6EF;
+       position: absolute;
+       top: 50%;
+       left: 50%;
+       transform: translate(-50%, -50%);
+       z-index: 2;
+       border: 3px solid #E7D4A3;
+       border-radius: 1rem;
+       filter: drop-shadow(0px 4px 0px #E7D4A3);
+       overflow: hidden;
+     }
+     
+     .popupContent {
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       text-align: center;
+       gap: 10px;
+       height: 95%;
+       margin: 1rem;
+     }
+     
+     .buttonRow {
+       display: flex;
+       flex-direction: row;
+       gap: 1rem;
+     }
+     
+     .starRow {
+       display: flex;
+       flex-direction: row;
+       justify-content: center;
+       position: absolute;
+       width: 100%;
+       top: -15%;
+     }
+     
+     .starRow > img:nth-child(1) {
+       width: 4rem;
+     }
+     .starRow > img:nth-child(2) {
+       bottom: 1rem;
+       position: relative;
+       width: 4.75rem;
+     }
+     .starRow > img:nth-child(3) {
+       width: 4rem;
+     }
+     
+     .popupButtonSmall {
+       padding: 0.5rem 0.75rem;
+       font-size: 1.25rem;
+       font-weight: bold;
+     }
+     
+     .primaryButton {
+       background-color: #C14400;
+       border: 2px solid #962F00;
+       border-radius: 0.5rem;
+       filter: drop-shadow(0px 3px 0px #962F00);
+       min-height: 2.5rem;
+       min-width: 2.5rem;
+       color: #FCEFE1;
+       cursor: pointer;
+     }
+     
+     .secondaryButton {
+       background-color: #FCEFE1;
+       border: 2px solid #E7D4A3;
+       border-radius: 0.5rem;
+       filter: drop-shadow(0px 3px 0px #E7D4A3);
+       min-height: 2.5rem;
+       min-width: 2.5rem;
+       cursor: pointer;
+     }
+     
+     .amatic-sc-bold {
+       font-family: "Amatic SC", sans-serif;
+       font-weight: 700;
+       font-style: normal;
+     }
      #howToPlay .popup-content footer {
        position: absolute !important;
        bottom: 24px !important;
@@ -268,10 +352,84 @@
       document.getElementById('onboarding').style.display = "flex";
     }
     function closeCongratulations() {
-      document.getElementById('congrats').style.display = "none";
+      document.getElementById('congrats').classList.add('hidden');
     }
     function openCongratulations() {
-      document.getElementById('congrats').style.display = "flex";
+      document.getElementById('congrats').classList.remove('hidden');
+    }
+    
+    function goHome() {
+      window.top.location.href = '../../games.html';
+    }
+    
+    function restartGame() {
+      // Close congratulations popup
+      document.getElementById('congrats').classList.add('hidden');
+      
+      // Reset game state variables
+      window.flowersgrown = 0;
+      window.currentMode = 2; // Start with shovel mode
+      
+      // Reset all dirt patches - remove any planted elements
+      const scene = document.getElementById('scene');
+      const dirtPatches = scene.querySelectorAll('.waterable.raycast');
+      dirtPatches.forEach(patch => {
+        // Remove any planted elements (seedlings, sunflowers, shoots)
+        const seedling = patch.querySelector('.seedling');
+        const sunflower = patch.querySelector('.sunflower');
+        const shoot = patch.querySelector('.shoot');
+        
+        if (seedling) seedling.remove();
+        if (sunflower) sunflower.remove();
+        if (shoot) shoot.remove();
+        
+        // Reset dirt patch state
+        patch.setAttribute('planted', false);
+        patch.planted = false;
+        
+        // Remove the entire dirt patch
+        patch.remove();
+      });
+      
+      // Reset bees - hide them and reset positions
+      const bee1 = document.getElementById('bee1');
+      const bee2 = document.getElementById('bee2');
+      const bee3 = document.getElementById('bee3');
+      const beeHolder1 = document.getElementById('bee-holder1');
+      const beeHolder2 = document.getElementById('bee-holder2');
+      const beeHolder3 = document.getElementById('bee-holder3');
+      
+      if (beeHolder1) {
+        beeHolder1.setAttribute('position', '0 10 0');
+        beeHolder1.setAttribute('scale', '0 0 0');
+      }
+      if (beeHolder2) {
+        beeHolder2.setAttribute('position', '0 10 0');
+        beeHolder2.setAttribute('scale', '0 0 0');
+      }
+      if (beeHolder3) {
+        beeHolder3.setAttribute('position', '0 10 0');
+        beeHolder3.setAttribute('scale', '0 0 0');
+      }
+      
+      // Reset UI elements
+      document.getElementById('hint').innerHTML = 'Tap the ground to dig a hole for your seeds';
+      document.getElementById('shovelButton').classList.remove('pulse');
+      document.getElementById('waterButton').classList.remove('pulse');
+      document.getElementById('seedButton').classList.remove('pulse');
+      
+      // Reset tool modes
+      document.getElementById('seedpacket').setAttribute('seedpacket', { enabled: false });
+      document.getElementById('camera').setAttribute('watercan', { enabled: false });
+      document.getElementById('camera').setAttribute('shovel', { enabled: true });
+      
+      // Reset tool containers
+      document.getElementById('seedpacketcontainer').emit('seedsLeave');
+      document.getElementById('wateringcancontainer').emit('waterLeave');
+      document.getElementById('shovelcontainer').emit('shovelEnter');
+      
+      // Re-enable raycast for shovel mode
+      document.getElementById('dragpad').classList.remove('raycast');
     }
     function openHowToPlay() {
       document.getElementById('howToPlay').classList.remove('hidden');
@@ -361,16 +519,28 @@
     <!-- ===========================
     CONGRATULATIONS OVERLAY
     ============================ -->
-    <div id="congrats" class="overlay hidden">
-      <main class="congrats-content">
-          <img src="assets/Badge.png" alt="Badge" class="congrats-badge">
-          <h1>Congratulations!</h1>
-          <p class="congrats-message">You did it! Well done.</p>
-      </main>
-
-      <footer> 
-          <button class="congrats-button" onclick="window.top.location.href='../../games.html'">Go to Home</button>
-      </footer>
+    <div id="congrats" class="popupWindow hidden" style="overflow: unset;">
+      <div class="starRow">
+        <img class="star" src="assets/Star.png">
+        <img class="star" src="assets/Star.png">
+        <img class="star" src="assets/Star.png">
+      </div>
+      <div class="popupContent" style="padding: 1rem 0rem 0rem 0rem;">
+        <div style="width: 100%">
+          <h2 class="amatic-sc-bold" style="margin: 0; font-size: 2.5rem;">Game Complete</h2>
+          <hr style="width: 80%; border: none; background-color: #E7D4A3; color: #E7D4A3; height: 1px;">
+        </div>
+        <p style="font-size: 1.25rem;">Well done! Your sunflower garden is thriving.</p>
+        <div class="buttonRow">
+          <button class="secondaryButton popupButtonSmall" onclick="">
+            <img src="assets/Share.png" style="object-fit: contain; width: 2rem;">
+          </button>
+          <button class="secondaryButton popupButtonSmall" onclick="restartGame()">
+            <img src="assets/PlayAgain.png" style="object-fit: contain; width: 2rem;">
+          </button>
+          <button class="primaryButton popupButtonSmall" onclick="goHome()">Home</button>
+        </div>
+      </div>
     </div>
 
     <div id="overlay" style="position: absolute; z-index: 1; ">
