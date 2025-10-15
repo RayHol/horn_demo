@@ -185,6 +185,151 @@
         .hidden {
             display: none !important;
         }
+
+        /* Disable scrolling */
+        body {
+            overflow: hidden;
+        }
+
+        /* Position title at top between buttons */
+        .title {
+            position: fixed !important;
+            top: 20px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 5 !important;
+            margin-bottom: 0 !important;
+        }
+
+        /* Adjust content positioning for fixed title */
+        .content-wrapper {
+            padding-top: 80px !important;
+        }
+
+        /* Responsive Design for Menu Page */
+        @media (max-width: 480px) {
+            .title {
+                font-size: 27px !important;
+                margin-bottom: 0 !important;
+            }
+            
+            .subtitle {
+                font-size: 32px !important;
+                margin-bottom: 16px !important;
+            }
+            
+            .description {
+                font-size: 16px !important;
+                margin-bottom: 24px !important;
+            }
+            
+            .button-container {
+                gap: 12px !important;
+                padding: 0 16px !important;
+            }
+            
+            .main-button, .secondary-button, .full-button {
+                font-size: 24px !important;
+                padding: 12px 24px !important;
+            }
+            
+            .button-icon {
+                width: 24px !important;
+                height: 24px !important;
+            }
+            
+            footer {
+                margin-bottom: 100px !important;
+            }
+            
+            .footer-logo {
+                height: 24px !important;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .title {
+                font-size: 27px !important;
+                margin-bottom: 0 !important;
+            }
+            
+            .subtitle {
+                font-size: 28px !important;
+                margin-bottom: 12px !important;
+            }
+            
+            .description {
+                font-size: 14px !important;
+                margin-bottom: 20px !important;
+            }
+            
+            .button-container {
+                gap: 10px !important;
+                padding: 0 12px !important;
+            }
+            
+            .main-button, .secondary-button, .full-button {
+                font-size: 24px !important;
+                padding: 12px 24px !important;
+            }
+            
+            .button-icon {
+                width: 24px !important;
+                height: 24px !important;
+            }
+            
+            footer {
+                margin-bottom: 80px !important;
+            }
+            
+            .footer-logo {
+                height: 20px !important;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .title {
+                margin-bottom: 40px !important;
+            }
+            
+            .subtitle {
+                margin-bottom: 12px !important;
+            }
+            
+            .description {
+                margin-bottom: 16px !important;
+            }
+            
+            .button-container {
+                gap: 8px !important;
+            }
+            
+            footer {
+                margin-bottom: 60px !important;
+            }
+        }
+
+        @media (max-height: 500px) {
+            .title {
+                margin-bottom: 20px !important;
+            }
+            
+            .subtitle {
+                margin-bottom: 8px !important;
+            }
+            
+            .description {
+                margin-bottom: 12px !important;
+            }
+            
+            .button-container {
+                gap: 6px !important;
+            }
+            
+            footer {
+                margin-bottom: 40px !important;
+            }
+        }
     </style>
 </head>
 <body>
