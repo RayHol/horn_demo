@@ -376,7 +376,7 @@ function spawnDirt(position) {
         target.object3D.getWorldPosition(worldPosition);
         watercan.object3D.position.setX(worldPosition.x + 0.125);
         watercan.object3D.position.setZ(worldPosition.z + 0.125);
-        watercan.object3D.position.setY(0.6);
+        watercan.object3D.position.setY(0.3);
         watercan.emit("water");
         waterpour.setAttribute('scale', '0 0 0')
         waterpour.emit("show")
