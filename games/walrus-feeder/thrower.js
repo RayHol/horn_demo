@@ -91,10 +91,10 @@ AFRAME.registerComponent('throwergame', {
         })
         this.dragpad.setAttribute('material', {
             transparent: true,
-            opacity: 0.5,
-            color: 'red'
+            opacity: 0,
+            color: 'white'
         })
-        this.dragpad.setAttribute('visible', true)
+        this.dragpad.setAttribute('visible', false)
         this.camera.append(this.dragpad)
         this.dragpad.classList.add('raycast')
 
