@@ -293,6 +293,43 @@
     function closeCongratulations() {
       document.getElementById('gamecomplete').classList.add('hidden')
     }
+    
+    function goHome() {
+      window.top.location.href = '../../games.html';
+    }
+    
+    function restartGame() {
+      // Reset catch counter
+      window.catchCounter = 0
+      
+      // Reset all food images to obscured state
+      document.querySelector('#clamImg').classList.add('obscured')
+      document.querySelector('#codImg').classList.add('obscured')
+      document.querySelector('#shrimpImg').classList.add('obscured')
+      document.querySelector('#musselImg').classList.add('obscured')
+      
+      // Reset thrower game to first item (clam)
+      document.querySelector('#throwergame').setAttribute('throwergame', {
+        throwableGLTF: '#clam-glb',
+        throwableScale: '1.2 1.2 1.2',
+        enabled: true
+      })
+      
+      // Reset hand indicator and text if they exist
+      const handIndicator = document.getElementById('hand-indicator')
+      const dragText = document.getElementById('drag-text')
+      if (handIndicator) {
+        handIndicator.style.display = 'block'
+        handIndicator.style.opacity = '1'
+      }
+      if (dragText) {
+        dragText.style.display = 'block'
+        dragText.style.opacity = '1'
+      }
+      
+      // Close congratulations popup
+      document.getElementById('gamecomplete').classList.add('hidden')
+    }
 
     // Add this at the start of your script section
     window.onload = function() {
@@ -389,10 +426,10 @@
           <button class="secondaryButton popupButtonSmall" onclick="">
             <img src="assets/Share.png" style="object-fit: contain; width: 2rem;">
           </button>
-          <button class="secondaryButton popupButtonSmall" onclick="">
+          <button class="secondaryButton popupButtonSmall" onclick="restartGame()">
             <img src="assets/PlayAgain.png" style="object-fit: contain; width: 2rem;">
           </button>
-          <button class="primaryButton popupButtonSmall" onclick="closeCongratulations()">Continue</button>
+          <button class="primaryButton popupButtonSmall" onclick="goHome()">Home</button>
         </div>
       </div>
     </div>
@@ -458,12 +495,16 @@
           id="mussel-glb"
           src="assets/mussel.glb">
         </a-asset-item>
+        <a-asset-item
+          id="hand-select"
+          src="assets/HandSelect.png">
+        </a-asset-item>
       </a-assets>
 
       <!-- Camera -->
       <a-entity id="camera" position="0 1.15 0" rotation="0 0 0" camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;">
         <a-entity id="bucket" gltf-model="#bucket-glb" position="0 -0.65 -0.4" rotation="0 45 0" scale="1 1 1"
-            animation="property: position; to: 0 -0.5 -0.55; loop: false; dur: 1500; startEvents: enter;">
+            animation="property: position; to: 0 -0.4 -0.55; loop: false; dur: 1500; startEvents: enter;">
         </a-entity>
       </a-entity>
       

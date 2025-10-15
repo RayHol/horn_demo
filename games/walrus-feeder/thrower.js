@@ -28,6 +28,9 @@ AFRAME.registerComponent('throwergame', {
         startOnLoad: {type: 'boolean', default: true}
     },
     init: function () {
+        // Clean up any existing elements first
+        this.cleanup()
+        
         // States
         this.padtouched = false
         this.currentItem
@@ -80,19 +83,59 @@ AFRAME.registerComponent('throwergame', {
         // Create dragpad
         this.dragpad = document.createElement('a-entity')
         this.dragpad.setAttribute('id', 'dragpad')
-        this.dragpad.setAttribute('position', '0 -0.25 -0.5')
+        this.dragpad.setAttribute('position', '0 -0.2 -0.5')
         this.dragpad.setAttribute('rotation', '-50 0 0')
-        this.dragpad.setAttribute('scale', '0.2 0.2 0.1')
+        this.dragpad.setAttribute('scale', '0.2 0.1 0.2')
         this.dragpad.setAttribute('geometry', {
             primitive: 'box',
         })
         this.dragpad.setAttribute('material', {
             transparent: true,
-            opacity: this.data.debug?0.5:0,
+            opacity: 0.5,
+            color: 'red'
         })
-        this.dragpad.setAttribute('visible', this.data.debug)
+        this.dragpad.setAttribute('visible', true)
         this.camera.append(this.dragpad)
         this.dragpad.classList.add('raycast')
+
+        // Create hand selection indicator as 2D UI element
+        this.handIndicator = document.createElement('div')
+        this.handIndicator.id = 'hand-indicator'
+        this.handIndicator.style.position = 'fixed'
+        this.handIndicator.style.width = '60px'
+        this.handIndicator.style.height = '60px'
+        this.handIndicator.style.backgroundImage = 'url(assets/HandSelect.png)'
+        this.handIndicator.style.backgroundSize = 'contain'
+        this.handIndicator.style.backgroundRepeat = 'no-repeat'
+        this.handIndicator.style.backgroundPosition = 'center'
+        this.handIndicator.style.pointerEvents = 'none'
+        this.handIndicator.style.zIndex = '1000'
+        this.handIndicator.style.transition = 'all 1s ease-in-out'
+        this.handIndicator.style.left = '50%'
+        this.handIndicator.style.top = '75%'
+        this.handIndicator.style.transform = 'translate(-50%, -50%)'
+        document.body.appendChild(this.handIndicator)
+
+        // Create "Drag to feed" text indicator
+        this.dragText = document.createElement('div')
+        this.dragText.id = 'drag-text'
+        this.dragText.textContent = 'Drag to feed'
+        this.dragText.style.position = 'fixed'
+        this.dragText.style.left = '50%'
+        this.dragText.style.top = '60%'
+        this.dragText.style.transform = 'translate(-50%, -50%)'
+        this.dragText.style.color = '#fff'
+        this.dragText.style.fontSize = '18px'
+        this.dragText.style.fontWeight = 'bold'
+        this.dragText.style.textShadow = '2px 2px 4px rgba(0,0,0,0.8)'
+        this.dragText.style.pointerEvents = 'none'
+        this.dragText.style.zIndex = '1001'
+        this.dragText.style.transition = 'opacity 1s ease-in-out'
+        this.dragText.style.opacity = '0'
+        document.body.appendChild(this.dragText)
+
+        // Start the animation loop
+        this.animateHandIndicator()
 
         // Drag-Pad events
         this.dragpad.addEventListener("mousedown", function(){
@@ -102,6 +145,14 @@ AFRAME.registerComponent('throwergame', {
             this.el.emit(this.data.readyEvent)
             this.dragpad.setAttribute('scale', '0.6 1.2 0.1')
             
+            // Hide hand indicator and text on first interaction
+            if(this.handIndicator) {
+              this.handIndicator.style.display = 'none'
+            }
+            if(this.dragText) {
+              this.dragText.style.display = 'none'
+            }
+            
             this.currentItem = this.createItem()
           }
         }.bind(this));
@@ -109,7 +160,7 @@ AFRAME.registerComponent('throwergame', {
             if(this.padtouched) {
             this.padtouched = false
             this.launchItem(this.currentItem)
-            this.dragpad.setAttribute('scale', '0.2 0.2 0.1')
+            this.dragpad.setAttribute('scale', '0.2 0.1 0.1')
             }
         }.bind(this));
 
@@ -143,15 +194,81 @@ AFRAME.registerComponent('throwergame', {
           }
         }.bind(this));
     },
-    update: function (oldData) {
 
+    animateHandIndicator: function() {
+        if(this.handIndicator && this.handIndicator.style.display !== 'none') {
+            // Start at bottom (75%) and show text once
+            this.handIndicator.style.top = '75%'
+            if(this.dragText.style.opacity === '0') {
+                this.dragText.style.opacity = '1'
+            }
+            setTimeout(() => {
+                if(this.handIndicator && this.handIndicator.style.display !== 'none') {
+                    // Animate up only about 1/4 distance (to 65%)
+                    this.handIndicator.style.top = '65%'
+                    setTimeout(() => {
+                        if(this.handIndicator && this.handIndicator.style.display !== 'none') {
+                            // Instantly reset to start position (text stays visible)
+                            this.handIndicator.style.top = '75%'
+                            setTimeout(() => {
+                                this.animateHandIndicator()
+                            }, 1000)
+                        }
+                    }, 1000)
+                }
+            }, 1000)
+        }
+    },
+
+    cleanup: function() {
+        // Remove existing dragpad
+        const existingDragpad = document.getElementById('dragpad')
+        if (existingDragpad) {
+            existingDragpad.remove()
+        }
+        
+        // Remove existing hand indicator
+        const existingHandIndicator = document.getElementById('hand-indicator')
+        if (existingHandIndicator) {
+            existingHandIndicator.remove()
+        }
+        
+        // Remove existing drag text
+        const existingDragText = document.getElementById('drag-text')
+        if (existingDragText) {
+            existingDragText.remove()
+        }
+    },
+
+    remove: function() {
+        this.cleanup()
+    },
+
+    update: function (oldData) {
+        // Handle changes to throwableGLTF
+        if (oldData.throwableGLTF !== this.data.throwableGLTF) {
+            // Reset the component state
+            this.padtouched = false
+            this.currentItem = null
+            this.positionArray = []
+            
+            // Re-enable if needed
+            if (this.data.enabled) {
+                this.el.setAttribute('visible', this.data.debug)
+            }
+        }
+        
+        // Handle enabled state changes
+        if (oldData.enabled !== this.data.enabled) {
+            this.el.setAttribute('visible', this.data.enabled && this.data.debug)
+        }
     },
     tick: function () {
         if(this.padtouched) {
             if(this.scene.components["raycaster"].getIntersection(this.dragpad) === null) {
                 this.padtouched = false
                 this.launchItem(this.currentItem)
-                this.dragpad.setAttribute('scale', '0.2 0.2 0.1')
+                this.dragpad.setAttribute('scale', '0.2 0.1 0.2')
             } else {
                 const currentIntersection = this.scene.components["raycaster"].getIntersection(this.dragpad).point
             

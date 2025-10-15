@@ -38,11 +38,11 @@ document.querySelector('#animal').addEventListener('placed', () => {
 })
 
 // Thrower game hit and miss listener
-let catchCounter = 0
+window.catchCounter = 0
 document.querySelector('#throwergame').addEventListener('hit', () => {
   document.querySelector('#animal').emit('eat')
-  catchCounter++
-  switch(catchCounter) {
+  window.catchCounter++
+  switch(window.catchCounter) {
       case 1:
         document.querySelector('#throwergame').setAttribute('throwergame', {
           throwableGLTF: '#cod-glb',
