@@ -362,6 +362,18 @@
     }
     
     function showBadgeCollection() {
+      // Add badge to collection
+      if (typeof addBadge === 'function') {
+        addBadge('walrus');
+      } else {
+        // Fallback for when badges page isn't loaded
+        let collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+        if (!collectedBadges.includes('walrus')) {
+          collectedBadges.push('walrus');
+          localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
+        }
+      }
+      
       // Hide the game complete popup
       document.getElementById('gamecomplete').classList.add('hidden');
       

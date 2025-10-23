@@ -426,6 +426,18 @@
     }
     
     function showBadgeCollection() {
+      // Add badge to collection
+      if (typeof addBadge === 'function') {
+        addBadge('sunflower');
+      } else {
+        // Fallback for when badges page isn't loaded
+        let collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+        if (!collectedBadges.includes('sunflower')) {
+          collectedBadges.push('sunflower');
+          localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
+        }
+      }
+      
       // Hide the game complete popup
       document.getElementById('congrats').classList.add('hidden');
       
