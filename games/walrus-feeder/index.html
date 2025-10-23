@@ -361,6 +361,21 @@
       window.top.location.href = '../../games.html';
     }
     
+    function showBadgeCollection() {
+      // Hide the game complete popup
+      document.getElementById('gamecomplete').classList.add('hidden');
+      
+      // Show the badge splash with congratulations
+      const badgeSplash = document.getElementById('badgeSplash');
+      badgeSplash.classList.remove('hidden');
+      
+      // Auto-dismiss splash after 4 seconds and show detail screen
+      setTimeout(() => {
+        badgeSplash.classList.add('hidden');
+        document.getElementById('badgeCollection').classList.remove('hidden');
+      }, 4000);
+    }
+    
     function restartGame() {
       // Reset catch counter
       window.catchCounter = 0
@@ -501,8 +516,27 @@
           <button class="secondaryButton popupButtonSmall" onclick="restartGame()">
             <img src="assets/PlayAgain.png" style="object-fit: contain; width: 2rem;">
           </button>
-          <button class="primaryButton popupButtonSmall" onclick="goHome()">Home</button>
+          <button class="primaryButton popupButtonSmall" onclick="showBadgeCollection()">Continue</button>
         </div>
+      </div>
+    </div>
+
+    <!-- Badge Congratulations Splash (4s auto-dismiss) -->
+    <div id="badgeSplash" class="badge-splash hidden">
+      <div class="splash-content">
+        <img src="assets/walrusFeeding-badge.png" class="splash-badge-icon">
+        <h1 class="splash-title">Congratulations</h1>
+        <p class="splash-subtitle">You earned a badge!</p>
+      </div>
+    </div>
+
+    <!-- Badge Collection Detail Screen -->
+    <div id="badgeCollection" class="badge-collection hidden">
+      <div class="badge-detail-content">
+        <img src="assets/walrusFeeding-badge.png" class="badge-detail-icon">
+        <h2 class="badge-name">Fancy Feeder</h2>
+        <p class="badge-description">Top marks for aim and timing! You've become the walrus's favorite feeder.</p>
+        <button class="primaryButton" onclick="goHome()">Continue</button>
       </div>
     </div>
     
