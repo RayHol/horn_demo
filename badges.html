@@ -146,6 +146,133 @@
             display: none !important;
         }
 
+        /* Badge Detail Popup Styling */
+        .badge-detail-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #FCF6EF;
+            background-image: url('./assets/Background-spread.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 10000;
+        }
+
+        .badge-detail-popup .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #D64D1B;
+            border: none;
+            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .badge-detail-popup .back-button:hover {
+            background-color: #B83D15;
+        }
+
+        .badge-detail-popup .back-button img {
+            width: 24px;
+            height: 24px;
+            filter: invert(1);
+        }
+
+        .badge-detail-popup .title {
+            font-family: "Amatic SC", sans-serif;
+            font-size: 27px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-color);
+            margin-top: 20px;
+            width: 100%;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .badge-detail-main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-top: 225px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .badge-detail-icon {
+            width: 275px;
+            height: 275px;
+            object-fit: contain;
+            margin-bottom: 2rem;
+        }
+
+        .badge-detail-name {
+            font-family: "Amatic SC";
+            font-size: 48px;
+            font-weight: 700;
+            color: #3A2E27;
+            margin: 0 0 1rem 0;
+            text-align: center;
+            line-height: 100%;
+        }
+
+        .badge-detail-date {
+            font-family: "BentonSans Regular";
+            font-size: 16px;
+            color: #3A2E27;
+            margin: 0 0 1.5rem 0;
+            text-align: center;
+            line-height: 140%;
+        }
+
+        .badge-detail-description {
+            color: var(--Texts-textMain, #3A2E27);
+            text-align: center;
+            font-family: "BentonSans Regular";
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 140%; /* 22.4px */
+            margin: 0;
+        }
+
+        /* Responsive adjustments for badge detail popup */
+        @media (max-width: 480px) {
+            .badge-detail-content {
+                width: 95%;
+                padding: 1.5rem;
+            }
+            
+            .badge-detail-title {
+                font-size: 36px;
+            }
+            
+            .badge-detail-icon {
+                width: 206px;
+                height: 206px;
+            }
+            
+            .badge-detail-name {
+                font-size: 36px;
+            }
+            
+            .badge-detail-description {
+                font-size: 16px;
+            }
+        }
+
         /* Disable scrolling */
         body {
             overflow: hidden;
@@ -341,6 +468,21 @@
         </div>
     </div>
 
+    <!-- Badge Detail Popup -->
+    <div id="badgeDetailPopup" class="badge-detail-popup hidden">
+        <button class="back-button" onclick="closeBadgeDetail()">
+            <img src="./assets/Arrow.png" alt="Back">
+        </button>
+        <h1 class="title">BADGE DETAILS</h1>
+        
+        <div class="badge-detail-main">
+            <img id="badgeDetailIcon" src="" alt="Badge" class="badge-detail-icon">
+            <h2 id="badgeDetailName" class="badge-detail-name"></h2>
+            <p id="badgeDetailDate" class="badge-detail-date"></p>
+            <p id="badgeDetailDescription" class="badge-detail-description"></p>
+        </div>
+    </div>
+
     <script>
         // Orientation Detection
         class OrientationManager {
@@ -395,6 +537,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             new OrientationManager();
             initializeBadgeCollection();
+            addBadgeClickListeners();
         });
 
         // Badge Collection System
@@ -442,6 +585,71 @@
                 collectedBadges.push(badgeId);
                 localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
             }
+        }
+
+        // Badge detail popup functionality
+        function showBadgeDetail(badgeId) {
+            const popup = document.getElementById('badgeDetailPopup');
+            const icon = document.getElementById('badgeDetailIcon');
+            const name = document.getElementById('badgeDetailName');
+            const date = document.getElementById('badgeDetailDate');
+            const description = document.getElementById('badgeDetailDescription');
+            
+            // Badge data
+            const badgeData = {
+                'sunflower': {
+                    icon: './assets/badges/icons/bee-badge.png',
+                    name: 'Garden Grower',
+                    description: 'A true garden grower! You\'ve planted, watered, and nurtured a beautiful home for the bees.'
+                },
+                'walrus': {
+                    icon: './assets/badges/icons/walrusFeeding-badge.png',
+                    name: 'Fancy Feeder',
+                    description: 'Top marks for aim and timing! You\'ve become the walrus\'s favorite feeder.'
+                }
+            };
+            
+            if (badgeData[badgeId]) {
+                icon.src = badgeData[badgeId].icon;
+                name.textContent = badgeData[badgeId].name;
+                
+                // Get current date as placeholder
+                const currentDate = new Date();
+                const monthNames = ["January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"];
+                const month = monthNames[currentDate.getMonth()];
+                const day = currentDate.getDate();
+                const year = currentDate.getFullYear();
+                date.textContent = `Collected in ${month} ${day}, ${year}`;
+                
+                description.textContent = badgeData[badgeId].description;
+                
+                popup.classList.remove('hidden');
+            }
+        }
+
+        function closeBadgeDetail() {
+            document.getElementById('badgeDetailPopup').classList.add('hidden');
+        }
+
+        // Add click event listeners to collected badges
+        function addBadgeClickListeners() {
+            const collectedBadges = document.querySelectorAll('.collected-badge');
+            collectedBadges.forEach(badge => {
+                badge.addEventListener('click', function() {
+                    // Find the parent badge item to get the data-badge attribute
+                    const badgeItem = this.closest('.badge-item');
+                    if (badgeItem) {
+                        const badgeId = badgeItem.getAttribute('data-badge');
+                        if (badgeId) {
+                            showBadgeDetail(badgeId);
+                        }
+                    }
+                });
+                
+                // Add cursor pointer to indicate clickable
+                badge.style.cursor = 'pointer';
+            });
         }
     </script>
 </body>
