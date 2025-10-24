@@ -6,6 +6,38 @@
     <title>Animals Everywhere! - Badges</title>
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="menu.css">
+    
+    <!-- Custom Fonts -->
+    <style>
+        @font-face {
+            font-family: 'BentonSans';
+            src: url('./assets/fonts/BentonSansCompBlackRegular.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+        }
+        
+        @font-face {
+            font-family: 'BentonSans Book';
+            src: url('./assets/fonts/BentonSans Book.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+        }
+        
+        @font-face {
+            font-family: 'Amatic SC';
+            src: url('./assets/fonts/Amatic SC Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+        }
+        
+        @font-face {
+            font-family: 'Amatic SC';
+            src: url('./assets/fonts/Amatic-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
+    </style>
+    
     <style>
         * {
             margin: 0;
@@ -206,7 +238,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            padding-top: 225px;
+            padding-top: 125px;
             padding-left: 20px;
             padding-right: 20px;
         }
@@ -229,7 +261,7 @@
         }
 
         .badge-detail-date {
-            font-family: "BentonSans Regular";
+            font-family: "BentonSans Book", sans-serif;
             font-size: 16px;
             color: #3A2E27;
             margin: 0 0 1.5rem 0;
@@ -240,7 +272,7 @@
         .badge-detail-description {
             color: var(--Texts-textMain, #3A2E27);
             text-align: center;
-            font-family: "BentonSans Regular";
+            font-family: "BentonSans Book", sans-serif;
             font-size: 16px;
             font-style: normal;
             font-weight: 400;
@@ -310,17 +342,16 @@
         /* Collected badges are 25% bigger than placeholder badges */
         .collected-badge {
             opacity: 0;
-            transform: scale(0.5);
+            transform: scale(0.3);
             width: 100% !important;
             height: 100% !important;
             max-width: 180px !important;
             max-height: 180px !important;
-            animation: badgeCollect 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
         }
 
         /* Scale collected badges to be 25% bigger after animation */
         .collected-badge.animation-complete {
-            transform: scale(1.25) !important;
+            transform: scale(1.0) !important;
         }
 
         .badge-item:hover .badge-image {
@@ -330,11 +361,15 @@
         @keyframes badgeCollect {
             0% {
                 opacity: 0;
-                transform: scale(0.5);
+                transform: scale(0.3);
             }
-            50% {
+            20% {
+                opacity: 0.8;
+                transform: scale(0.8);
+            }
+            60% {
                 opacity: 1;
-                transform: scale(1.3);
+                transform: scale(1.2);
             }
             100% {
                 opacity: 1;
@@ -342,19 +377,7 @@
             }
         }
 
-        /* Sequential animation delays */
-        .collected-badge:nth-of-type(1) {
-            animation-delay: 0.2s;
-        }
-        .collected-badge:nth-of-type(2) {
-            animation-delay: 0.8s;
-        }
-        .collected-badge:nth-of-type(3) {
-            animation-delay: 1.4s;
-        }
-        .collected-badge:nth-of-type(4) {
-            animation-delay: 2.0s;
-        }
+        /* Remove conflicting CSS animation delays - handled by JavaScript */
 
         /* Responsive adjustments */
         @media (max-width: 480px) {
@@ -425,7 +448,8 @@
     <div class="badge-grid">
         <!-- Row 1 -->
         <div class="badge-item" data-badge="sunflower">
-            <img src="./assets/badges/icons/bee-badge.png" alt="Bee Badge" class="badge-image collected-badge">
+            <img src="./assets/badges/Badge.png" alt="Badge 1" class="badge-image">
+            <img src="./assets/badges/icons/bee-badge.png" alt="Bee Badge" class="badge-image collected-badge" style="display: none;">
         </div>
         <div class="badge-item">
             <img src="./assets/badges/Badge.png" alt="Badge 2" class="badge-image">
@@ -436,10 +460,12 @@
 
         <!-- Row 2 -->
         <div class="badge-item" data-badge="walrus">
-            <img src="./assets/badges/icons/walrusFeeding-badge.png" alt="Walrus Feeding Badge" class="badge-image collected-badge">
-        </div>
-        <div class="badge-item">
             <img src="./assets/badges/Badge.png" alt="Badge 5" class="badge-image">
+            <img src="./assets/badges/icons/walrusFeeding-badge.png" alt="Walrus Feeding Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+        <div class="badge-item" data-badge="anemone">
+            <img src="./assets/badges/Badge.png" alt="Badge 6" class="badge-image">
+            <img src="./assets/badges/icons/clownfish-game-badge.png" alt="Clownfish Badge" class="badge-image collected-badge" style="display: none;">
         </div>
         <div class="badge-item">
             <img src="./assets/badges/Badge.png" alt="Badge 6" class="badge-image">
@@ -557,25 +583,64 @@
                     }
                     if (collectedBadge) {
                         collectedBadge.style.display = 'block';
+                        // Mark as ready for animation
+                        collectedBadge.setAttribute('data-ready', 'true');
                     }
                 }
             });
             
-            // Trigger sequential animations for collected badges
+            console.log('Collected badges from localStorage:', collectedBadges);
+            
+            // Trigger truly sequential animations - each badge waits for previous to finish
             setTimeout(() => {
-                const collectedBadgeElements = document.querySelectorAll('.collected-badge');
-                collectedBadgeElements.forEach((badge, index) => {
-                    if (badge.style.display !== 'none') {
-                        badge.style.animationDelay = `${index * 0.6}s`;
-                        badge.classList.add('animate-in');
-                        
-                        // Add event listener for animation completion
-                        badge.addEventListener('animationend', () => {
-                            badge.classList.add('animation-complete');
-                        });
+                const collectedBadgeElements = document.querySelectorAll('.collected-badge[data-ready="true"]');
+                const visibleBadges = Array.from(collectedBadgeElements).filter(badge => 
+                    badge.style.display !== 'none' && badge.offsetParent !== null
+                );
+                
+                console.log('Found badges to animate:', visibleBadges.length);
+                
+                // Function to animate a single badge and then trigger the next
+                function animateBadgeSequentially(badgeIndex) {
+                    if (badgeIndex >= visibleBadges.length) {
+                        console.log('All badges animated');
+                        return; // All badges animated
                     }
-                });
-            }, 500);
+                    
+                    const badge = visibleBadges[badgeIndex];
+                    console.log('Animating badge', badgeIndex, badge);
+                    
+                    // Reset badge state
+                    badge.style.animation = 'none';
+                    badge.style.opacity = '0';
+                    badge.style.transform = 'scale(0.3)';
+                    
+                    // Force reflow
+                    badge.offsetHeight;
+                    
+                    // Start animation
+                    badge.style.animation = 'badgeCollect 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards';
+                    
+                    // Wait for this badge to finish, then animate the next one
+                    const handleAnimationEnd = () => {
+                        console.log('Badge animation ended:', badgeIndex);
+                        badge.classList.add('animation-complete');
+                        badge.removeEventListener('animationend', handleAnimationEnd);
+                        
+                        // Start the next badge after a small pause
+                        setTimeout(() => {
+                            animateBadgeSequentially(badgeIndex + 1);
+                        }, 200); // Pause between badges
+                    };
+                    
+                    badge.addEventListener('animationend', handleAnimationEnd);
+                }
+                
+                // Start the sequential animation
+                if (visibleBadges.length > 0) {
+                    animateBadgeSequentially(0);
+                }
+            }, 300);
         }
 
         // Function to add a badge (called from games)
@@ -606,6 +671,11 @@
                     icon: './assets/badges/icons/walrusFeeding-badge.png',
                     name: 'Fancy Feeder',
                     description: 'Top marks for aim and timing! You\'ve become the walrus\'s favorite feeder.'
+                },
+                'anemone': {
+                    icon: './assets/badges/icons/clownfish-game-badge.png',
+                    name: 'Careful Cleaner',
+                    description: 'Great care! You\'ve scrubbed the anemones spotless for the Clownfish.'
                 }
             };
             
