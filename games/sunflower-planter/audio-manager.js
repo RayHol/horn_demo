@@ -5,7 +5,7 @@
 class AudioManager {
   constructor() {
     this.sounds = {
-      buttonTap: ['assets/audio/Button Tap.mp3'],
+      buttonTap: ['assets/audio/click.mp3'],
       shovelButton: ['assets/audio/Digging 1.mp3'],
       seedButton: ['assets/audio/Seed Miss 1.mp3'],
       dig: [
