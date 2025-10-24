@@ -64,7 +64,7 @@
     }
     .popup-content h1 {
       margin: 0;
-      font-family: 'Amatic SC', cursive;
+      font-family: 'Amatic', cursive;
       font-size: 1.8rem;
       color: #333;
     }
@@ -181,7 +181,7 @@
      }
      
      .amatic-sc-bold {
-       font-family: "Amatic SC", sans-serif;
+       font-family: "Amatic", sans-serif;
        font-weight: 700;
        font-style: normal;
      }
@@ -241,7 +241,7 @@
       border: none;
       border-radius: 12px;
       cursor: pointer;
-      font-family: 'BentonSans Comp Black', sans-serif;
+      font-family: 'BentonSans', sans-serif;
       font-weight: 400;
       font-size: 24px;
       padding: 12px;
@@ -276,7 +276,7 @@
       align-items: center;
     }
     .onboarding-title {
-      font-family: 'Amatic SC', cursive;
+      font-family: 'Amatic', cursive;
       font-size: 3rem;
       margin-bottom: 20px;
       color: #333;
@@ -289,7 +289,7 @@
       border: none;
       border-radius: 12px;
       cursor: pointer;
-      font-family: 'BentonSans Comp Black', sans-serif;
+      font-family: 'BentonSans', sans-serif;
       font-weight: 400;
       font-size: 24px;
       padding: 12px 24px;
@@ -306,6 +306,21 @@
     .main-button:active {
       transform: translateY(4px);
       box-shadow: none;
+    }
+    .main-button:disabled {
+      background: #999;
+      color: #ccc;
+      box-shadow: 0px 4px 0px 0px #666;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .main-button:disabled:hover {
+      transform: none;
+      box-shadow: 0px 4px 0px 0px #666;
+    }
+    .main-button:disabled:active {
+      transform: none;
+      box-shadow: 0px 4px 0px 0px #666;
     }
     #onboarding {
       background-color: #FFF5E9 !important;
@@ -402,9 +417,16 @@
   <script src="actor-utils.js"></script>
   <script src="planting-utils.js"></script>
   <script src="physics-utils.js"></script>
+  <script src="audio-manager.js"></script>
 
   <script>
     function closeOnboarding() {
+      // Play button tap sound at 50% volume
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
       document.getElementById('onboarding').style.display = "none";
       openHowToPlay();
       setTimeout(() => {
@@ -418,14 +440,38 @@
       document.getElementById('congrats').classList.add('hidden');
     }
     function openCongratulations() {
+      // Play TaDA celebration sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('tada').catch(error => {
+          console.warn('Failed to play tada sound:', error);
+        });
+      }
       document.getElementById('congrats').classList.remove('hidden');
     }
     
     function goHome() {
+      // Play button tap sound at 50% volume
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
       window.top.location.href = '../../games.html';
     }
     
     function showBadgeCollection() {
+      // Stop looping bee sound
+      if (window.AudioManager) {
+        window.AudioManager.stopLoopingAudio();
+      }
+      
+      // Play TaDA celebration sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('tada').catch(error => {
+          console.warn('Failed to play tada sound:', error);
+        });
+      }
+      
       // Add badge to collection
       if (typeof addBadge === 'function') {
         addBadge('sunflower');
@@ -460,6 +506,17 @@
     }
     
     function restartGame() {
+      // Stop looping bee sound
+      if (window.AudioManager) {
+        window.AudioManager.stopLoopingAudio();
+      }
+      
+      // Play button tap sound at 50% volume
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
       // Close congratulations popup
       document.getElementById('congrats').classList.add('hidden');
       
@@ -532,9 +589,21 @@
       document.getElementById('howToPlay').classList.remove('hidden');
     }
     function closeHowToPlay() {
+      // Play button tap sound at 50% volume
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
       document.getElementById('howToPlay').classList.add('hidden');
     }
     function backHowToPlay() {
+      // Play button tap sound at 50% volume
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
       window.top.location.href = '../../games.html';
     }
 
@@ -636,7 +705,7 @@
           <h2 class="amatic-sc-bold" style="margin: 0; font-size: 2.5rem;">Game Complete</h2>
           <hr style="width: 80%; border: none; background-color: #E7D4A3; color: #E7D4A3; height: 1px;">
         </div>
-        <p style="font-size: 1.25rem;">Well done! Your sunflower garden is thriving.</p>
+        <p style="font-size: 1.25rem; font-family: 'BentonSans Book', sans-serif;">Well done! Your sunflower garden is thriving.</p>
         <div class="buttonRow">
           <button class="secondaryButton popupButtonSmall" onclick="">
             <img src="assets/Share.png" style="object-fit: contain; width: 2rem;">
@@ -644,7 +713,7 @@
           <button class="secondaryButton popupButtonSmall" onclick="restartGame()">
             <img src="assets/PlayAgain.png" style="object-fit: contain; width: 2rem;">
           </button>
-          <button class="primaryButton popupButtonSmall" onclick="showBadgeCollection()">Continue</button>
+          <button class="primaryButton popupButtonSmall" onclick="showBadgeCollection()" style="font-family: 'BentonSans', sans-serif;">Continue</button>
         </div>
       </div>
     </div>
@@ -794,7 +863,7 @@
       </a-entity>
       
       <a-entity id="bee-holder3" position="0 10 0" rotation="0 0 0" scale="0 0 0" animation__enter="property: scale; from: 0 0 0; to:  1 1 1; dur: 3000; startEvents: enter; easing: linear;" animation__spin="property: rotation; from: 0 0 0; to:  0 360 0; dur: 2000; autoplay: true; loop: true; easing: linear;">
-        <a-entity id="bee3" gltf-model="#bee-glb" position="0.1 0.1 0.2" rotation="0 -90 0" scale="3.5 3.5 3.5" animation-mixer="clip: ArmatureAction"></a-entity>
+        <a-entity id="bee3" gltf-model="#bee-glb" position="0.1 0.1 -0.2" rotation="0 -90 0" scale="3.5 3.5 3.5" animation-mixer="clip: ArmatureAction"></a-entity>
       </a-entity>
     </a-scene>
     

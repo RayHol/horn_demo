@@ -3,17 +3,39 @@
    ============================== */
 @font-face {
   font-family: 'BentonSans';
-  src: url('../static/fonts/BentonSansCompBlackRegular.otf') format('truetype');
+  src: url('assets/fonts/BentonSansCompBlackRegular.otf') format('truetype');
 }
 
 @font-face {
   font-family: 'BentonSans Book';
-  src: url('../static/fonts/BentonSans Book.otf') format('truetype');
+  src: url('assets/fonts/BentonSans Book.otf') format('truetype');
 }
 
 @font-face {
   font-family: 'Amatic';
-  src: url('../static/fonts/Amatic SC Regular.ttf') format('truetype');
+  src: url('assets/fonts/Amatic SC Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Amatic Bold';
+  src: url('assets/fonts/Amatic-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Amatic Regular';
+  src: url('assets/fonts/Amatic-Regular.ttf') format('truetype');
+}
+
+.amatic-sc-regular {
+  font-family: "Amatic", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.amatic-sc-bold {
+  font-family: "Amatic", sans-serif;
+  font-weight: 700;
+  font-style: normal;
 }
 
 /* ==============================
@@ -51,65 +73,195 @@
 }
 
 #howToPlay {
-  background-image: url('https://cdn.glitch.global/8edb8ccc-1d3b-4b5f-b3c1-4b7d8d39f2fb/HTPBG.png?v=1739277520972');
-  background-repeat: no-repeat;
-  background-position: center center;
+  /* Background image removed to match walrus game */
 }
 
 /* ==============================
-   Buttons (Scales for different screen sizes)
+   Buttons
    ============================== */
-.button, 
-.congrats-button {
-  font-family: 'BentonSans', sans-serif;
-  font-size: clamp(16px, 4vw, 24px); /* Dynamically scales font size */
-  font-weight: 400;
-  color: white;
-  background-color: #BD3B00;
+.primaryButton {
+  background-color: #C14400;
+  border: 2px solid #962F00;
+  border-radius: 0.5rem;
+  filter: drop-shadow(0px 3px 0px #962F00);
+  min-height: 2.5rem;
+  min-width: 2.5rem;
+  color: #FCEFE1;
+}
+
+.secondaryButton {
+  background-color: #FCEFE1;
+  border: 2px solid #E7D4A3;
+  border-radius: 0.5rem;
+  filter: drop-shadow(0px 3px 0px #E7D4A3);
+  min-height: 2.5rem;
+  min-width: 2.5rem;
+  color: #C14400;
+}
+
+.wordButton {
+  background: none;
   border: none;
-  border-radius: 12px;
-  padding: 12px 16px;
-  width: min(80%, 220px); /* Ensures buttons resize properly */
-  height: auto;
-  min-height: 50px;
-  box-shadow: 0px 4px 0px 0px #962F00;
-  cursor: pointer;
 }
 
-.button:disabled,
-button[disabled] {
-  color: #CCCCCC;
-  background-color: #AAAAAA;
-  box-shadow: 0px 4px 0px 0px #999999;
+.squareButton {
+  font-size: 2rem;
+  font-weight: bold;
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
 }
 
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
+.popupButton {
+  padding: 0.75rem 2rem 1rem 2rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.popupButtonSmall {
+  padding: 0.5rem 0.75rem;
+  font-size: 1.25rem;
+  font-weight: bold;
 }
 
 .back-button {
-  background-color: #BD3B00;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   border: none;
   border-radius: 12px;
-  padding: 10px 13px;
-  width: 53px;
-  height: 48px;
-  box-shadow: 0px 4px 0px 0px #962F00;
   cursor: pointer;
-  color: initial;
+  font-family: 'BentonSans', sans-serif;
+  font-weight: 400;
+  font-size: 24px;
+  padding: 12px;
+  background: #BD3B00;
+  color: #FCEFE1;
+  box-shadow: 0px 4px 0px 0px #962F00;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  transform: translateY(2px);
+  box-shadow: 0px 2px 0px 0px #962F00;
+}
+
+.back-button:active {
+  transform: translateY(4px);
+  box-shadow: none;
 }
 
 .back-button img {
-  filter: none !important;
-  -webkit-filter: none !important;
-  width: 24px !important;
-  height: 24px !important;
-  object-fit: contain !important;
-  color: initial !important;
-  background-color: transparent !important;
-  opacity: 1 !important;
+  width: 24px;
+  height: 24px;
+  filter: invert(1);
+}
+
+/* ==============================
+   Popup Classes
+   ============================== */
+.popupWindowFull {
+  background-color: #FCF6EF;
+  width: 95%;
+  height: 95%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  border: 3px solid #E7D4A3;
+  border-radius: 1rem;
+  filter: drop-shadow(0px 4px 0px #E7D4A3);
+  overflow: hidden;
+}
+
+.popupWindow {
+  background-color: #FCF6EF;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  border: 3px solid #E7D4A3;
+  border-radius: 1rem;
+  filter: drop-shadow(0px 4px 0px #E7D4A3);
+  overflow: hidden;
+}
+
+.popupContent{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  height: 95%;
+  margin: 1rem;
+}
+
+.popupTitle {
+  font-size: 2.75rem;
+}
+
+.skipButton {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: arial;
+  color: #C14400;
+}
+
+.popupPages {
+  position: relative;
+  left: 0;
+  transition: left 0.5s;
+  display: flex;
+  flex-direction: row;
+  width: 400%;
+  flex-grow: 4;
+  flex-wrap: nowrap;
+  align-self: flex-start;
+}
+
+.popupPage {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem 1rem;
+  overflow: auto;
+  text-align: center;
+}
+
+.buttonRow {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.starRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
+  top: -15%;
+}
+
+.starRow > img:nth-child(1) {
+  width: 4rem;
+}
+.starRow > img:nth-child(2) {
+  bottom: 1rem;
+  position: relative;
+  width: 4.75rem;
+}
+.starRow > img:nth-child(3) {
+  width: 4rem;
 }
 
 /* ==============================
@@ -148,7 +300,7 @@ button:disabled {
    ============================== */
 
 #howToPlay h1 {
-  font-family: 'Amatic SC', sans-serif;
+  font-family: 'Amatic', sans-serif;
   font-size: 27px;
   color: #3A2E27;
   text-align: center;
@@ -220,7 +372,8 @@ button:disabled {
 
 /* Hint window */
 #hint {
-  font-family: 'BentonSans', sans-serif;
+  font-family: 'BentonSans Book', sans-serif;
+  font-weight: 400;
   background-color: #FCF6EF;
   border: 2px solid #E7D4A3;
   border-radius: 12px;
@@ -299,7 +452,7 @@ button:disabled {
   text-align: center;
   -webkit-text-stroke-width: 0.2px;
   -webkit-text-stroke-color: var(--Texts-textWhite, #FCEFE1);
-  font-family: "Amatic SC";
+  font-family: "Amatic";
   font-size: 48px;
   font-style: normal;
   font-weight: 700;
@@ -310,7 +463,7 @@ button:disabled {
 .splash-subtitle {
   color: var(--Texts-textWhite, #FCEFE1);
   text-align: center;
-  font-family: 'BentonSans Comp Black', sans-serif;
+  font-family: 'BentonSans', sans-serif;
   font-size: 24px;
   font-style: normal;
   font-weight: 400;
@@ -360,6 +513,8 @@ button:disabled {
   text-align: center;
   padding: 2rem;
   max-width: 500px;
+  position: relative;
+  min-height: 100vh;
 }
 
 .badge-detail-icon {
@@ -384,7 +539,7 @@ button:disabled {
 .badge-name {
   color: var(--Texts-textMain, #3A2E27);
   text-align: center;
-  font-family: "Amatic SC";
+  font-family: "Amatic";
   font-size: 48px;
   font-style: normal;
   font-weight: 700;
@@ -398,7 +553,7 @@ button:disabled {
 .badge-description {
   color: var(--Texts-textMain, #3A2E27);
   text-align: center;
-  font-family: "BentonSans Regular";
+  font-family: "BentonSans Book";
   font-size: 16px;
   font-style: normal;
   font-weight: 400;
@@ -421,20 +576,28 @@ button:disabled {
 }
 
 .badge-collection .primaryButton {
-  min-width: 200px !important;
-  color: var(--Texts-textWhite, #FCEFE1) !important;
-  text-align: center !important;
-  font-family: "BentonSans Comp Black" !important;
-  font-size: 24px !important;
-  font-style: normal !important;
-  font-weight: 400 !important;
-  line-height: 120% !important; /* 28.8px */
-  background-color: #C14400 !important;
-  border: 2px solid #962F00 !important;
-  border-radius: 0.5rem !important;
-  filter: drop-shadow(0px 3px 0px #962F00) !important;
-  min-height: 2.5rem !important;
-  cursor: pointer !important;
+  display: flex;
+  width: 220px;
+  min-width: 104px;
+  padding: 12px 16px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  background: var(--UI-primary, #C14400);
+  box-shadow: 0 4px 0 0 #962F00;
+  color: var(--Texts-textWhite, #FCEFE1);
+  text-align: center;
+  font-family: "BentonSans" !important;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 120%; /* 28.8px */
+  cursor: pointer;
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 @media (max-height: 400px) {
@@ -524,4 +687,8 @@ html body .a-dialog-ok-button {
    ============================== */
 .hidden {
   display: none;
+}
+
+.obscured {
+  filter: brightness(20%)
 } 

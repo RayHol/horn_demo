@@ -23,6 +23,13 @@ AFRAME.registerComponent("shovel", {
           shovel.object3D.position.setY(0.35);
 
           shovel.emit("dig");
+          
+          // Play digging sound
+          if (window.AudioManager) {
+            window.AudioManager.playSound('dig').catch(error => {
+              console.warn('Failed to play dig sound:', error);
+            });
+          }
 
           let dirt = spawnDirt(
             intersection.x +
@@ -37,6 +44,12 @@ AFRAME.registerComponent("shovel", {
           }, 500);
 
           setTimeout(() => {
+            // Play second digging sound just before second dirt animation
+            if (window.AudioManager) {
+              window.AudioManager.playSound('digSecond').catch(error => {
+                console.warn('Failed to play second dig sound:', error);
+              });
+            }
             dirt.emit("dig2");
           }, 2500);
 
@@ -217,6 +230,13 @@ AFRAME.registerComponent("seedpacket", {
     // calculate vector from start pos to end pos    
     let dir = new THREE.Vector3();
     dir.subVectors(this.positionArray[this.positionArray.length-1].pos, this.positionArray[this.positionArray.length-accuracy].pos).normalize();
+    
+    // Play throwing whoosh sound
+    if (window.AudioManager) {
+      window.AudioManager.playSound('throwWhoosh').catch(error => {
+        console.warn('Failed to play throw whoosh sound:', error);
+      });
+    }
 
     // calculate speed from position data
     const distance = Math.abs(this.positionArray[this.positionArray.length-1].pos.distanceTo(this.positionArray[this.positionArray.length-accuracy].pos))
@@ -348,6 +368,14 @@ function spawnDirt(position) {
       dirt.setAttribute("planted", true);
       dirt.querySelector(".shoot").emit("planted");
       dirt.querySelector(".shoot").setAttribute("visible", "true");
+      
+      // Play success sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('seedLand').catch(error => {
+          console.warn('Failed to play seed land sound:', error);
+        });
+      }
+      
       document.getElementById("hint").innerHTML =
         "You planted a seed, now it needs water. Select the watering can using the button and tap the seedling you want to water.";
       document.getElementById("waterButton").classList.add('pulse')
@@ -378,6 +406,16 @@ function spawnDirt(position) {
         watercan.object3D.position.setZ(worldPosition.z + 0.125);
         watercan.object3D.position.setY(0.3);
         watercan.emit("water");
+        
+        // Play watering pour sound with slight delay to sync with animation
+        setTimeout(() => {
+          if (window.AudioManager) {
+            window.AudioManager.playSound('waterPour').catch(error => {
+              console.warn('Failed to play water pour sound:', error);
+            });
+          }
+        }, 500);
+        
         waterpour.setAttribute('scale', '0 0 0')
         waterpour.emit("show")
         waterpour.emit("grow");
@@ -392,6 +430,14 @@ function spawnDirt(position) {
           );
           if (target.getAttribute("watered") == 1) {
             target.querySelector(".shoot").emit("water1");
+            
+            // Play sapling growth sound
+            if (window.AudioManager) {
+              window.AudioManager.playSound('saplingGrow').catch(error => {
+                console.warn('Failed to play sapling grow sound:', error);
+              });
+            }
+            
             document.getElementById("hint").innerHTML =
               "Nice! It just needs a bit more water.";
           } else if (target.getAttribute("watered") == 2) {
@@ -400,6 +446,13 @@ function spawnDirt(position) {
             target
               .querySelector(".sunflower")
               .setAttribute("visible", "true");
+              
+            // Play sunflower completion sound
+            if (window.AudioManager) {
+              window.AudioManager.playSound('sunflowerComplete').catch(error => {
+                console.warn('Failed to play sunflower complete sound:', error);
+              });
+            }
             if (window.flowersgrown < 3) {
               document.getElementById("hint").innerHTML =
                 "Congrats! You grew a sunflower. Grow 3 to try and attract a bee";
@@ -426,6 +479,13 @@ function spawnDirt(position) {
                 bee1.emit("enter");
                 bee2.emit("enter");
                 bee3.emit("enter");
+                
+                // Play bee buzz sound (looping)
+                if (window.AudioManager) {
+                  window.AudioManager.playSound('beeBuzz', null, true).catch(error => {
+                    console.warn('Failed to play bee buzz sound:', error);
+                  });
+                }
                 document.getElementById("hint").innerHTML =
                   "Look, a bee showed up!";
                 document.getElementById("shovelButton").classList.remove('pulse')

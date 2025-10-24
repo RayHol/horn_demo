@@ -23,6 +23,21 @@ window.flowersgrown = 0
 window.currentMode = 2
 function swapSeeds() {
   document.getElementById("seedButton").classList.remove('pulse')
+  
+  // Initialize audio context on first user interaction
+  if (window.AudioManager) {
+    window.AudioManager.initializeAudioContext();
+  }
+  
+  // Play seed button sound at 50% volume
+  if (window.AudioManager) {
+    console.log('Playing seed button sound');
+    window.AudioManager.playSound('seedButton', 0.35).catch(error => {
+      console.warn('Failed to play seed button sound:', error);
+    });
+  } else {
+    console.warn('AudioManager not available for seed button');
+  }
     if(window.currentMode != 0) {
         if(window.currentMode == 1) {
             document.getElementById('wateringcancontainer').emit('waterLeave')
@@ -55,6 +70,21 @@ function swapWater() {
   }
   
   document.getElementById("waterButton").classList.remove('pulse')
+  
+  // Initialize audio context on first user interaction
+  if (window.AudioManager) {
+    window.AudioManager.initializeAudioContext();
+  }
+  
+  // Play watering can pickup sound
+  if (window.AudioManager) {
+    console.log('Playing water pickup sound');
+    window.AudioManager.playSound('waterPickup').catch(error => {
+      console.warn('Failed to play water pickup sound:', error);
+    });
+  } else {
+    console.warn('AudioManager not available for water pickup');
+  }
     if(window.currentMode != 1) {
         if(window.currentMode == 0) {
             document.getElementById('seedpacketcontainer').emit('seedsLeave')
@@ -81,6 +111,21 @@ function swapWater() {
 }
 function swapShovel() {
   document.getElementById("shovelButton").classList.remove('pulse')
+  
+  // Initialize audio context on first user interaction
+  if (window.AudioManager) {
+    window.AudioManager.initializeAudioContext();
+  }
+  
+  // Play shovel button sound at 50% volume
+  if (window.AudioManager) {
+    console.log('Playing shovel button sound');
+    window.AudioManager.playSound('shovelButton', 0.35).catch(error => {
+      console.warn('Failed to play shovel button sound:', error);
+    });
+  } else {
+    console.warn('AudioManager not available for shovel button');
+  }
     if(window.currentMode != 2) {
         if(window.currentMode == 0) {
             document.getElementById('seedpacketcontainer').emit('seedsLeave')
