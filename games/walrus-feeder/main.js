@@ -26,6 +26,17 @@ document.querySelector('#animal').addEventListener('placed', () => {
     enabled: false,
   })
   document.querySelector('#bucket').emit('enter')
+  
+  // Play bucket appearance sound
+  if (window.AudioManager) {
+    console.log('Playing bucket appearance sound');
+    window.AudioManager.playSound('bucketAppear').catch(error => {
+      console.warn('Failed to play bucket appearance sound:', error);
+    });
+  } else {
+    console.warn('AudioManager not available for bucket appearance sound');
+  }
+  
   document.querySelector('#walrusHint').classList.add('hidden')
   document.querySelector('#back').setAttribute('ammo-body', {
     type: 'static',
@@ -41,6 +52,20 @@ document.querySelector('#animal').addEventListener('placed', () => {
 window.catchCounter = 0
 document.querySelector('#throwergame').addEventListener('hit', () => {
   document.querySelector('#animal').emit('eat')
+  
+  // Play food landing and walrus happy sounds
+  if (window.AudioManager) {
+    console.log('AudioManager found, playing food landing and walrus happy sounds');
+    window.AudioManager.playSound('foodLand').catch(error => {
+      console.warn('Failed to play food landing sound:', error);
+    });
+    window.AudioManager.playSound('walrusHappy').catch(error => {
+      console.warn('Failed to play walrus happy sound:', error);
+    });
+  } else {
+    console.warn('AudioManager not available for catch sounds');
+  }
+  
   window.catchCounter++
   switch(window.catchCounter) {
       case 1:
@@ -84,6 +109,17 @@ document.querySelector('#throwergame').addEventListener('hit', () => {
 })
 document.querySelector('#throwergame').addEventListener('miss', () => {
   document.querySelector('#animal').emit('drop')
+  
+  // Play walrus sad sound
+  if (window.AudioManager) {
+    console.log('AudioManager found, playing walrus sad sound');
+    window.AudioManager.playSound('walrusSad').catch(error => {
+      console.warn('Failed to play walrus sad sound:', error);
+    });
+  } else {
+    console.warn('AudioManager not available for miss sound');
+  }
+  
   setTimeout(() => {
     document.querySelector('#throwergame').setAttribute('throwergame', {
       enabled: true,

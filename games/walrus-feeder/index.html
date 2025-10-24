@@ -338,6 +338,7 @@
   <script src="animation-utils.js"></script>
   <script src="thrower.js"></script>
   <script src="placer.js"></script>
+  <script src="audio-manager.js"></script>
 
   <!--  Overlay functions  -->
   <script>
@@ -345,12 +346,30 @@
       document.getElementById('howToPlay').classList.remove('hidden');
     }
     function closeHowToPlay() {
+      // Play button tap sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
       document.getElementById('howToPlay').classList.add('hidden');
     }
     function backHowToPlay() {
+      // Play button tap sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
       window.top.location.href = '../../games.html';
     }
     function openCongratulations() {
+      // Play TaDA celebration sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('tada').catch(error => {
+          console.warn('Failed to play tada sound:', error);
+        });
+      }
       document.getElementById('gamecomplete').classList.remove('hidden')
     }
     function closeCongratulations() {
@@ -358,10 +377,23 @@
     }
     
     function goHome() {
+      // Play button tap sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
       window.top.location.href = '../../games.html';
     }
     
     function showBadgeCollection() {
+      // Play TaDA celebration sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('tada').catch(error => {
+          console.warn('Failed to play tada sound:', error);
+        });
+      }
+      
       // Add badge to collection
       if (typeof addBadge === 'function') {
         addBadge('walrus');
@@ -389,6 +421,13 @@
     }
     
     function restartGame() {
+      // Play button tap sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
+      
       // Reset catch counter
       window.catchCounter = 0
       

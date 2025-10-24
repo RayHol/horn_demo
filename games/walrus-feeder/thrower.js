@@ -140,6 +140,11 @@ AFRAME.registerComponent('throwergame', {
         // Drag-Pad events
         this.dragpad.addEventListener("mousedown", function(){
           if(this.data.enabled) {
+            // Initialize audio context on first user interaction
+            if (window.AudioManager) {
+              window.AudioManager.initializeAudioContext();
+            }
+            
             this.positionArray = []
             this.padtouched = true
             this.el.emit(this.data.readyEvent)
@@ -317,6 +322,16 @@ AFRAME.registerComponent('throwergame', {
         let speed = (distance / time) * 1000
         if(speed >= this.data.maxspeed) {
           speed = this.data.maxspeed
+        }
+        
+        // Play throwing whoosh sound
+        if (window.AudioManager) {
+          console.log('AudioManager found, attempting to play throwing whoosh sound');
+          window.AudioManager.playSound('throwWhoosh').catch(error => {
+            console.warn('Failed to play throwing whoosh sound:', error);
+          });
+        } else {
+          console.warn('AudioManager not available for throwing sound');
         }
       
         // apply speed as force when body loaded
