@@ -96,7 +96,6 @@ function anemoneCleaned() {
   if(cleanCount >= 4) {
     document.querySelector('#hint').innerHTML = "You did it, they're all clean!"
     setTimeout(() => {
-      document.querySelector('#tada-sfx').emit('startsound')
       openCongratulations()
     }, 5000);
   }

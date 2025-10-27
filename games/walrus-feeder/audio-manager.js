@@ -44,7 +44,7 @@ class AudioManager {
         'assets/audio/Walrus Sad 6.mp3',
         'assets/audio/Walrus Sad 7.mp3'
       ],
-      tada: ['assets/audio/TaDA.wav']
+      tada: ['assets/audio/tada.mp3']
     };
     
     this.audioElements = {};

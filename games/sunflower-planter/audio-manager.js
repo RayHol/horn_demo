@@ -61,7 +61,7 @@ class AudioManager {
         'assets/audio/Sunflower Game Bee 1.mp3',
         'assets/audio/Sunflower Game Bee 2.mp3'
       ],
-      tada: ['assets/audio/TaDA.wav']
+      tada: ['assets/audio/tada.mp3']
     };
     
     this.audioElements = {};

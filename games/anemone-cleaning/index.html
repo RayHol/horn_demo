@@ -748,28 +748,15 @@
       // Hide the game complete popup
       document.getElementById('gamecomplete').classList.add('hidden');
       
+      // Play TaDA celebration sound
+      const tadaAudio = document.getElementById('tada-wav');
+      if (tadaAudio) {
+        tadaAudio.play().catch(e => console.log('TaDA audio play failed:', e));
+      }
+      
       // Show the badge splash with congratulations
       const badgeSplash = document.getElementById('badgeSplash');
       badgeSplash.classList.remove('hidden');
-      
-      // Play TaDA sound for badge splash (iOS compatible)
-      setTimeout(() => {
-        // Try multiple methods to ensure iOS compatibility
-        const tadaSfx = document.querySelector('#tada-sfx');
-        if (tadaSfx) {
-          // Method 1: Direct component call
-          if (tadaSfx.components.sound) {
-            tadaSfx.components.sound.playSound();
-          }
-          // Method 2: Emit event (fallback)
-          tadaSfx.emit('startsound');
-          // Method 3: Direct audio element (iOS fallback)
-          const tadaAudio = document.getElementById('tada-wav');
-          if (tadaAudio) {
-            tadaAudio.play().catch(e => console.log('TaDA audio play failed:', e));
-          }
-        }
-      }, 100);
       
       // Auto-dismiss splash after 4 seconds and show detail screen
       setTimeout(() => {
@@ -1129,7 +1116,7 @@
 
         <audio id="ding-wav" src="assets/audio/ding.wav" autostart="0" preload ="none"></audio>
         <audio id="ding2-wav" src="assets/audio/ding2.wav" autostart="0" preload ="none"></audio>
-        <audio id="tada-wav" src="assets/audio/tada.wav" autostart="0" preload ="none"></audio>
+        <audio id="tada-wav" src="assets/audio/tada.mp3" autostart="0" preload ="none"></audio>
         
         <img id="star-texture" src="assets/Star.png" crossorigin="anonymous">
         <img id="dirt1-texture" src="assets/dirt1.png" crossorigin="anonymous">
