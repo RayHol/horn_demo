@@ -952,6 +952,28 @@
         }
       }, 5000);
     }
+
+    // Lock camera rotation on scene load
+    document.querySelector('#scene').addEventListener('loaded', function() {
+      function lockCamera() {
+        const camera = document.querySelector('#camera');
+        if (camera) {
+          const lookControls = camera.components['look-controls'];
+          if (lookControls) {
+            camera.setAttribute('look-controls', {
+              'magicWindowTrackingEnabled': true,
+              'touchEnabled': false,
+              'mouseEnabled': false,
+              'reverseMouseDrag': false,
+              'reverseTouchDrag': false
+            });
+          }
+        }
+      }
+      setTimeout(lockCamera, 100);
+      setTimeout(lockCamera, 500);
+      setTimeout(lockCamera, 1000);
+    });
   </script>
 
   <!-- Google tag (gtag.js) -->
@@ -1126,8 +1148,7 @@
       </a-assets>
 
       <!-- Camera -->
-      <a-entity id="camera" position="0 1.15 0" rotation="0 0 0" camera="near: 0.0001; far: 1000;" look-controls="magicWindowTrackingEnabled: true; touchEnabled: false;">
-          <!--     Place objects attached to camera here     -->
+      <a-entity id="camera" position="0 1.15 0" rotation="0 0 0" camera="near: 0.0001; far: 1000;" look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false; reverseMouseDrag: false; reverseTouchDrag: false;">
       </a-entity>
       
       <!-- Light & Sound -->
@@ -1157,6 +1178,7 @@
       <a-entity id="particle-c" particle-effects="zone: c; position: 0.35 0.5 -1.5"></a-entity>
       <a-entity id="particle-d" particle-effects="zone: d; position: 0.85 0.5 -1.4"></a-entity>
 
+      <!-- Hidden hit boxes for each cleaning zone -->
       <a-entity id="dirt1" position="-0.7 0.5 -1.5" geometry="primitive: cylinder; radius: 0.2; height: 0.75;" material="color: brown" visible="false"
         scrubbable="milestone1Value: 1; milestone2Value: 33; milestone3Value: 66; finishedValue: 100;"
         animation__shrink1="property: scale; to: 0.85 0.85 0.85; startEvents: milestone1; dur: 750"

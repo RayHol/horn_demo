@@ -600,3 +600,38 @@ function hideInstructions() {
     instructions.style.opacity = '0';
   }
 }
+
+// Lock camera rotation to prevent touch/mouse rotation on Android
+function lockCameraRotation() {
+  const camera = document.querySelector('#camera');
+  if (camera) {
+    // Ensure look-controls is properly configured to prevent rotation
+    const lookControls = camera.components['look-controls'];
+    if (lookControls) {
+      // Disable all rotation methods
+      lookControls.enabled = true;
+      // Set specific rotation limits
+      camera.setAttribute('look-controls', {
+        'magicWindowTrackingEnabled': true,
+        'touchEnabled': false,
+        'mouseEnabled': false,
+        'reverseMouseDrag': false,
+        'reverseTouchDrag': false
+      });
+    }
+  }
+}
+
+// Call on scene ready to ensure camera is locked
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(lockCameraRotation, 100);
+  setTimeout(lockCameraRotation, 500);
+  setTimeout(lockCameraRotation, 1000);
+});
+
+// Also lock camera rotation after A-Frame scene is ready
+window.addEventListener('load', () => {
+  setTimeout(lockCameraRotation, 100);
+  setTimeout(lockCameraRotation, 500);
+  setTimeout(lockCameraRotation, 1000);
+});
