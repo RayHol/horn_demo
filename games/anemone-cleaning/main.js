@@ -622,6 +622,20 @@ function lockCameraRotation() {
   }
 }
 
+AFRAME.registerComponent('no-culling', {
+  schema: {
+    default: ''
+  },
+  init() {
+    this.el.addEventListener('object3dset', this.update.bind(this))
+  },
+  update() {
+    this.el.object3D.traverse(function (o) {
+      o.frustumCulled = false
+    }.bind(this))
+  }
+})
+
 // Call on scene ready to ensure camera is locked
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(lockCameraRotation, 100);
