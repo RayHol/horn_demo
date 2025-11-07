@@ -166,6 +166,10 @@
             overflow: hidden;
         }
     </style>
+    
+    <!-- Customer.io Helper (loads before Customer.io snippet) -->
+    <script src="customer-io-helper.js"></script>
+    <!-- Customer.io snippet will go here when available -->
 </head>
 <body>
     <!-- Orientation Warning Overlay -->
@@ -283,6 +287,12 @@
                 }
             };
             localStorage.setItem('userData', JSON.stringify(userData));
+            
+            // Sync to Customer.io (will work when snippet is added)
+            if (typeof syncUserToCustomerIO === 'function') {
+                syncUserToCustomerIO(userData);
+            }
+            
             return userData;
         }
 

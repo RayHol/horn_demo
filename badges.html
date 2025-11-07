@@ -446,6 +446,10 @@
             }
         }
     </style>
+    
+    <!-- Customer.io Helper (loads before Customer.io snippet) -->
+    <script src="customer-io-helper.js"></script>
+    <!-- Customer.io snippet will go here when available -->
 </head>
 <body>
     <!-- Orientation Warning Overlay -->
@@ -681,6 +685,11 @@
                     if (!userData.progress.badges.includes(badgeId)) {
                         userData.progress.badges.push(badgeId);
                         localStorage.setItem('userData', JSON.stringify(userData));
+                    }
+                    
+                    // Update Customer.io when badge is collected (will work when snippet is added)
+                    if (typeof updateBadgeInCustomerIO === 'function') {
+                        updateBadgeInCustomerIO(badgeId);
                     }
                 }
             }
