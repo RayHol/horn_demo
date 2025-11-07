@@ -2,34 +2,27 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Animals Everywhere</title>
 
-    <!-- Resource Hints -->
-    <link rel="preload" href="menu.css" as="style">
-    <link rel="preload" href="./assets/fonts/BentonSansCompBlackRegular.otf" as="font" type="font/otf" crossorigin>
-    <link rel="preload" href="./assets/HMGLogo-Header.png" as="image">
-    <link rel="preload" href="./assets/HTPBG.png" as="image">
-    <link rel="prefetch" href="nickname.html">
+    <!-- Resource Hints - removed preload to avoid blocking on iOS Safari -->
 
     <!-- External Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Roboto:wght@700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XT4SMTQCY2"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-XT4SMTQCY2');
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Roboto:wght@700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Roboto:wght@700&display=swap" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet">
+    </noscript>
+    <link rel="stylesheet" href="style.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="style.css"></noscript>
 
     <style>
         /* Orientation Warning Overlay */
@@ -119,12 +112,17 @@
         <img src="./assets/HMGLogo-Header.png" alt="HMG Logo" class="onboarding-logo">
       </header>
       <main class="onboarding-content">
-        <h1 class="onboarding-title">Animals Everywhere!</h1>
-        <button onclick="window.location.href='nickname.html'" class="button" aria-label="Start the game">Start</button>
+        <h1 class="onboarding-title" id="welcomeTitle">Animals Everywhere!</h1>
+        <p id="welcomeMessage" class="description" style="display: none; margin: 20px 0; font-size: 24px; color: var(--text-color);">Welcome back,<br><span id="welcomeNickname"></span>!</p>
+        <button id="startButton" onclick="window.location.href='nickname.html'" class="button" aria-label="Start the game" style="display: block;">Start</button>
+        <button id="continueButton" onclick="window.location.href='menu.html'" class="button" style="display: none;" aria-label="Continue to menu">Continue</button>
       </main>
     </div>
 
     <script>
+        // Wrap everything to prevent blocking errors on iOS Safari
+        try {
+        
         // Orientation Detection
         class OrientationManager {
             constructor() {
@@ -155,29 +153,230 @@
             }
             
             checkOrientation() {
-                // Use screen orientation API if available, fallback to window dimensions
-                let isLandscape = false;
-                
-                if (screen.orientation) {
-                    // Use screen orientation API for more accurate detection
-                    isLandscape = screen.orientation.angle === 90 || screen.orientation.angle === 270;
-                } else {
-                    // Fallback to window dimensions with a small tolerance
-                    isLandscape = window.innerWidth > window.innerHeight + 50;
-                }
-                
-                if (isLandscape) {
-                    this.orientationOverlay.classList.remove('hidden');
-                } else {
-                    this.orientationOverlay.classList.add('hidden');
+                try {
+                    // Use screen orientation API if available, fallback to window dimensions
+                    let isLandscape = false;
+                    
+                    if (screen && screen.orientation && typeof screen.orientation.angle !== 'undefined') {
+                        // Use screen orientation API for more accurate detection
+                        isLandscape = screen.orientation.angle === 90 || screen.orientation.angle === 270;
+                    } else {
+                        // Fallback to window dimensions with a small tolerance
+                        isLandscape = window.innerWidth > window.innerHeight + 50;
+                    }
+                    
+                    if (this.orientationOverlay) {
+                        if (isLandscape) {
+                            this.orientationOverlay.classList.remove('hidden');
+                        } else {
+                            this.orientationOverlay.classList.add('hidden');
+                        }
+                    }
+                } catch (e) {
+                    // If orientation check fails, just hide the overlay
+                    if (this.orientationOverlay) {
+                        this.orientationOverlay.classList.add('hidden');
+                    }
                 }
             }
         }
 
-        // Initialize orientation manager when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            new OrientationManager();
-        });
+        // Check if localStorage is available (non-blocking)
+        function isLocalStorageAvailable() {
+            try {
+                if (typeof Storage === 'undefined' || !window.localStorage) {
+                    return false;
+                }
+                const test = '__localStorage_test__';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // Check if user already exists and show welcome message
+        // This function is called AFTER page load to avoid blocking
+        function checkExistingUser() {
+            // Get elements with null checks
+            const welcomeTitle = document.getElementById('welcomeTitle');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            const welcomeNickname = document.getElementById('welcomeNickname');
+            const startButton = document.getElementById('startButton');
+            const continueButton = document.getElementById('continueButton');
+            
+            // Ensure all elements exist before proceeding
+            if (!welcomeTitle || !welcomeMessage || !welcomeNickname || !startButton || !continueButton) {
+                return; // Elements not ready yet
+            }
+            
+            // Always show default state first (non-blocking)
+            // Then check localStorage asynchronously
+            setTimeout(function() {
+                try {
+                    // Check localStorage availability
+                    if (!isLocalStorageAvailable()) {
+                        // localStorage not available, keep default new user screen
+                        return;
+                    }
+                    
+                    // Safely access localStorage with corruption detection
+                    let userData = null;
+                    try {
+                        const userDataStr = localStorage.getItem('userData');
+                        if (userDataStr) {
+                            try {
+                                userData = JSON.parse(userDataStr);
+                                // Validate userData structure
+                                if (userData && typeof userData !== 'object') {
+                                    throw new Error('Invalid userData format');
+                                }
+                            } catch (parseError) {
+                                // Corrupted data - clear it
+                                console.warn('Corrupted userData detected, clearing:', parseError);
+                                localStorage.removeItem('userData');
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        // If localStorage fails, keep default screen
+                        console.warn('localStorage access failed:', e);
+                        return;
+                    }
+                    
+                    // Update UI if user exists
+                    if (userData && userData.nickname) {
+                        // Keep "Animals Everywhere!" as title, just show welcome message below
+                        welcomeNickname.textContent = userData.nickname;
+                        welcomeMessage.style.display = 'block';
+                        startButton.style.display = 'none';
+                        continueButton.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.warn('Error checking existing user:', error);
+                    // Keep default state on any error
+                }
+            }, 100); // Small delay to ensure page is fully rendered
+        }
+
+        // Clean up corrupted localStorage data that might block page load
+        function cleanupCorruptedStorage() {
+            try {
+                if (typeof Storage === 'undefined' || !window.localStorage) {
+                    return;
+                }
+                
+                // Test if localStorage is accessible
+                const testKey = '__storage_test__';
+                localStorage.setItem(testKey, 'test');
+                localStorage.removeItem(testKey);
+                
+                // Try to read userData and check if it's valid JSON
+                try {
+                    const userDataStr = localStorage.getItem('userData');
+                    if (userDataStr) {
+                        JSON.parse(userDataStr); // Test if it's valid JSON
+                    }
+                } catch (e) {
+                    // Corrupted userData - clear it
+                    console.warn('Corrupted userData detected, clearing...');
+                    localStorage.removeItem('userData');
+                }
+                
+                // Try to read collectedBadges and check if it's valid JSON
+                try {
+                    const badgesStr = localStorage.getItem('collectedBadges');
+                    if (badgesStr) {
+                        JSON.parse(badgesStr); // Test if it's valid JSON
+                    }
+                } catch (e) {
+                    // Corrupted collectedBadges - clear it
+                    console.warn('Corrupted collectedBadges detected, clearing...');
+                    localStorage.removeItem('collectedBadges');
+                }
+            } catch (e) {
+                // If localStorage is completely broken, try to clear everything
+                console.warn('localStorage appears corrupted, attempting cleanup...');
+                try {
+                    localStorage.clear();
+                } catch (clearError) {
+                    // Can't even clear - localStorage is completely broken
+                    console.error('Cannot access localStorage:', clearError);
+                }
+            }
+        }
+
+        // Initialize page - only run once, completely non-blocking
+        let initialized = false;
+        function initializePage() {
+            if (initialized) return;
+            initialized = true;
+            
+            try {
+                // Don't clean up storage here - do it later after page loads
+                // This ensures page can render even if localStorage is broken
+                new OrientationManager();
+            } catch (error) {
+                console.error('Error initializing orientation manager:', error);
+            }
+        }
+
+        // Initialize orientation manager immediately (non-blocking)
+        // This doesn't access localStorage, so it's safe
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                try {
+                    initializePage();
+                } catch (e) {
+                    console.error('Error in DOMContentLoaded:', e);
+                }
+            }, false);
+        } else {
+            // DOM already ready
+            try {
+                initializePage();
+            } catch (e) {
+                console.error('Error initializing page:', e);
+            }
+        }
+
+        // Check user data AFTER page is fully loaded and rendered
+        // This is deferred to avoid blocking page load on iOS Safari
+        window.addEventListener('load', function() {
+            // Clean up corrupted storage first, then check user
+            try {
+                cleanupCorruptedStorage();
+            } catch (e) {
+                console.warn('Storage cleanup failed, continuing anyway:', e);
+            }
+            // Wait a bit longer to ensure page is fully rendered
+            setTimeout(function() {
+                try {
+                    checkExistingUser();
+                } catch (e) {
+                    console.error('Error checking existing user:', e);
+                }
+            }, 300);
+        }, false);
+        
+        } catch (e) {
+            // If anything fails, at least the page should still render
+            console.error('Initialization error:', e);
+        }
+    </script>
+
+    <!-- Google tag (gtag.js) - moved to end to avoid blocking page load -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XT4SMTQCY2"></script>
+    <script>
+      try {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XT4SMTQCY2');
+      } catch (e) {
+        console.warn('Google Analytics initialization failed:', e);
+      }
     </script>
   </body>
 </html>

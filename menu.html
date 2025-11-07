@@ -415,6 +415,33 @@
     </div>
 
     <script>
+        // Sync badges between collectedBadges and userData.progress.badges
+        function syncBadges() {
+            const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+            const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+            
+            if (userData) {
+                // Ensure progress object exists
+                if (!userData.progress) {
+                    userData.progress = { gamesCompleted: [], badges: [], highScores: {} };
+                }
+                if (!userData.progress.badges) {
+                    userData.progress.badges = [];
+                }
+                
+                // Merge badges: combine both arrays and remove duplicates
+                const allBadges = [...new Set([...collectedBadges, ...userData.progress.badges])];
+                
+                // Update both storages with merged badges
+                localStorage.setItem('collectedBadges', JSON.stringify(allBadges));
+                userData.progress.badges = allBadges;
+                localStorage.setItem('userData', JSON.stringify(userData));
+            } else if (collectedBadges.length > 0) {
+                // If userData doesn't exist but badges do, keep collectedBadges for when user creates account
+                // This maintains backward compatibility
+            }
+        }
+
         function updateNickname() {
             const userData = JSON.parse(localStorage.getItem('userData'));
             const settingsNickname = document.getElementById('userNickname');
@@ -478,8 +505,9 @@
             }
         }
 
-        // Call updateNickname and initialize orientation manager when page loads
+        // Call updateNickname, sync badges, and initialize orientation manager when page loads
         document.addEventListener('DOMContentLoaded', () => {
+            syncBadges();
             updateNickname();
             new OrientationManager();
         });

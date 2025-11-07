@@ -102,6 +102,16 @@
     margin-right: 0;
 }
 
+/* Description text styling (for welcome message) */
+#onboarding .description {
+    font-family: "BentonSans", sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    text-align: center;
+    color: var(--Texts-textMain, #3A2E27);
+    margin: 20px 0;
+}
+
 /* Button styling */
 #onboarding .button {
     width: 220px;

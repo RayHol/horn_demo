@@ -269,13 +269,16 @@
 
         // Save user data to local storage
         function saveUserData(nickname) {
+            // Check if collectedBadges already exists and sync them
+            const existingBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+            
             const userData = {
                 nickname: nickname,
                 userId: Date.now().toString(36) + Math.random().toString(36).substr(2),
                 created: new Date().toISOString(),
                 progress: {
                     gamesCompleted: [],
-                    badges: [],
+                    badges: existingBadges, // Sync existing badges if any
                     highScores: {}
                 }
             };
@@ -343,9 +346,20 @@
             }
         }
 
+        // Check if user already exists and redirect if so
+        function checkExistingUser() {
+            const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+            if (userData && userData.nickname) {
+                // User already exists, redirect to menu
+                window.location.href = 'menu.html';
+            }
+            // If no userData, show the nickname creation form as normal
+        }
+
         // Initialize orientation manager when page loads
         document.addEventListener('DOMContentLoaded', () => {
             new OrientationManager();
+            checkExistingUser();
         });
     </script>
 </body>

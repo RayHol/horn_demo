@@ -463,19 +463,50 @@
       document.getElementById('gamecomplete').classList.add('hidden');
       // Close badge collection
       document.getElementById('badgeCollection').classList.add('hidden');
-      // Reset game state
-      document.querySelector('#placezone').setAttribute('visible', true)
-      document.querySelector('#peacock').setAttribute('ar-place', {
+      
+      // Get peacock element
+      const peacockEl = document.querySelector('#peacock');
+      
+      // Reset ar-place component state
+      if (peacockEl.components['ar-place']) {
+        peacockEl.components['ar-place'].placed = false;
+      }
+      
+      // Reset peacock position and scale to initial values
+      peacockEl.setAttribute('position', '0 0 -5');
+      peacockEl.setAttribute('scale', '0.6 0.6 0.6');
+      peacockEl.setAttribute('visible', false);
+      
+      // Remove any animations
+      peacockEl.removeAttribute('animation__grow');
+      peacockEl.removeAttribute('animation__shrink');
+      peacockEl.removeAttribute('animation-mixer');
+      
+      // Reset ar-place to enabled
+      peacockEl.setAttribute('ar-place', {
         enabled: true,
-      })
-      document.querySelector('#peacock').setAttribute('visible', false)
-      document.querySelector('#peacock').removeAttribute('animation-mixer')
-      peacock.components.photographersubject.posing = false
-      gameStarted = false
-      cameraReady = false
-
+        floorID: '#placezone'
+      });
+      
+      // Reset photographersubject component state
+      if (peacockEl.components.photographersubject) {
+        peacockEl.components.photographersubject.posing = false;
+      }
+      
+      // Reset game state variables
+      if (typeof gameStarted !== 'undefined') {
+        gameStarted = false;
+      }
+      if (typeof cameraReady !== 'undefined') {
+        cameraReady = false;
+      }
+      
+      // Reset placezone visibility
+      document.querySelector('#placezone').setAttribute('visible', true);
+      
       // Reset hint text
       document.querySelector('#hint').innerHTML = "Tap the highlighted area to bring out the peacock.";
+      
       // Show instructions
       showInstructions();
     }
@@ -595,7 +626,7 @@
     <!-- Badge Congratulations Splash (4s auto-dismiss) -->
     <div id="badgeSplash" class="badge-splash hidden">
       <div class="splash-content">
-        <img src="../../assets/badges/icons/peacock-game-badge.png" class="splash-badge-icon">
+        <img src="../../assets/badges/icons/peacock-game-badge.svg" class="splash-badge-icon">
         <h1 class="splash-title">Congratulations</h1>
         <p class="splash-subtitle">You earned a badge!</p>
       </div>
@@ -604,7 +635,7 @@
     <!-- Badge Collection Detail Screen -->
     <div id="badgeCollection" class="badge-collection hidden">
       <div class="badge-detail-content">
-        <img src="../../assets/badges/icons/peacock-game-badge.png" class="badge-detail-icon">
+        <img src="../../assets/badges/icons/peacock-game-badge.svg" class="badge-detail-icon">
         <h2 class="badge-name">Proud Photographer</h2>
         <p class="badge-description">You captured the peacock's proudest moment.</p>
         <button class="primaryButton" onclick="goHome()">Continue</button>

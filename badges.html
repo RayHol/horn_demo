@@ -337,23 +337,32 @@
             max-width: 180px;
             max-height: 180px;
             transition: transform 0.2s ease;
+            box-sizing: border-box;
         }
 
         /* Collected badges are 25% bigger than placeholder badges */
         .collected-badge {
             opacity: 0;
             transform: scale(0.3);
-            width: 100% !important;
-            height: 100% !important;
+            transform-origin: center center;
+            width: 90% !important;
+            height: 90% !important;
             max-width: 180px !important;
             max-height: 180px !important;
+            object-fit: contain !important;
             will-change: transform, opacity;
             backface-visibility: hidden;
         }
 
         /* Scale collected badges to be 25% bigger after animation */
         .collected-badge.animation-complete {
-            transform: scale(1.0) !important;
+            transform: scale(1.5625) !important;
+            transform-origin: center center;
+            width: 90% !important;
+            height: 90% !important;
+            max-width: 180px !important;
+            max-height: 180px !important;
+            object-fit: contain !important;
         }
 
         .badge-item:hover .badge-image {
@@ -367,11 +376,11 @@
             }
             60% {
                 opacity: 1;
-                transform: scale(1.2);
+                transform: scale(1.8);
             }
             100% {
                 opacity: 1;
-                transform: scale(1);
+                transform: scale(1.5625);
             }
         }
 
@@ -390,14 +399,20 @@
             }
             
             .collected-badge {
-                width: 100% !important;
-                height: 100% !important;
+                width: 90% !important;
+                height: 90% !important;
                 max-width: 140px !important;
                 max-height: 140px !important;
+                object-fit: contain !important;
             }
             
             .collected-badge.animation-complete {
-                transform: scale(1.25) !important;
+                transform: scale(1.5625) !important;
+                width: 90% !important;
+                height: 90% !important;
+                max-width: 140px !important;
+                max-height: 140px !important;
+                object-fit: contain !important;
             }
         }
 
@@ -414,14 +429,20 @@
             }
             
             .collected-badge {
-                width: 100% !important;
-                height: 100% !important;
+                width: 90% !important;
+                height: 90% !important;
                 max-width: 120px !important;
                 max-height: 120px !important;
+                object-fit: contain !important;
             }
             
             .collected-badge.animation-complete {
-                transform: scale(1.25) !important;
+                transform: scale(1.5625) !important;
+                width: 90% !important;
+                height: 90% !important;
+                max-width: 120px !important;
+                max-height: 120px !important;
+                object-fit: contain !important;
             }
         }
     </style>
@@ -446,7 +467,7 @@
         <!-- Row 1 -->
         <div class="badge-item" data-badge="sunflower">
             <img src="./assets/badges/Badge.png" alt="Badge 1" class="badge-image">
-            <img src="./assets/badges/icons/bee-badge.png" alt="Bee Badge" class="badge-image collected-badge" style="display: none;">
+            <img src="./assets/badges/icons/bee-badge.svg" alt="Bee Badge" class="badge-image collected-badge" style="display: none;">
         </div>
         <div class="badge-item">
             <img src="./assets/badges/Badge.png" alt="Badge 2" class="badge-image">
@@ -458,11 +479,11 @@
         <!-- Row 2 -->
         <div class="badge-item" data-badge="walrus">
             <img src="./assets/badges/Badge.png" alt="Badge 5" class="badge-image">
-            <img src="./assets/badges/icons/walrusFeeding-badge.png" alt="Walrus Feeding Badge" class="badge-image collected-badge" style="display: none;">
+            <img src="./assets/badges/icons/walrusFeeding-badge.svg" alt="Walrus Feeding Badge" class="badge-image collected-badge" style="display: none;">
         </div>
         <div class="badge-item" data-badge="anemone">
             <img src="./assets/badges/Badge.png" alt="Badge 6" class="badge-image">
-            <img src="./assets/badges/icons/clownfish-game-badge.png" alt="Clownfish Badge" class="badge-image collected-badge" style="display: none;">
+            <img src="./assets/badges/icons/clownfish-game-badge.svg" alt="Clownfish Badge" class="badge-image collected-badge" style="display: none;">
         </div>
         <div class="badge-item">
             <img src="./assets/badges/Badge.png" alt="Badge 6" class="badge-image">
@@ -471,7 +492,7 @@
         <!-- Row 3 -->
         <div class="badge-item" data-badge="photographer">
             <img src="./assets/badges/Badge.png" alt="Badge 7" class="badge-image">
-            <img src="./assets/badges/icons/peacock-game-badge.png" alt="Proud Photographer Badge" class="badge-image collected-badge" style="display: none;">
+            <img src="./assets/badges/icons/peacock-game-badge.svg" alt="Proud Photographer Badge" class="badge-image collected-badge" style="display: none;">
         </div>
         <div class="badge-item">
             <img src="./assets/badges/Badge.png" alt="Badge 8" class="badge-image">
@@ -647,6 +668,21 @@
             if (!collectedBadges.includes(badgeId)) {
                 collectedBadges.push(badgeId);
                 localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
+                
+                // Also sync with userData.progress.badges if userData exists
+                const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+                if (userData) {
+                    if (!userData.progress) {
+                        userData.progress = { gamesCompleted: [], badges: [], highScores: {} };
+                    }
+                    if (!userData.progress.badges) {
+                        userData.progress.badges = [];
+                    }
+                    if (!userData.progress.badges.includes(badgeId)) {
+                        userData.progress.badges.push(badgeId);
+                        localStorage.setItem('userData', JSON.stringify(userData));
+                    }
+                }
             }
         }
 
@@ -661,22 +697,22 @@
             // Badge data
             const badgeData = {
                 'sunflower': {
-                    icon: './assets/badges/icons/bee-badge.png',
+                    icon: './assets/badges/icons/bee-badge.svg',
                     name: 'Garden Grower',
                     description: 'A true garden grower! You\'ve planted, watered, and nurtured a beautiful home for the bees.'
                 },
                 'walrus': {
-                    icon: './assets/badges/icons/walrusFeeding-badge.png',
+                    icon: './assets/badges/icons/walrusFeeding-badge.svg',
                     name: 'Fancy Feeder',
                     description: 'Top marks for aim and timing! You\'ve become the walrus\'s favorite feeder.'
                 },
                 'anemone': {
-                    icon: './assets/badges/icons/clownfish-game-badge.png',
+                    icon: './assets/badges/icons/clownfish-game-badge.svg',
                     name: 'Careful Cleaner',
                     description: 'Great care! You\'ve scrubbed the anemones spotless for the Clownfish.'
                 },
                 'photographer': {
-                    icon: './assets/badges/icons/peacock-game-badge.png',
+                    icon: './assets/badges/icons/peacock-game-badge.svg',
                     name: 'Proud Photographer',
                     description: 'You captured the peacock\'s proudest moment.'
                 }
