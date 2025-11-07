@@ -3,27 +3,27 @@
    ============================== */
 @font-face {
   font-family: 'BentonSans';
-  src: url('assets/fonts/BentonSansCompBlackRegular.otf') format('truetype');
+  src: url('../../assets/fonts/BentonSansCompBlackRegular.otf') format('truetype');
 }
 
 @font-face {
   font-family: 'BentonSans Book';
-  src: url('assets/fonts/BentonSans Book.otf') format('truetype');
+  src: url('../../assets/fonts/BentonSans Book.otf') format('truetype');
 }
 
 @font-face {
   font-family: 'Amatic';
-  src: url('assets/fonts/Amatic SC Regular.ttf') format('truetype');
+  src: url('../../assets/fonts/Amatic SC Regular.ttf') format('truetype');
 }
 
 @font-face {
   font-family: 'Amatic Bold';
-  src: url('assets/fonts/Amatic-Bold.ttf') format('truetype');
+  src: url('../../assets/fonts/Amatic-Bold.ttf') format('truetype');
 }
 
 @font-face {
   font-family: 'Amatic Regular';
-  src: url('assets/fonts/Amatic-Regular.ttf') format('truetype');
+  src: url('../../assets/fonts/Amatic-Regular.ttf') format('truetype');
 }
 
 .amatic-sc-regular {

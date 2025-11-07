@@ -375,7 +375,6 @@
             }
         }
 
-        /* Remove conflicting CSS animation delays - handled by JavaScript */
 
         /* Responsive adjustments */
         @media (max-width: 480px) {
@@ -470,8 +469,9 @@
         </div>
 
         <!-- Row 3 -->
-        <div class="badge-item">
+        <div class="badge-item" data-badge="photographer">
             <img src="./assets/badges/Badge.png" alt="Badge 7" class="badge-image">
+            <img src="./assets/badges/icons/peacock-game-badge.png" alt="Proud Photographer Badge" class="badge-image collected-badge" style="display: none;">
         </div>
         <div class="badge-item">
             <img src="./assets/badges/Badge.png" alt="Badge 8" class="badge-image">
@@ -674,6 +674,11 @@
                     icon: './assets/badges/icons/clownfish-game-badge.png',
                     name: 'Careful Cleaner',
                     description: 'Great care! You\'ve scrubbed the anemones spotless for the Clownfish.'
+                },
+                'photographer': {
+                    icon: './assets/badges/icons/peacock-game-badge.png',
+                    name: 'Proud Photographer',
+                    description: 'You captured the peacock\'s proudest moment.'
                 }
             };
             

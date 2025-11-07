@@ -409,6 +409,52 @@
       document.getElementById('gamecomplete').classList.add('hidden')
       document.querySelector('#click-sfx').emit('startsound')
     }
+    
+    function showBadgeCollection() {
+      // Stop background music - pause direct audio and mute A-Frame sound
+      const backgroundAudio = document.getElementById('background-mp3');
+      if (backgroundAudio) {
+        backgroundAudio.pause();
+        backgroundAudio.currentTime = 0;
+      }
+      
+      // Mute the A-Frame background sound instead of stopping it completely
+      const backgroundSfx = document.querySelector('#background-sfx');
+      if (backgroundSfx && backgroundSfx.components.sound) {
+        backgroundSfx.setAttribute('sound', 'volume', 0);
+      }
+      
+      // Add badge to collection
+      if (typeof addBadge === 'function') {
+        addBadge('photographer');
+      } else {
+        // Fallback for when badges page isn't loaded
+        let collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+        if (!collectedBadges.includes('photographer')) {
+          collectedBadges.push('photographer');
+          localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
+        }
+      }
+      
+      // Hide the game complete popup
+      document.getElementById('gamecomplete').classList.add('hidden');
+      
+      // Play TaDA celebration sound
+      const tadaAudio = document.getElementById('tada-wav');
+      if (tadaAudio) {
+        tadaAudio.play().catch(e => console.log('TaDA audio play failed:', e));
+      }
+      
+      // Show the badge splash with congratulations
+      const badgeSplash = document.getElementById('badgeSplash');
+      badgeSplash.classList.remove('hidden');
+      
+      // Auto-dismiss splash after 4 seconds and show detail screen
+      setTimeout(() => {
+        badgeSplash.classList.add('hidden');
+        document.getElementById('badgeCollection').classList.remove('hidden');
+      }, 4000);
+    }
 
     function restartGame() {
       // Play button tap sound
@@ -560,7 +606,7 @@
       <div class="badge-detail-content">
         <img src="../../assets/badges/icons/peacock-game-badge.png" class="badge-detail-icon">
         <h2 class="badge-name">Proud Photographer</h2>
-        <p class="badge-description">You captured the peacock’sproudest moment.</p>
+        <p class="badge-description">You captured the peacock's proudest moment.</p>
         <button class="primaryButton" onclick="goHome()">Continue</button>
       </div>
     </div>
