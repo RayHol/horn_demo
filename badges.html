@@ -682,8 +682,13 @@
                     if (!userData.progress.badges) {
                         userData.progress.badges = [];
                     }
+                    if (!userData.progress.badgeDates) {
+                        userData.progress.badgeDates = {};
+                    }
                     if (!userData.progress.badges.includes(badgeId)) {
                         userData.progress.badges.push(badgeId);
+                        // Store the collection date
+                        userData.progress.badgeDates[badgeId] = new Date().toISOString();
                         localStorage.setItem('userData', JSON.stringify(userData));
                     }
                     
@@ -731,14 +736,35 @@
                 icon.src = badgeData[badgeId].icon;
                 name.textContent = badgeData[badgeId].name;
                 
-                // Get current date as placeholder
-                const currentDate = new Date();
+                // Get the actual collection date from userData
+                let collectionDate = null;
+                try {
+                    const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+                    if (userData && userData.progress && userData.progress.badgeDates && userData.progress.badgeDates[badgeId]) {
+                        collectionDate = new Date(userData.progress.badgeDates[badgeId]);
+                    }
+                } catch (e) {
+                    console.warn('Error retrieving badge date:', e);
+                }
+                
+                // Format and display the date
                 const monthNames = ["January", "February", "March", "April", "May", "June",
                     "July", "August", "September", "October", "November", "December"];
-                const month = monthNames[currentDate.getMonth()];
-                const day = currentDate.getDate();
-                const year = currentDate.getFullYear();
-                date.textContent = `Collected in ${month} ${day}, ${year}`;
+                
+                if (collectionDate && !isNaN(collectionDate.getTime())) {
+                    // Use the stored collection date
+                    const month = monthNames[collectionDate.getMonth()];
+                    const day = collectionDate.getDate();
+                    const year = collectionDate.getFullYear();
+                    date.textContent = `Collected in ${month} ${day}, ${year}`;
+                } else {
+                    // Fallback to current date if no stored date (for backwards compatibility)
+                    const currentDate = new Date();
+                    const month = monthNames[currentDate.getMonth()];
+                    const day = currentDate.getDate();
+                    const year = currentDate.getFullYear();
+                    date.textContent = `Collected in ${month} ${day}, ${year}`;
+                }
                 
                 description.textContent = badgeData[badgeId].description;
                 

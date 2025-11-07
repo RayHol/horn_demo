@@ -35,6 +35,7 @@ function syncUserToCustomerIO(userData) {
         created: userData.created || new Date().toISOString(),
         badges_count: userData.progress?.badges?.length || 0,
         badges: userData.progress?.badges || [],
+        badge_dates: userData.progress?.badgeDates || {},
         games_completed_count: userData.progress?.gamesCompleted?.length || 0,
         games_completed: userData.progress?.gamesCompleted || [],
         last_seen: new Date().toISOString()
