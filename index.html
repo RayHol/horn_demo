@@ -96,11 +96,137 @@
         body {
             overflow: hidden;
         }
+
+        /* Ensure onboarding overlay appears above animated background */
+        #onboarding {
+            background: transparent;
+        }
+
+        /* Animation container - ensure full screen coverage */
+        #animation_container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            background-color: #9CCCE5;
+            overflow: hidden;
+        }
+
+        /* Support for mobile viewport units */
+        @supports (height: 100dvh) {
+            #animation_container {
+                height: 100dvh;
+            }
+        }
+
+        /* Fix for mobile Safari */
+        @supports (-webkit-touch-callout: none) {
+            #animation_container {
+                height: -webkit-fill-available;
+            }
+        }
+
+        /* Canvas - let makeResponsive handle sizing, just ensure it's positioned correctly */
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: block;
+        }
+
+        /* DOM overlay container */
+        #dom_overlay_container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        /* Onboarding element animations - initially hidden */
+        .onboarding-logo,
+        .onboarding-title,
+        #startButton,
+        #continueButton {
+            opacity: 0;
+            transform: scale(0);
+            transition: none;
+        }
+
+        /* Grow animation with overshoot effect */
+        @keyframes growIn {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            80% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Classes to trigger animations */
+        .onboarding-logo.animate-in {
+            animation: growIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        .onboarding-title.animate-in {
+            animation: growIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        #startButton.animate-in,
+        #continueButton.animate-in {
+            animation: growIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        /* Welcome message should also be hidden initially if shown */
+        #welcomeMessage {
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        /* When welcome message is shown, animate it with the title */
+        #welcomeMessage.animate-in {
+            animation: growIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        /* Fade out animation */
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+
+        /* Classes to trigger fade out */
+        .onboarding-logo.animate-out,
+        .onboarding-title.animate-out,
+        #startButton.animate-out,
+        #continueButton.animate-out,
+        #welcomeMessage.animate-out {
+            animation: fadeOut 0.5s ease-in forwards;
+        }
     </style>
 
   </head>
 
   <body>
+    <!-- Landing Page Animated Background (Adobe Animate/CreateJS) -->
+    <div id="animation_container">
+      <canvas id="canvas" width="640" height="1136"></canvas>
+      <div id="dom_overlay_container"></div>
+    </div>
+
     <!-- Orientation Warning Overlay -->
     <div id="orientationOverlay" class="orientation-overlay hidden">
       <div class="orientation-content">
@@ -117,9 +243,9 @@
       </header>
       <main class="onboarding-content">
         <h1 class="onboarding-title" id="welcomeTitle">Animals Everywhere!</h1>
-        <p id="welcomeMessage" class="description" style="display: none; margin: 20px 0; font-size: 24px; color: var(--text-color);">Welcome back,<br><span id="welcomeNickname"></span>!</p>
-        <button id="startButton" onclick="window.location.href='nickname.html'" class="button" aria-label="Start the game" style="display: block;">Start</button>
-        <button id="continueButton" onclick="window.location.href='menu.html'" class="button" style="display: none;" aria-label="Continue to menu">Continue</button>
+        <p id="welcomeMessage" class="description" style="display: none;">Welcome back,<br><span id="welcomeNickname"></span>!</p>
+        <button id="startButton" onclick="handleStartClick('nickname.html')" class="button" aria-label="Start the game" style="display: block;">Start</button>
+        <button id="continueButton" onclick="handleStartClick('menu.html')" class="button" style="display: none;" aria-label="Continue to menu">Continue</button>
       </main>
     </div>
 
@@ -372,6 +498,209 @@
             // If anything fails, at least the page should still render
             console.error('Initialization error:', e);
         }
+    </script>
+
+    <!-- Adobe Animate/CreateJS Animation Scripts -->
+    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+    <script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
+    <script src="landing-ani.js"></script>
+    <script>
+      var canvas, stage, exportRoot, anim_container, dom_overlay_container, fnStartAnimation;
+      var animationLib, isReversing = false, pendingNavigation = null;
+      
+      function init() {
+        canvas = document.getElementById("canvas");
+        anim_container = document.getElementById("animation_container");
+        dom_overlay_container = document.getElementById("dom_overlay_container");
+        var comp = AdobeAn.getComposition("31388C4C00097D4D8EE56250BF6D718A");
+        animationLib = comp.getLibrary();
+        var loader = new createjs.LoadQueue(false);
+        loader.addEventListener("fileload", function(evt){handleFileLoad(evt,comp)});
+        loader.addEventListener("complete", function(evt){handleComplete(evt,comp)});
+        var lib = comp.getLibrary();
+        loader.loadManifest(lib.properties.manifest);
+      }
+      function handleFileLoad(evt, comp) {
+        var images = comp.getImages();	
+        if (evt && (evt.item.type == "image")) { images[evt.item.id] = evt.result; }	
+      }
+      function handleComplete(evt,comp) {
+        var lib = comp.getLibrary();
+        var ss = comp.getSpriteSheet();
+        var queue = evt.target;
+        var ssMetadata = lib.ssMetadata;
+        for(i = 0; i < ssMetadata.length; i++) {
+          ss[ssMetadata[i].name] = new createjs.SpriteSheet( {"images": [queue.getResult(ssMetadata[i].name)], "frames": ssMetadata[i].frames} )
+        }
+        exportRoot = new lib.landingani2();
+        stage = new lib.Stage(canvas);	
+        fnStartAnimation = function() {
+          stage.addChild(exportRoot);
+          createjs.Ticker.framerate = lib.properties.fps;
+          createjs.Ticker.addEventListener("tick", handleAnimationTick);
+          // Start playing the animation forward
+          exportRoot.play();
+        }	    
+        // Ensure container is full screen before makeResponsive runs
+        anim_container.style.width = window.innerWidth + 'px';
+        anim_container.style.height = window.innerHeight + 'px';
+        
+        // Use scaleType 1 (Math.min) to maintain aspect ratio - original setting
+        AdobeAn.makeResponsive(true,'both',true,1,[canvas,anim_container,dom_overlay_container]);
+        
+        // Re-apply container size after makeResponsive (it may override it)
+        setTimeout(function() {
+          anim_container.style.width = window.innerWidth + 'px';
+          anim_container.style.height = window.innerHeight + 'px';
+        }, 50);
+        
+        // Handle resize and orientation changes
+        window.addEventListener('resize', function() {
+          anim_container.style.width = window.innerWidth + 'px';
+          anim_container.style.height = window.innerHeight + 'px';
+        });
+        window.addEventListener('orientationchange', function() {
+          setTimeout(function() {
+            anim_container.style.width = window.innerWidth + 'px';
+            anim_container.style.height = window.innerHeight + 'px';
+          }, 200);
+        });	
+        AdobeAn.compositionLoaded(lib.properties.id);
+        fnStartAnimation();
+        
+        // Animate in onboarding elements after background animation completes
+        // Background animation is 60 frames at 30fps = 2 seconds
+        setTimeout(function() {
+          animateOnboardingElements();
+        }, 2000);
+      }
+      
+      // Function to animate onboarding elements in sequence
+      function animateOnboardingElements() {
+        var logo = document.querySelector('.onboarding-logo');
+        var title = document.querySelector('.onboarding-title');
+        var startButton = document.getElementById('startButton');
+        var continueButton = document.getElementById('continueButton');
+        
+        // Determine which button is visible
+        var activeButton = null;
+        if (startButton && startButton.style.display !== 'none') {
+          activeButton = startButton;
+        } else if (continueButton && continueButton.style.display !== 'none') {
+          activeButton = continueButton;
+        }
+        
+        // Animate logo first
+        if (logo) {
+          logo.classList.add('animate-in');
+        }
+        
+        // Animate title after 0.3 seconds (and welcome message if shown)
+        setTimeout(function() {
+          if (title) {
+            title.classList.add('animate-in');
+          }
+          var welcomeMessage = document.getElementById('welcomeMessage');
+          if (welcomeMessage && welcomeMessage.style.display !== 'none') {
+            welcomeMessage.classList.add('animate-in');
+          }
+        }, 300);
+        
+        // Animate button after 0.6 seconds
+        setTimeout(function() {
+          if (activeButton) {
+            activeButton.classList.add('animate-in');
+          }
+        }, 600);
+      }
+      
+      // Handle animation tick to check for reverse completion
+      function handleAnimationTick(event) {
+        if (isReversing && exportRoot) {
+          // Manually step backwards through frames
+          var currentFrame = exportRoot.currentFrame;
+          if (currentFrame > 0) {
+            // Go to previous frame (stop prevents forward auto-advance)
+            exportRoot.stop();
+            exportRoot.gotoAndStop(Math.max(0, currentFrame - 1));
+          } else {
+            // Reached the beginning, stop and navigate
+            isReversing = false;
+            exportRoot.stop();
+            if (pendingNavigation) {
+              window.location.href = pendingNavigation;
+            }
+          }
+        }
+        // Update stage (CreateJS handles normal forward playback automatically)
+        stage.update(event);
+      }
+      
+      // Function to fade out onboarding elements
+      function fadeOutOnboardingElements() {
+        var logo = document.querySelector('.onboarding-logo');
+        var title = document.querySelector('.onboarding-title');
+        var startButton = document.getElementById('startButton');
+        var continueButton = document.getElementById('continueButton');
+        var welcomeMessage = document.getElementById('welcomeMessage');
+        
+        // Remove animate-in class and add animate-out class
+        if (logo) {
+          logo.classList.remove('animate-in');
+          logo.classList.add('animate-out');
+        }
+        if (title) {
+          title.classList.remove('animate-in');
+          title.classList.add('animate-out');
+        }
+        if (startButton) {
+          startButton.classList.remove('animate-in');
+          startButton.classList.add('animate-out');
+        }
+        if (continueButton) {
+          continueButton.classList.remove('animate-in');
+          continueButton.classList.add('animate-out');
+        }
+        if (welcomeMessage) {
+          welcomeMessage.classList.remove('animate-in');
+          welcomeMessage.classList.add('animate-out');
+        }
+      }
+      
+      // Handle button click - reverse animation then navigate
+      function handleStartClick(url) {
+        // Prevent multiple clicks
+        if (isReversing) return;
+        
+        // Disable buttons
+        var startButton = document.getElementById('startButton');
+        var continueButton = document.getElementById('continueButton');
+        if (startButton) startButton.disabled = true;
+        if (continueButton) continueButton.disabled = true;
+        
+        // Fade out onboarding elements
+        fadeOutOnboardingElements();
+        
+        // Store the URL to navigate to
+        pendingNavigation = url;
+        
+        // Start reversing the animation
+        if (exportRoot && exportRoot.totalFrames > 0) {
+          isReversing = true;
+          // Stop normal playback - tick handler will manually reverse
+          exportRoot.stop();
+        } else {
+          // If animation isn't ready, just navigate
+          window.location.href = url;
+        }
+      }
+      
+      // Initialize animation when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
     </script>
 
     <!-- Google tag (gtag.js) - moved to end to avoid blocking page load -->
