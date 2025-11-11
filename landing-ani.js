@@ -262,7 +262,7 @@ if (reversed == null) { reversed = false; }
 	this.shape.graphics.f("#237661").s().p("EggLAVIMAAHgncIgBABQAAg8AuALQAjAJAhAiQAVAWALAkQAGAYAFArQAFAtAHAXQAKAkAUAVQgVhoBZhTQBYhTBnAbQAEguAiglQAigmAugJQAvgJAtAUQAtAVAXApQAzg+BFghQBKgjBKAHQBPAIA6A5QA9A6AABLQBggEBMBJQBMBKgDBgQAYgzA/gPQA+gPAvAhQAvAhALA+QAJA4gaAxQAkgmA4gLQA8gLAyAZQAyAZAaA2QAZA2gMA3QAig/BGgcQBIgcBDAYQBEAXAmBDQAmBCgNBGQAcgbAqgFQAmgEAnARQAmARAYAeQAZAhgBAnQAggQAkAKQAiAJAbAcQAbAcAHAiQAJAlgTAfQBBgHApBCQAoBCgkA3QApgOAhAoQAeAmgSAjQAVgkArgRQAsgRAqAOQAqAPAYAqQAWAogHApQAHgfAbgVQAcgXAiABQAiACAbAZQAPAPAIARQAAgLAEgMQAKgbAYgJQAZgJAZAPQAMAHAIAJQgEgSAHgVQANgkAggJQAggJAeAYQAYAUACAaQABgcARgaQATgeAhgNQANAZAbAwQgEgvAhgpQAggqAwgGQAwgGArAeQAqAfAJAvQABgiAogNQAngNAeAVQAwAhAIBcIAATmg");
 	this.shape.setTransform(368.5902,241.8355,1.789,1.789);
 
-	this.timeline.addTween(cjs.Tween.get(this.shape).wait(59).to({scaleX:1.624,scaleY:1.624,x:368.5578,y:241.7666},0).wait(1));
+	this.timeline.addTween(cjs.Tween.get(this.shape).wait(59).to({scaleX:1.789,scaleY:1.789,x:368.5578,y:241.7666},0).wait(1));
 
 	this._renderFirstFrame();
 

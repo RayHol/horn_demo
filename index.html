@@ -196,6 +196,251 @@
             animation: growIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
         }
 
+        /* Butterfly Container - keeps element always in viewport to prevent GIF pausing */
+        .butterfly-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10001;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        /* Butterfly Animation Styles */
+        .butterfly-animation {
+            position: absolute;
+            width: 60px;
+            height: auto;
+            opacity: 0;
+            will-change: transform, opacity;
+            /* Position at top of viewport, centered horizontally */
+            top: 0;
+            left: 50%;
+            transform-origin: center center;
+            /* Force browser to keep animating by ensuring element stays in viewport */
+            image-rendering: auto;
+        }
+
+        /* Butterfly fade in */
+        @keyframes butterflyFadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Butterfly flutter path - slow, organic movement in top portion of screen */
+        /* Element stays within viewport bounds to prevent GIF pausing */
+        /* Using viewport units to keep it in the top area but higher up */
+        @keyframes butterflyFlutter {
+            0% {
+                transform: translate(calc(-50% - 30vw), 8vh) rotate(-25deg);
+            }
+            10% {
+                transform: translate(calc(-50% - 15vw), 6vh) rotate(10deg);
+            }
+            20% {
+                transform: translate(calc(-50% + 0vw), 5vh) rotate(-15deg);
+            }
+            30% {
+                transform: translate(calc(-50% + 20vw), 7vh) rotate(20deg);
+            }
+            40% {
+                transform: translate(calc(-50% + 40vw), 6vh) rotate(-10deg);
+            }
+            50% {
+                transform: translate(calc(-50% + 60vw), 8vh) rotate(15deg);
+            }
+            60% {
+                transform: translate(calc(-50% + 50vw), 9vh) rotate(-20deg);
+            }
+            70% {
+                transform: translate(calc(-50% + 30vw), 7vh) rotate(10deg);
+            }
+            80% {
+                transform: translate(calc(-50% + 10vw), 8vh) rotate(-15deg);
+            }
+            90% {
+                transform: translate(calc(-50% - 10vw), 6vh) rotate(20deg);
+            }
+            100% {
+                transform: translate(calc(-50% - 30vw), 8vh) rotate(-25deg);
+            }
+        }
+
+        /* Butterfly fade out */
+        @keyframes butterflyFadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* Butterfly states */
+        #butterfly.animate-in {
+            animation: butterflyFadeIn 1s ease-in forwards,
+                       butterflyFlutter 25s ease-in-out infinite;
+            /* Force browser to keep GIF animating */
+            animation-play-state: running !important;
+        }
+
+        #butterfly.animate-out {
+            animation: butterflyFadeOut 0.5s ease-in forwards;
+        }
+        
+        /* Additional CSS to prevent GIF pausing - ensure element is always considered visible */
+        #butterfly {
+            content-visibility: auto;
+            contain: none;
+            /* Force browser to keep rendering the GIF */
+            backface-visibility: visible;
+            transform-style: preserve-3d;
+        }
+
+        /* Bee Container - keeps element always in viewport to prevent GIF pausing */
+        .bee-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10001;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        /* Bee Animation Styles */
+        .bee-animation {
+            position: absolute;
+            width: 50px;
+            height: auto;
+            opacity: 0;
+            will-change: transform, opacity;
+            /* Position at center of viewport */
+            top: 50%;
+            left: 50%;
+            transform-origin: center center;
+            image-rendering: auto;
+        }
+
+        /* Bee fade in */
+        @keyframes beeFadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Bee erratic path - faster, more erratic movement with hover moments */
+        /* scaleX: -1 flips the bee horizontally when moving right (X increasing), scaleX: 1 when moving left (X decreasing) */
+        @keyframes beeErraticPath {
+            /* 0-12%: Moving right (X: -40vw → -20vw → -10vw) - flip to face right */
+            0% {
+                transform: translate(calc(-50% - 40vw), calc(-50% + 25vh)) rotate(-30deg) scaleX(1);
+            }
+            5% {
+                transform: translate(calc(-50% - 20vw), calc(-50% + 20vh)) rotate(25deg) scaleX(-1);
+            }
+            10% {
+                transform: translate(calc(-50% - 10vw), calc(-50% + 18vh)) rotate(-20deg) scaleX(-1);
+            }
+            12% {
+                transform: translate(calc(-50% - 10vw), calc(-50% + 18vh)) rotate(-20deg) scaleX(-1);
+            }
+            /* 15-42%: Moving right (X: -10vw → +5vw → +25vw → +45vw → +60vw → +80vw) - keep facing right */
+            15% {
+                transform: translate(calc(-50% + 5vw), calc(-50% + 22vh)) rotate(35deg) scaleX(-1);
+            }
+            20% {
+                transform: translate(calc(-50% + 25vw), calc(-50% + 15vh)) rotate(-25deg) scaleX(-1);
+            }
+            25% {
+                transform: translate(calc(-50% + 45vw), calc(-50% + 28vh)) rotate(30deg) scaleX(-1);
+            }
+            28% {
+                transform: translate(calc(-50% + 45vw), calc(-50% + 28vh)) rotate(30deg) scaleX(-1);
+            }
+            32% {
+                transform: translate(calc(-50% + 60vw), calc(-50% + 20vh)) rotate(-35deg) scaleX(-1);
+            }
+            38% {
+                transform: translate(calc(-50% + 80vw), calc(-50% + 25vh)) rotate(20deg) scaleX(-1);
+            }
+            42% {
+                transform: translate(calc(-50% + 80vw), calc(-50% + 25vh)) rotate(20deg) scaleX(-1);
+            }
+            /* 48-100%: Moving left (X: +80vw → +70vw → +50vw → +30vw → +10vw → -15vw → -30vw → -35vw → -40vw) - flip to face left */
+            48% {
+                transform: translate(calc(-50% + 70vw), calc(-50% + 30vh)) rotate(-28deg) scaleX(1);
+            }
+            55% {
+                transform: translate(calc(-50% + 50vw), calc(-50% + 18vh)) rotate(32deg) scaleX(1);
+            }
+            60% {
+                transform: translate(calc(-50% + 30vw), calc(-50% + 24vh)) rotate(-22deg) scaleX(1);
+            }
+            65% {
+                transform: translate(calc(-50% + 30vw), calc(-50% + 24vh)) rotate(-22deg) scaleX(1);
+            }
+            72% {
+                transform: translate(calc(-50% + 10vw), calc(-50% + 20vh)) rotate(28deg) scaleX(1);
+            }
+            78% {
+                transform: translate(calc(-50% - 15vw), calc(-50% + 26vh)) rotate(-30deg) scaleX(1);
+            }
+            82% {
+                transform: translate(calc(-50% - 15vw), calc(-50% + 26vh)) rotate(-30deg) scaleX(1);
+            }
+            88% {
+                transform: translate(calc(-50% - 30vw), calc(-50% + 22vh)) rotate(25deg) scaleX(1);
+            }
+            95% {
+                transform: translate(calc(-50% - 35vw), calc(-50% + 25vh)) rotate(-28deg) scaleX(1);
+            }
+            100% {
+                transform: translate(calc(-50% - 40vw), calc(-50% + 25vh)) rotate(-30deg) scaleX(1);
+            }
+        }
+
+        /* Bee fade out */
+        @keyframes beeFadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* Bee states */
+        #bee.animate-in {
+            animation: beeFadeIn 1s ease-in forwards,
+                       beeErraticPath 18s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            /* Force browser to keep GIF animating */
+            animation-play-state: running !important;
+        }
+
+        #bee.animate-out {
+            animation: beeFadeOut 0.5s ease-in forwards;
+        }
+        
+        /* Additional CSS to prevent GIF pausing - ensure element is always considered visible */
+        #bee {
+            content-visibility: auto;
+            contain: none;
+            /* Force browser to keep rendering the GIF */
+            backface-visibility: visible;
+            transform-style: preserve-3d;
+        }
+
         /* Fade out animation */
         @keyframes fadeOut {
             0% {
@@ -234,6 +479,16 @@
         <h2>Please Rotate Your Device</h2>
         <p>Hold your device in portrait mode for the best experience</p>
       </div>
+    </div>
+
+    <!-- Butterfly Animation -->
+    <div class="butterfly-container">
+      <img id="butterfly" src="./assets/Landing/bfly-ani.gif" alt="Butterfly" class="butterfly-animation">
+    </div>
+
+    <!-- Bee Animation -->
+    <div class="bee-container">
+      <img id="bee" src="./assets/Landing/bee-ani.gif" alt="Bee" class="bee-animation">
     </div>
 
     <!-- HTML Overlay for Onboarding -->
@@ -581,6 +836,8 @@
         var title = document.querySelector('.onboarding-title');
         var startButton = document.getElementById('startButton');
         var continueButton = document.getElementById('continueButton');
+        var butterfly = document.getElementById('butterfly');
+        var bee = document.getElementById('bee');
         
         // Determine which button is visible
         var activeButton = null;
@@ -593,6 +850,25 @@
         // Animate logo first
         if (logo) {
           logo.classList.add('animate-in');
+        }
+        
+        // Animate butterfly - fade in and start fluttering
+        if (butterfly) {
+          setTimeout(function() {
+            butterfly.classList.add('animate-in');
+            // Force GIF to keep animating by periodically "touching" it
+            // This prevents browsers from pausing the GIF when it goes off-screen
+            keepGifAnimating(butterfly);
+          }, 500);
+        }
+        
+        // Animate bee - fade in and start erratic movement
+        if (bee) {
+          setTimeout(function() {
+            bee.classList.add('animate-in');
+            // Force GIF to keep animating
+            keepGifAnimating(bee);
+          }, 800);
         }
         
         // Animate title after 0.3 seconds (and welcome message if shown)
@@ -612,6 +888,28 @@
             activeButton.classList.add('animate-in');
           }
         }, 600);
+      }
+      
+      // Function to keep GIF animating even when off-screen
+      function keepGifAnimating(imgElement) {
+        if (!imgElement) return;
+        
+        // Periodically force the browser to keep the GIF active
+        // by temporarily changing a property that forces a re-render
+        setInterval(function() {
+          if (imgElement && imgElement.classList.contains('animate-in')) {
+            // Force a reflow/repaint to keep GIF animating
+            var currentSrc = imgElement.src;
+            // Add a cache-busting parameter that doesn't actually change
+            imgElement.src = currentSrc.split('?')[0] + '?t=' + Date.now();
+            // Immediately restore to prevent flicker
+            setTimeout(function() {
+              if (imgElement) {
+                imgElement.src = currentSrc.split('?')[0];
+              }
+            }, 10);
+          }
+        }, 1000); // Check every second
       }
       
       // Handle animation tick to check for reverse completion
@@ -643,6 +941,8 @@
         var startButton = document.getElementById('startButton');
         var continueButton = document.getElementById('continueButton');
         var welcomeMessage = document.getElementById('welcomeMessage');
+        var butterfly = document.getElementById('butterfly');
+        var bee = document.getElementById('bee');
         
         // Remove animate-in class and add animate-out class
         if (logo) {
@@ -664,6 +964,14 @@
         if (welcomeMessage) {
           welcomeMessage.classList.remove('animate-in');
           welcomeMessage.classList.add('animate-out');
+        }
+        if (butterfly) {
+          butterfly.classList.remove('animate-in');
+          butterfly.classList.add('animate-out');
+        }
+        if (bee) {
+          bee.classList.remove('animate-in');
+          bee.classList.add('animate-out');
         }
       }
       
