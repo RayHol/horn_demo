@@ -13,11 +13,11 @@
                             if (p.state === 'granted') {
                                 try { localStorage.setItem('geopin-location-permission','granted'); } catch(_) {}
                             } else {
-                                window.location.replace('./index.html');
+                                window.location.replace('../index.html');
                             }
-                        }).catch(function(){ window.location.replace('./index.html'); });
+                        }).catch(function(){ window.location.replace('../index.html'); });
                     } else {
-                        window.location.replace('./index.html');
+                        window.location.replace('../index.html');
                     }
                 }
             } catch (_) { /* if storage blocked, just continue */ }

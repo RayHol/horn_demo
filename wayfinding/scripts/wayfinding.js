@@ -1132,8 +1132,8 @@
 
         if (leaveConfirmButton) {
             leaveConfirmButton.addEventListener('click', () => {
-                // Navigate to index page
-                window.location.href = './index.html';
+                // Navigate to menu page
+                window.location.href = '../menu.html';
             });
         }
 
