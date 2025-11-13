@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Animals Everywhere! - Wayfinding Map</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./scripts/style.css">
+    <link rel="stylesheet" href="./scripts/wayfinding.css">
+</head>
+<body>
+    <button class="back-button" id="backButton" aria-label="Back to menu">
+        <img src="./assets/ui/close_button.png" alt="Back">
+    </button>
+    
+    <button class="help-button" id="helpButton" aria-label="Help">?</button>
+    
+    <!-- Orientation Warning Overlay -->
+    <div id="orientationOverlay" class="orientation-overlay hidden">
+        <div class="orientation-content">
+            <div class="orientation-icon">📱</div>
+            <h2>Please Rotate Your Device</h2>
+            <p>Hold your device in portrait mode for the best experience</p>
+        </div>
+    </div>
+
+    <!-- Instructions Overlay -->
+    <div id="instructionsOverlay" class="instructions-overlay hidden">
+        <div class="instructions-content">
+            <h2>How to Use the Map</h2>
+            <ul>
+                <li>Move around and watch your location on the map</li>
+                <li>Follow hotspots to find animals</li>
+                <li>You will get an alert when you are close</li>
+                <li>Scan the area to collect the animal and its badge</li>
+            </ul>
+            <button class="instructions-close" id="instructionsClose">Got it!</button>
+        </div>
+    </div>
+
+    <!-- Leave Confirmation Overlay -->
+    <div id="leaveConfirmationOverlay" class="instructions-overlay hidden">
+        <div class="instructions-content">
+            <h2>You are leaving the map</h2>
+            <p class="leave-confirm-message">Stay on this page in order to be notified about where the animals are</p>
+            <div class="leave-confirm-buttons">
+                <button class="leave-confirm-close" id="leaveConfirmClose">✕</button>
+                <button class="instructions-close" id="leaveConfirmButton">Leave</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boundary Warning Overlay -->
+    <div id="boundaryWarningOverlay" class="instructions-overlay hidden">
+        <div class="instructions-content">
+            <button class="boundary-warning-close" id="boundaryWarningClose">✕</button>
+            <h2>Leaving the Animal Area</h2>
+            <p class="boundary-warning-message">You are leaving the find the animals area. Please return to the grounds to continue your search.</p>
+        </div>
+    </div>
+
+    <!-- Proximity Notification -->
+    <div id="proximityNotification" class="proximity-notification"></div>
+
+    <!-- Open Camera Button -->
+    <button id="openCameraBtn" class="open-camera-btn">Open Camera</button>
+
+    <!-- Recenter Map Button -->
+    <button id="recenterBtn" class="recenter-btn" aria-label="Recenter map to your location">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path d="M12 1v6m0 8v6M1 12h6m8 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </button>
+
+    <!-- Map Container -->
+    <div class="map-container" id="mapContainer">
+        <img src="./assets/Map-image.png" alt="Interactive Map" class="map-image" id="mapImage">
+        <div class="user-location-dot" id="userLocationDot"></div>
+        <div id="animalHotspots"></div>
+    </div>
+
+
+    <script src="./scripts/map-config.js"></script>
+    <script src="./scripts/wayfinding.js"></script>
+</body>
+</html>
+

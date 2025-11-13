@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, minimum-scale=1, maximum-scale=1, initial-scale=1, user-scalable=no, user-scalable=0"/>
+    <title>Geo-AnimalsAR</title>
+    <link rel="preload" as="audio" href="./Geo-pin-app/assets/bell.mp3">
+    <link rel="stylesheet" type="text/css" href="./scripts/style.css"/>
+    <style>
+        body { margin: 0; font-family: 'BentonSans Book', sans-serif; background: var(--Background-main); color: var(--Texts-textMain); font-size: 18px; }
+        .container { max-width: 520px; margin: 0 auto; padding: 16px; }
+        .card { background: rgba(255,255,255,0.8); border: 1px solid rgba(58,46,39,0.1); border-radius: 12px; padding: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .title { font-size: 1.75rem; margin-bottom: 16px; color: var(--Texts-textMain); font-family: 'Amatic SC', sans-serif; font-weight: 700; }
+        .status { margin-top: 12px; color: var(--Texts-textMain); font-size: 1.1rem; opacity: 0.8; }
+        .btn { width: 100%; max-width: 220px; }
+        /* Modal */
+        .modal__content { margin-bottom: 12px; }
+        .modal__actions { display: flex; gap: 10px; justify-content: flex-end; }
+    </style>
+    <script>
+        (function(){
+            try {
+                var granted = localStorage.getItem('geopin-location-permission') === 'granted';
+                if (!granted && navigator.permissions && navigator.permissions.query) {
+                    navigator.permissions.query({ name: 'geolocation' }).then(function(p){
+                        if (p.state === 'granted') {
+                            try { localStorage.setItem('geopin-location-permission','granted'); } catch(_) {}
+                        }
+                    }).catch(function(){});
+                }
+            } catch(_) {}
+        })();
+    </script>
+    <script defer src="./scripts/proximity.js"></script>
+    <link rel="stylesheet" type="text/css" href="./scripts/style.css"/>
+    <!-- reuse modal styles from scripts/style.css if present -->
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="title">Location Tracking</div>
+            <button id="enableBtn" class="btn">Enable Location</button>
+            <div id="status" class="status">Location tracking disabled</div>
+        </div>
+
+        <div class="card" style="margin-top:12px; text-align:center;">
+            <div class="title">AR Experience</div>
+            <button id="startArBtn" class="btn" disabled>Start AR Game</button>
+            <div class="status" id="arHint">Get near a location to enable</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="nearbyModal" hidden>
+        <div class="modal">
+            <div class="modal__content" id="nearbyText">An animal is nearby</div>
+            <button class="modal__close" aria-label="Close">✕</button>
+            <div class="modal__actions"></div>
+        </div>
+    </div>
+</body>
+</html>
+

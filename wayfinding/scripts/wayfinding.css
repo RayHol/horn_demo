@@ -1,0 +1,594 @@
+/* Wayfinding Map Page Styles */
+
+/* Font Imports */
+@font-face {
+    font-family: 'BentonSans Comp Black';
+    src: url('../assets/fonts/BentonSansCompBlackRegular.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'BentonSans Book';
+    src: url('../assets/fonts/BentonSans Book.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+}
+
+/* CSS Variables (additional to style.css) */
+:root {
+    --primary-color: #BD3B00;
+    --button-shadow: #962F00;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Dynamic viewport height support */
+@supports (height: 100dvh) {
+    body {
+        height: 100dvh;
+    }
+}
+
+/* Fix for mobile Safari */
+@supports (-webkit-touch-callout: none) {
+    body {
+        min-height: -webkit-fill-available;
+    }
+}
+
+body {
+    background-color: #FCF6EF !important;
+    background-image: none !important;
+    min-height: 100vh;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.map-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    cursor: grab;
+}
+
+.map-container:active {
+    cursor: grabbing;
+}
+
+.map-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.2);
+    max-width: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
+    transition: transform 0.1s ease-out;
+}
+
+.map-image.dragging {
+    transition: none;
+}
+
+/* User location dot */
+.user-location-dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background-color: #0066FF;
+    border: 3px solid white;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0.8;
+    }
+}
+
+/* Animal hotspot pins */
+.animal-hotspot {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    transform: translate(-50%, -50%);
+    z-index: 90;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.animal-pin {
+    width: 100%;
+    height: 100%;
+    background-color: #C14400;
+    border: 2px solid white;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+.animal-pin::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 8px;
+    height: 8px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+.animal-pin-label {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(58, 46, 39, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'BentonSans Book', sans-serif;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.animal-hotspot:hover .animal-pin-label,
+.animal-hotspot.active .animal-pin-label {
+    opacity: 1;
+}
+
+/* Back button */
+.back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 12px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0px 4px 0px 0px var(--button-shadow);
+}
+
+.back-button:hover {
+    transform: translateY(2px);
+    box-shadow: 0px 2px 0px 0px var(--button-shadow);
+}
+
+.back-button:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+.back-button img {
+    width: 24px;
+    height: 24px;
+}
+
+/* Help button */
+.help-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 12px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0px 4px 0px 0px var(--button-shadow);
+    font-size: 24px;
+    color: white;
+    font-weight: bold;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.help-button:hover {
+    transform: translateY(2px);
+    box-shadow: 0px 2px 0px 0px var(--button-shadow);
+}
+
+.help-button:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+/* Instructions overlay */
+.instructions-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.instructions-overlay.hidden {
+    display: none;
+}
+
+.instructions-content {
+    background-color: #FCF6EF;
+    border: 3px solid #E7D4A3;
+    border-radius: 1rem;
+    padding: 2rem;
+    max-width: 400px;
+    margin: 1rem;
+    box-shadow: 0px 4px 0px 0px #E7D4A3;
+    position: relative;
+}
+
+/* Leave confirmation content has close button in top right */
+#leaveConfirmationOverlay .instructions-content {
+    padding-top: 2.5rem; /* Extra padding at top for close button */
+}
+
+.instructions-content h2 {
+    color: #C14400;
+    font-family: "Amatic SC", sans-serif;
+    font-weight: 700;
+    font-size: 2rem;
+    margin: 0 0 1rem 0;
+    text-align: center;
+}
+
+.instructions-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+}
+
+.instructions-content li {
+    color: #333;
+    font-family: 'BentonSans Book', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.instructions-content li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: #C14400;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.instructions-close {
+    width: 100%;
+    padding: 12px 24px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'BentonSans Comp Black', sans-serif;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0px 4px 0px 0px var(--button-shadow);
+    transition: all 0.2s ease;
+}
+
+.instructions-close:hover {
+    transform: translateY(2px);
+    box-shadow: 0px 2px 0px 0px var(--button-shadow);
+}
+
+.instructions-close:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+/* Proximity notification area */
+.proximity-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--Background-main);
+    color: var(--Texts-textMain);
+    border: 2px solid var(--Texts-textMain);
+    border-radius: 12px;
+    padding: 16px 20px;
+    min-width: 220px;
+    max-width: 80vw;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    font-family: 'BentonSans Book', sans-serif;
+    font-size: 1.1em;
+    text-align: center;
+    z-index: 1000;
+    display: none;
+}
+
+.proximity-notification.show {
+    display: block;
+}
+
+.proximity-notification.nearby {
+    opacity: 0.9;
+    font-size: 1em;
+}
+
+/* Open Camera button */
+.open-camera-btn {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px 24px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'BentonSans Comp Black', sans-serif;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0px 4px 0px 0px var(--button-shadow);
+    transition: all 0.2s ease;
+    display: none;
+}
+
+.open-camera-btn.show {
+    display: block;
+}
+
+.open-camera-btn:hover:not(:disabled) {
+    transform: translateX(-50%) translateY(2px);
+    box-shadow: 0px 2px 0px 0px var(--button-shadow);
+}
+
+.open-camera-btn:active:not(:disabled) {
+    transform: translateX(-50%) translateY(4px);
+    box-shadow: none;
+}
+
+.open-camera-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Recenter Map Button */
+.recenter-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 12px;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0px 4px 0px 0px var(--button-shadow);
+    transition: all 0.2s ease;
+    color: white;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.recenter-btn:hover {
+    transform: translateY(2px);
+    box-shadow: 0px 2px 0px 0px var(--button-shadow);
+}
+
+.recenter-btn:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+.recenter-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Orientation Warning Overlay */
+.orientation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.orientation-content {
+    background-color: #FCF6EF;
+    border: 3px solid #E7D4A3;
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    max-width: 300px;
+    margin: 1rem;
+    box-shadow: 0px 4px 0px 0px #E7D4A3;
+}
+
+.orientation-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: rotateToPortrait 2.5s ease-in-out infinite;
+    transform-origin: 0 100%;
+    display: inline-block;
+}
+
+.orientation-content h2 {
+    color: #C14400;
+    font-family: "Amatic SC", sans-serif;
+    font-weight: 700;
+    font-size: 2rem;
+    margin: 0 0 1rem 0;
+}
+
+.orientation-content p {
+    color: #333;
+    font-size: 1.1rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+@keyframes rotateToPortrait {
+    0% { transform: rotate(-90deg); opacity: 1; }
+    40% { transform: rotate(0deg); opacity: 1; }
+    60% { transform: rotate(0deg); opacity: 1; }
+    70% { transform: rotate(0deg); opacity: 0; }
+    71% { transform: rotate(-90deg); opacity: 0; }
+    80% { transform: rotate(-90deg); opacity: 1; }
+    100% { transform: rotate(-90deg); opacity: 1; }
+}
+
+/* Leave Confirmation Overlay */
+.leave-confirm-message {
+    color: #333;
+    font-family: 'BentonSans Book', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0 0 1.5rem 0;
+    text-align: center;
+}
+
+/* Boundary Warning Overlay */
+.boundary-warning-message {
+    color: #333;
+    font-family: 'BentonSans Book', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+    text-align: center;
+}
+
+#boundaryWarningOverlay .instructions-content {
+    padding-top: 2.5rem; /* Extra padding at top for close button */
+}
+
+.boundary-warning-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: var(--Texts-textMain);
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    z-index: 10;
+    font-weight: bold;
+}
+
+.boundary-warning-close:hover {
+    opacity: 0.8;
+}
+
+.boundary-warning-close:active {
+    opacity: 0.6;
+}
+
+.leave-confirm-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.leave-confirm-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: var(--Texts-textMain);
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    z-index: 10;
+    font-weight: bold;
+}
+
+.leave-confirm-close:hover {
+    opacity: 0.8;
+}
+
+.leave-confirm-close:active {
+    opacity: 0.6;
+}
+
+#leaveConfirmButton {
+    width: 100%;
+}
+
+/* Hidden class */
+.hidden {
+    display: none !important;
+}
+

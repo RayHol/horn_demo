@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script>
+        (function(){
+            try {
+                var granted = localStorage.getItem('geopin-location-permission') === 'granted';
+                if (!granted) {
+                    // Best-effort: if Permissions API is available and already granted, set flag
+                    if (navigator.permissions && navigator.permissions.query) {
+                        navigator.permissions.query({ name: 'geolocation' }).then(function(p){
+                            if (p.state === 'granted') {
+                                try { localStorage.setItem('geopin-location-permission','granted'); } catch(_) {}
+                            } else {
+                                window.location.replace('./index.html');
+                            }
+                        }).catch(function(){ window.location.replace('./index.html'); });
+                    } else {
+                        window.location.replace('./index.html');
+                    }
+                }
+            } catch (_) { /* if storage blocked, just continue */ }
+        })();
+    </script>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, height=device-height, minimum-scale=1, maximum-scale=1, initial-scale=1, user-scalable=no, user-scalable=0"/>
+    <title>Geo-AnimalsAR</title>
+    <script src='https://aframe.io/releases/1.0.4/aframe.min.js'></script>
+    <script src="https://raw.githack.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar.min.js"></script>
+    <script src="https://raw.githack.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
+    <script>
+        THREEx.ArToolkitContext.baseURL = 'https://raw.githack.com/jeromeetienne/ar.js/master/three.js/'
+    </script>
+    <script src="./scripts/script.js"></script>
+    <link rel="stylesheet" type="text/css" href="./scripts/style.css"/>
+</head>
+
+<body style='margin: 0; overflow: hidden; background: var(--Background-main);'>
+    <!-- AR Overlay -->
+    <div class="ar-overlay">
+        <div class="ar-overlay__background"></div>
+        <div class="ar-overlay__cutout" id="arCutout">
+            <!-- Corner graphics -->
+            <img src="./assets/ui/corner-path.svg" alt="" class="ar-corner ar-corner--top-left">
+            <img src="./assets/ui/corner-path.svg" alt="" class="ar-corner ar-corner--top-right">
+            <img src="./assets/ui/corner-path.svg" alt="" class="ar-corner ar-corner--bottom-left">
+            <img src="./assets/ui/corner-path.svg" alt="" class="ar-corner ar-corner--bottom-right">
+        </div>
+        <a href="./wayfinding.html" class="ar-overlay__back-button" aria-label="Back to wayfinding page"></a>
+        <div class="ar-overlay__title">FIND THE ANIMALS</div>
+        <div class="centered instructions"></div>
+    </div>
+    <a-scene 
+        vr-mode-ui='enabled: false' 
+        embedded
+        arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false;'>
+    <a-camera id="mainCamera" gps-camera rotation-reader raycaster="objects: .detectable, .detectable *; interval: 200; far: 1000"></a-camera>
+</a-scene>
+<div class="centered">
+    <button data-action="camera-btn" title="Camera action" aria-label="Camera action"></button>
+</div>
+<div class="centered centered--debug">
+    <div id="proximityDebug" style="font-size: 0.9em; color: var(--Texts-textWhite); text-align: center; font-family: 'BentonSans Book', sans-serif;"></div>
+</div>
+<div class="modal-overlay" id="miniGameModal" hidden>
+    <div class="modal">
+        <div class="modal__content">You have a badge</div>
+        <button class="modal__close" aria-label="Close">✕</button>
+    </div>
+    
+</div>
+<div class="loader-overlay" id="sceneLoader">
+    <div class="loader"></div>
+    
+</div>
+</body>
+
+</html>
+
