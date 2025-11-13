@@ -678,8 +678,8 @@
       <!-- <button id="zoomOutButton" onclick="zoomOutButton()" style="position: absolute; bottom: 1rem; left: 10%; width: 4rem; height: 4rem; font-size: 2rem;">
         -
       </button> -->
-      <button id="cameraButton" onclick="cameraButton()" style="position: absolute; bottom: 3rem; left: 35%; width: 30%; height: 4rem; background: none; border: none;">
-        <img src="assets/button-tap.png" alt="Icon for shutter button" style="width: 100%; height: auto">
+      <button id="cameraButton" onclick="cameraButton()" style="position: fixed; bottom: max(8vh, 5.5rem); left: 50%; transform: translateX(-50%); width: 25%; max-width: 120px; min-width: 80px; height: auto; aspect-ratio: 1; background: none; border: none; z-index: 1000;">
+        <img src="assets/button-tap.png" alt="Icon for shutter button" style="width: 100%; height: 100%; object-fit: contain;">
       </button>
       <!-- <button id="zoomInButton" onclick="zoomInButton()" style="position: absolute; bottom: 1rem; right: 10%; width: 4rem; height: 4rem; font-size: 2rem;">
         +

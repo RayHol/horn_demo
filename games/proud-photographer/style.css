@@ -638,3 +638,54 @@ html body .a-dialog-ok-button {
     60% { opacity: 0.65; }
     100% { opacity: 0; }
 }
+
+/* ==============================
+   Camera Button Responsive Styles
+   ============================== */
+#cameraButton {
+  position: fixed !important;
+  bottom: max(8vh, 5.5rem) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 25% !important;
+  max-width: 120px !important;
+  min-width: 80px !important;
+  height: auto !important;
+  aspect-ratio: 1 !important;
+  z-index: 1000 !important;
+}
+
+#cameraButton img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-height: 600px) {
+  #cameraButton {
+    bottom: max(7vh, 5rem) !important;
+    width: 22% !important;
+    max-width: 110px !important;
+    min-width: 75px !important;
+  }
+}
+
+@media (max-height: 500px) {
+  #cameraButton {
+    bottom: max(6vh, 4.5rem) !important;
+    width: 20% !important;
+    max-width: 100px !important;
+    min-width: 70px !important;
+  }
+}
+
+/* Ensure button is always visible on very small screens */
+@media (max-height: 400px) {
+  #cameraButton {
+    bottom: max(5vh, 3.5rem) !important;
+    width: 18% !important;
+    max-width: 85px !important;
+    min-width: 65px !important;
+  }
+}
