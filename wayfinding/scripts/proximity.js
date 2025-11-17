@@ -86,7 +86,9 @@
     }
 
     async function loadAnimals() {
-        const res = await fetch('./data/animals.json', { cache: 'no-cache' });
+        // Switch between testing and production data by commenting/uncommenting the appropriate line:
+        const res = await fetch('./data/animals.json', { cache: 'no-cache' }); // Production/Onsite
+        // const res = await fetch('./data/testing.json', { cache: 'no-cache' }); // Testing/Home
         const cfg = await res.json();
         animals = Array.isArray(cfg.animals) ? cfg.animals : [];
     }

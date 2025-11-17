@@ -18,6 +18,7 @@
     const mapContainer = document.getElementById('mapContainer');
     const mapImage = document.getElementById('mapImage');
     const userLocationDot = document.getElementById('userLocationDot');
+    const userLocationAccuracyCircle = document.getElementById('userLocationAccuracyCircle');
     const animalHotspots = document.getElementById('animalHotspots');
     const proximityNotification = document.getElementById('proximityNotification');
     const openCameraBtn = document.getElementById('openCameraBtn');
@@ -44,6 +45,16 @@
     let instructionsDismissed = false; // Track if instructions overlay has been dismissed
     let boundaryWarningDismissed = false; // Track if boundary warning has been dismissed
     let isOutsideBounds = false; // Track if user is currently outside map bounds
+    
+    // User location centering state
+    let userLocationJitter = { x: 0, y: 0 }; // Small random offset for natural movement
+    let targetJitter = { x: 0, y: 0 }; // Target jitter position for smooth transitions
+    let lastJitterUpdate = 0;
+    let lastSignificantLocationChange = Date.now(); // Track when location last changed significantly
+    const JITTER_UPDATE_INTERVAL = 2000; // Update jitter target every 2 seconds
+    const MAX_JITTER_RADIUS = 8; // Maximum pixels of jitter (small area)
+    const JITTER_SMOOTHING = 0.1; // Smoothing factor for jitter transitions
+    const STATIONARY_TIME_THRESHOLD = 3000; // Milliseconds - reduce jitter after being still this long
 
     // Cooldown functions (from proximity.js)
     function lastKey(id) { 
@@ -60,15 +71,20 @@
     }
 
     // GPS Stabilizer (from proximity.js)
+    // Enhanced with stationary detection to reduce jitter when user is still
     function makeGpsStabilizer(opts) {
         const cfg = Object.assign({
             minAccuracy: 30,
             alpha: 0.45,
             minDelta: 0.2,
-            emitIntervalMs: 120
+            emitIntervalMs: 120,
+            stationaryThreshold: 1.0, // Meters - if movement is less than this, consider stationary
+            stationaryTime: 3000 // Milliseconds - how long to be stationary before applying higher threshold
         }, opts || {});
         let state = null;
         let lastEmit = 0;
+        let lastSignificantMove = 0; // Track when user last moved significantly
+        let stationarySince = null; // Track when user became stationary
 
         function dist(a, b) {
             const toRad = d => d * Math.PI / 180;
@@ -90,8 +106,11 @@
                 state = sample;
                 onEmit && onEmit(state);
                 lastEmit = Date.now();
+                lastSignificantMove = Date.now();
                 return;
             }
+            
+            const previousState = { ...state };
             state = {
                 lat: state.lat + cfg.alpha * (sample.lat - state.lat),
                 lng: state.lng + cfg.alpha * (sample.lng - state.lng),
@@ -99,9 +118,29 @@
             };
 
             const now = Date.now();
-            const moved = dist(state, sample);
-            if (moved < cfg.minDelta) return;
+            const moved = dist(previousState, sample);
+            
+            // Check if user is moving significantly
+            if (moved >= cfg.stationaryThreshold) {
+                // User is moving - reset stationary tracking
+                lastSignificantMove = now;
+                stationarySince = null;
+            } else {
+                // User appears stationary
+                if (stationarySince === null) {
+                    stationarySince = now;
+                }
+            }
+            
+            // Use higher threshold if user has been stationary for a while
+            const timeSinceLastMove = now - lastSignificantMove;
+            const isStationary = timeSinceLastMove >= cfg.stationaryTime;
+            const effectiveMinDelta = isStationary ? Math.max(cfg.minDelta, cfg.stationaryThreshold * 0.5) : cfg.minDelta;
+            
+            // Only emit if movement exceeds threshold
+            if (moved < effectiveMinDelta) return;
             if (now - lastEmit < cfg.emitIntervalMs) return;
+            
             lastEmit = now;
             onEmit && onEmit(state);
         };
@@ -125,7 +164,9 @@
     // Load animals from JSON
     async function loadAnimals() {
         try {
-            const res = await fetch('./data/animals.json', { cache: 'no-cache' });
+            // Switch between testing and production data by commenting/uncommenting the appropriate line:
+            const res = await fetch('./data/animals.json', { cache: 'no-cache' }); // Production/Onsite
+            // const res = await fetch('./data/testing.json', { cache: 'no-cache' }); // Testing/Home
             const cfg = await res.json();
             animals = Array.isArray(cfg.animals) ? cfg.animals : [];
             renderAnimalHotspots();
@@ -196,7 +237,7 @@
             this.targetScale = this.scale;
             this.targetTranslateX = this.translateX;
             this.targetTranslateY = this.translateY;
-            this.animationSpeed = 0.15;
+            this.animationSpeed = 0.25; // Increased for smoother, faster response
             
             // Touch/Drag state
             this.isDragging = false;
@@ -208,6 +249,8 @@
             this.userHasManuallyMoved = false;
             this.autoRecenterEnabled = true;
             this.isAutoRecenterActive = false;
+            this.keepUserCentered = true; // Keep user location centered on map
+            this.cannotCenterAtBoundary = false; // Track when we can't center due to boundary limits
             
             this.init();
             this.updateTransform();
@@ -417,8 +460,70 @@
         }
         
         startAnimationLoop() {
+            const self = this;
             const animate = () => {
-                this.updateTransform();
+                // Always update user location dot position in animation loop for smooth updates
+                // Only update if we have the necessary elements
+                if (userLocationDot && currentUserLocation && self.mapContainer && self.mapImage) {
+                    // Always ensure dot is visible
+                    userLocationDot.style.display = 'block';
+                    
+                    let dotX, dotY;
+                    
+                    if (self.keepUserCentered && !self.userHasManuallyMoved && !self.cannotCenterAtBoundary) {
+                        // Auto-centering mode: update jitter and position at center
+                        updateUserLocationJitter();
+                        const containerRect = self.mapContainer.getBoundingClientRect();
+                        const centerX = containerRect.width / 2;
+                        const centerY = containerRect.height / 2;
+                        dotX = centerX + userLocationJitter.x;
+                        dotY = centerY + userLocationJitter.y;
+                        userLocationDot.style.left = dotX + 'px';
+                        userLocationDot.style.top = dotY + 'px';
+                    } else {
+                        // Manual mode: show actual GPS location on map
+                        // Only try if mapInstance is available (for coordinate conversion)
+                        if (mapInstance) {
+                            try {
+                                const coords = gpsToScreenCoordinates(currentUserLocation.lat, currentUserLocation.lng, true);
+                                // Ensure coordinates are valid numbers
+                                if (coords && isFinite(coords.x) && isFinite(coords.y)) {
+                                    dotX = coords.x;
+                                    dotY = coords.y;
+                                    userLocationDot.style.left = dotX + 'px';
+                                    userLocationDot.style.top = dotY + 'px';
+                                }
+                            } catch (e) {
+                                // If coordinate conversion fails, don't update position
+                                console.warn('Failed to update user location dot position:', e);
+                            }
+                        }
+                    }
+                    
+                    // Update accuracy circle position and size in animation loop
+                    if (userLocationAccuracyCircle && dotX !== undefined && dotY !== undefined && currentUserLocation) {
+                        userLocationAccuracyCircle.style.left = dotX + 'px';
+                        userLocationAccuracyCircle.style.top = dotY + 'px';
+                        userLocationAccuracyCircle.style.display = 'block';
+                        
+                        // Convert GPS accuracy (meters) to screen pixels (diameter)
+                        const accuracyMeters = currentUserLocation.accuracy || currentUserLocation.acc || 10;
+                        const diameterPixels = metersToScreenPixels(accuracyMeters, currentUserLocation.lat);
+                        
+                        if (diameterPixels > 0 && isFinite(diameterPixels)) {
+                            // Ensure minimum size for visibility
+                            const minSize = 40; // Minimum 40px diameter
+                            const size = Math.max(minSize, diameterPixels);
+                            userLocationAccuracyCircle.style.width = size + 'px';
+                            userLocationAccuracyCircle.style.height = size + 'px';
+                        }
+                    }
+                }
+                self.updateTransform();
+                
+                // Update hotspot positions smoothly every frame for fixed appearance
+                updateHotspotPositions();
+                
                 requestAnimationFrame(animate);
             };
             requestAnimationFrame(animate);
@@ -450,7 +555,7 @@
         recenterToUserLocation(userLocation, resetManualFlag = false) {
             if (!userLocation) return;
             
-            // Get current screen position of user location
+            // Get current screen position of user location (where it would be without centering)
             const currentCoords = gpsToScreenCoordinates(userLocation.lat, userLocation.lng, true);
             
             // Get container dimensions
@@ -458,9 +563,11 @@
             const centerX = containerRect.width / 2;
             const centerY = containerRect.height / 2;
             
-            // Calculate the difference between current position and center
-            const deltaX = centerX - currentCoords.x;
-            const deltaY = centerY - currentCoords.y;
+            // Calculate the difference between current position and center (with jitter)
+            const targetX = centerX + userLocationJitter.x;
+            const targetY = centerY + userLocationJitter.y;
+            const deltaX = targetX - currentCoords.x;
+            const deltaY = targetY - currentCoords.y;
             
             // Adjust target translation to move user location to center
             this.targetTranslateX += deltaX;
@@ -473,8 +580,85 @@
         }
 
         // Check if user location is near edge and auto-recenter if needed
+        // Now also handles keeping user centered when keepUserCentered is true
         checkAndAutoRecenter(userLocation) {
-            if (!userLocation || !this.autoRecenterEnabled || this.userHasManuallyMoved) {
+            if (!userLocation || !this.autoRecenterEnabled) {
+                return;
+            }
+            
+            // If keepUserCentered is enabled and user hasn't manually moved, always keep user centered
+            if (this.keepUserCentered && !this.userHasManuallyMoved) {
+                // Get current screen position of user location (where it would be without centering)
+                const currentCoords = gpsToScreenCoordinates(userLocation.lat, userLocation.lng, true);
+                
+                // Get container dimensions
+                const containerRect = this.mapContainer.getBoundingClientRect();
+                const centerX = containerRect.width / 2;
+                const centerY = containerRect.height / 2;
+                
+                // Calculate the difference between current position and center (with jitter)
+                const targetX = centerX + userLocationJitter.x;
+                const targetY = centerY + userLocationJitter.y;
+                const deltaX = targetX - currentCoords.x;
+                const deltaY = targetY - currentCoords.y;
+                
+                // Use a smaller adjustment factor for smoother, less jerky movement
+                // The animation speed will handle the smooth interpolation
+                const centeringFactor = 0.15; // Reduced from 0.3 for smoother movement
+                const newTranslateX = this.targetTranslateX + deltaX * centeringFactor;
+                const newTranslateY = this.targetTranslateY + deltaY * centeringFactor;
+                
+                // Check if we can actually move that far (check against map bounds)
+                const imageRect = this.mapImage.getBoundingClientRect();
+                const scaledWidth = imageRect.width * this.targetScale;
+                const scaledHeight = imageRect.height * this.targetScale;
+                
+                const maxTranslateX = Math.max(0, (scaledWidth - containerRect.width) / 2 + 250);
+                const maxTranslateY = Math.max(0, (scaledHeight - containerRect.height) / 2 + 250);
+                
+                // Use tolerance for auto-recenter
+                const isNearMaxZoom = this.targetScale >= this.maxScale * 0.95;
+                const baseTolerance = 1.5;
+                const zoomTolerance = isNearMaxZoom ? 2.0 : 1.0;
+                const boundsTolerance = baseTolerance * zoomTolerance;
+                const effectiveMaxTranslateX = maxTranslateX * boundsTolerance;
+                const effectiveMaxTranslateY = maxTranslateY * boundsTolerance;
+                
+                // Check if the new translation would exceed bounds
+                const wouldExceedX = Math.abs(newTranslateX) > effectiveMaxTranslateX;
+                const wouldExceedY = Math.abs(newTranslateY) > effectiveMaxTranslateY;
+                
+                if (wouldExceedX || wouldExceedY) {
+                    // Can't fully center - map is at boundary limits
+                    // Still try to move as close as possible, but show actual location
+                    this.isAutoRecenterActive = false;
+                    this.cannotCenterAtBoundary = true;
+                    
+                    // Clamp to maximum allowed translation
+                    if (wouldExceedX) {
+                        this.targetTranslateX = newTranslateX > 0 ? effectiveMaxTranslateX : -effectiveMaxTranslateX;
+                    } else {
+                        this.targetTranslateX = newTranslateX;
+                    }
+                    
+                    if (wouldExceedY) {
+                        this.targetTranslateY = newTranslateY > 0 ? effectiveMaxTranslateY : -effectiveMaxTranslateY;
+                    } else {
+                        this.targetTranslateY = newTranslateY;
+                    }
+                    return;
+                }
+                
+                // We can center, so proceed
+                this.isAutoRecenterActive = true;
+                this.cannotCenterAtBoundary = false;
+                this.targetTranslateX = newTranslateX;
+                this.targetTranslateY = newTranslateY;
+                return;
+            }
+            
+            // Original edge-based recentering logic (when keepUserCentered is false)
+            if (this.userHasManuallyMoved) {
                 return;
             }
             
@@ -550,25 +734,154 @@
         return { x: screenX, y: screenY };
     }
 
+    // Convert GPS accuracy (meters) to screen pixels (diameter)
+    function metersToScreenPixels(meters, centerLat) {
+        if (!mapInstance || !meters || meters <= 0) return 0;
+        
+        // Calculate the distance in meters that corresponds to the map's width
+        const bounds = MapConfig.gpsBounds;
+        const toRad = (d) => d * Math.PI / 180;
+        const R = 6371000; // Earth radius in meters
+        
+        // Calculate distance across map width at the center latitude
+        const lat1 = toRad(centerLat);
+        const dLng = toRad(bounds.east - bounds.west);
+        const mapWidthMeters = Math.abs(Math.cos(lat1) * R * dLng);
+        
+        // Get map transform
+        const transform = mapInstance.getMapTransform();
+        
+        // Calculate pixels per meter
+        const mapWidthPixels = transform.imageWidth * transform.scale;
+        const pixelsPerMeter = mapWidthPixels / mapWidthMeters;
+        
+        // Return diameter in pixels (accuracy is radius, so multiply by 2)
+        return meters * pixelsPerMeter * 2;
+    }
+
+    // Update user location jitter for natural movement
+    // Reduces jitter when user is stationary
+    function updateUserLocationJitter() {
+        const now = Date.now();
+        const timeSinceLastMove = now - lastSignificantLocationChange;
+        const isStationary = timeSinceLastMove >= STATIONARY_TIME_THRESHOLD;
+        
+        // Update target jitter position periodically
+        if (now - lastJitterUpdate >= JITTER_UPDATE_INTERVAL) {
+            lastJitterUpdate = now;
+            
+            // Reduce or eliminate jitter when stationary
+            if (isStationary) {
+                // Gradually reduce jitter to zero when stationary
+                targetJitter.x = 0;
+                targetJitter.y = 0;
+            } else {
+                // Generate random jitter target within a small radius when moving
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * MAX_JITTER_RADIUS;
+                targetJitter.x = Math.cos(angle) * radius;
+                targetJitter.y = Math.sin(angle) * radius;
+            }
+        }
+        
+        // Smoothly interpolate current jitter toward target
+        // Use faster smoothing when stationary to reduce jitter quicker
+        const smoothing = isStationary ? JITTER_SMOOTHING * 2 : JITTER_SMOOTHING;
+        userLocationJitter.x += (targetJitter.x - userLocationJitter.x) * smoothing;
+        userLocationJitter.y += (targetJitter.y - userLocationJitter.y) * smoothing;
+    }
+
     // Update user location dot
     function updateUserLocation(location) {
-        currentUserLocation = location;
-        // Convert coordinates to screen position (works even if outside bounds)
-        const coords = gpsToScreenCoordinates(location.lat, location.lng, true);
+        if (!location) return;
         
-        if (userLocationDot) {
-            userLocationDot.style.left = coords.x + 'px';
-            userLocationDot.style.top = coords.y + 'px';
-            userLocationDot.style.display = 'block';
+        // Check if location has changed significantly
+        if (currentUserLocation) {
+            const distance = haversineMeters(
+                { lat: currentUserLocation.lat, lng: currentUserLocation.lng },
+                { lat: location.lat, lng: location.lng }
+            );
+            // If moved more than 1 meter, update the significant movement timestamp
+            if (distance >= 1.0) {
+                lastSignificantLocationChange = Date.now();
+            }
+        } else {
+            // First location update
+            lastSignificantLocationChange = Date.now();
+        }
+        
+        currentUserLocation = location;
+        
+        // Update jitter for natural movement
+        updateUserLocationJitter();
+        
+        // Get container dimensions
+        const containerRect = mapContainer ? mapContainer.getBoundingClientRect() : null;
+        if (!containerRect || !userLocationDot) return;
+        
+        // Check if map instance is ready
+        if (!mapInstance) return;
+        
+        // Check if user has manually moved the map
+        const userHasManuallyMoved = mapInstance.userHasManuallyMoved || false;
+        const keepUserCentered = mapInstance.keepUserCentered !== false;
+        const cannotCenterAtBoundary = mapInstance.cannotCenterAtBoundary || false;
+        
+        // Always ensure dot is visible
+        userLocationDot.style.display = 'block';
+        
+        // Determine position for both dot and accuracy circle
+        let dotX, dotY;
+        
+        // If user has manually moved, auto-centering is disabled, or we can't center at boundary, show actual GPS location
+        if (userHasManuallyMoved || !keepUserCentered || cannotCenterAtBoundary) {
+            // Convert GPS coordinates to screen position (actual location on map)
+            try {
+                const coords = gpsToScreenCoordinates(location.lat, location.lng, true);
+                // Ensure coordinates are valid numbers
+                if (coords && isFinite(coords.x) && isFinite(coords.y)) {
+                    dotX = coords.x;
+                    dotY = coords.y;
+                    userLocationDot.style.left = dotX + 'px';
+                    userLocationDot.style.top = dotY + 'px';
+                }
+            } catch (e) {
+                console.warn('Failed to convert GPS to screen coordinates:', e);
+            }
+        } else {
+            // Auto-centering mode: position dot at center with jitter
+            const centerX = containerRect.width / 2;
+            const centerY = containerRect.height / 2;
+            dotX = centerX + userLocationJitter.x;
+            dotY = centerY + userLocationJitter.y;
+            userLocationDot.style.left = dotX + 'px';
+            userLocationDot.style.top = dotY + 'px';
+        }
+        
+        // Update accuracy circle position and size
+        if (userLocationAccuracyCircle && dotX !== undefined && dotY !== undefined) {
+            userLocationAccuracyCircle.style.left = dotX + 'px';
+            userLocationAccuracyCircle.style.top = dotY + 'px';
+            userLocationAccuracyCircle.style.display = 'block';
+            
+            // Convert GPS accuracy (meters) to screen pixels (diameter)
+            const accuracyMeters = location.accuracy || location.acc || 10; // Default to 10m if not provided
+            const diameterPixels = metersToScreenPixels(accuracyMeters, location.lat);
+            
+            if (diameterPixels > 0 && isFinite(diameterPixels)) {
+                // Ensure minimum size for visibility
+                const minSize = 40; // Minimum 40px diameter
+                const size = Math.max(minSize, diameterPixels);
+                userLocationAccuracyCircle.style.width = size + 'px';
+                userLocationAccuracyCircle.style.height = size + 'px';
+            }
         }
         
         // Check if user is outside map bounds
         checkBoundaryWarning(location);
         
-        // Check if we need to auto-recenter
-        if (mapInstance) {
-            mapInstance.checkAndAutoRecenter(location);
-        }
+        // Check if we need to auto-recenter (this will move the map to keep user centered)
+        mapInstance.checkAndAutoRecenter(location);
     }
 
     // Check if user is at map boundaries and show warning
@@ -607,32 +920,67 @@
         }
     }
 
-    // Render animal hotspots
+    // Store hotspot element references for smooth updates
+    const hotspotElements = new Map(); // Map<animalId, HTMLElement>
+    
+    // Render animal hotspots (only creates DOM elements, doesn't update positions)
     function renderAnimalHotspots() {
         if (!animalHotspots) return;
         
-        animalHotspots.innerHTML = '';
+        // Clear existing hotspots that are no longer in the animals array
+        const currentAnimalIds = new Set(animals.map(a => a.id));
+        hotspotElements.forEach((element, animalId) => {
+            if (!currentAnimalIds.has(animalId)) {
+                element.remove();
+                hotspotElements.delete(animalId);
+            }
+        });
         
+        // Create or update hotspots
         animals.forEach(animal => {
-            // Animal hotspots always use real positioning
-            const coords = gpsToScreenCoordinates(animal.location.lat, animal.location.lng, false);
+            let hotspot = hotspotElements.get(animal.id);
             
-            const hotspot = document.createElement('div');
-            hotspot.className = 'animal-hotspot';
-            hotspot.dataset.animalId = animal.id;
-            hotspot.style.left = coords.x + 'px';
-            hotspot.style.top = coords.y + 'px';
+            if (!hotspot) {
+                // Create new hotspot element
+                hotspot = document.createElement('div');
+                hotspot.className = 'animal-hotspot';
+                hotspot.dataset.animalId = animal.id;
+                
+                const pin = document.createElement('div');
+                pin.className = 'animal-pin';
+                
+                const label = document.createElement('div');
+                label.className = 'animal-pin-label';
+                label.textContent = animal.name;
+                
+                hotspot.appendChild(pin);
+                hotspot.appendChild(label);
+                animalHotspots.appendChild(hotspot);
+                
+                hotspotElements.set(animal.id, hotspot);
+            }
+            // Position will be updated in updateHotspotPositions()
+        });
+    }
+    
+    // Update hotspot positions smoothly (called every frame)
+    function updateHotspotPositions() {
+        if (!mapInstance || !animalHotspots) return;
+        
+        hotspotElements.forEach((hotspot, animalId) => {
+            const animal = animals.find(a => a.id === animalId);
+            if (!animal) return;
             
-            const pin = document.createElement('div');
-            pin.className = 'animal-pin';
-            
-            const label = document.createElement('div');
-            label.className = 'animal-pin-label';
-            label.textContent = animal.name;
-            
-            hotspot.appendChild(pin);
-            hotspot.appendChild(label);
-            animalHotspots.appendChild(hotspot);
+            try {
+                // Animal hotspots always use real positioning
+                const coords = gpsToScreenCoordinates(animal.location.lat, animal.location.lng, false);
+                if (coords && isFinite(coords.x) && isFinite(coords.y)) {
+                    hotspot.style.left = coords.x + 'px';
+                    hotspot.style.top = coords.y + 'px';
+                }
+            } catch (e) {
+                // Silently handle coordinate conversion errors
+            }
         });
     }
 
@@ -641,7 +989,8 @@
         if (currentUserLocation) {
             updateUserLocation(currentUserLocation);
         }
-        renderAnimalHotspots();
+        // Update hotspot positions smoothly instead of re-rendering
+        updateHotspotPositions();
     }
 
     // Proximity detection and notifications
@@ -831,7 +1180,16 @@
     }
 
     // GPS position handler
-    const pushStabilized = makeGpsStabilizer({ minAccuracy: 30, alpha: 0.45, minDelta: 0.2, emitIntervalMs: 120 });
+    // Reduced emitIntervalMs for more frequent updates and smoother movement
+    // Enhanced with stationary detection to reduce jitter when still
+    const pushStabilized = makeGpsStabilizer({ 
+        minAccuracy: 30, 
+        alpha: 0.45, 
+        minDelta: 0.2, 
+        emitIntervalMs: 80,
+        stationaryThreshold: 1.0, // Consider stationary if movement < 1 meter
+        stationaryTime: 3000 // Apply higher threshold after 3 seconds of being still
+    });
 
     function onPosition(pos) {
         // Set location permission flag for animalsAR.html
@@ -1132,8 +1490,8 @@
 
         if (leaveConfirmButton) {
             leaveConfirmButton.addEventListener('click', () => {
-                // Navigate to menu page
-                window.location.href = '../menu.html';
+                // Navigate to index page
+                window.location.href = './index.html';
             });
         }
 

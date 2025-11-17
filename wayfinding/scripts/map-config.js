@@ -2,14 +2,24 @@
 // This configuration can be calibrated later when the actual map location is known
 
 const MapConfig = {
-    // GPS bounds of the map area (placeholder values - to be calibrated)
-    // These represent the geographic coordinates that the map image covers
+    // GPS bounds of the map area
+    // Switch between testing and production bounds by commenting/uncommenting the appropriate section:
+    
+    // Production/Onsite bounds 
     gpsBounds: {
-        north: 55.7494,   // Top latitude
-        south: 55.7468,   // Bottom latitude
-        east: -4.6419,    // Right longitude
-        west: -4.6455      // Left longitude
+        north: 51.444250593987384,   // Top latitude -  ONSITE COORDINATES
+        south: 51.44037067801714,   // Bottom latitude -  ONSITE COORDINATES
+        east: -0.05874017548710331,    // Right longitude -  ONSITE COORDINATES
+        west: -0.064847      // Left longitude -  ONSITE COORDINATES
     },
+    
+    // Testing/Home bounds 
+    // gpsBounds: {
+    //     north: 55.7494,   // Top latitude
+    //     south: 55.7468,   // Bottom latitude
+    //     east: -4.6419,    // Right longitude
+    //     west: -4.6455      // Left longitude
+    // },
     
     // Map image dimensions in pixels (placeholder - should match actual image dimensions)
     // These will be updated automatically when the image loads, or can be set manually

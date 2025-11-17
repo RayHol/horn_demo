@@ -84,6 +84,28 @@ body {
     transition: none;
 }
 
+/* User location accuracy circle */
+.user-location-accuracy-circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 102, 255, 0.4);
+    background-color: rgba(0, 102, 255, 0.15);
+    transform: translate(-50%, -50%);
+    z-index: 99;
+    pointer-events: none;
+    animation: accuracyPulse 2s ease-in-out infinite;
+    transition: width 0.3s ease-out, height 0.3s ease-out;
+}
+
+@keyframes accuracyPulse {
+    0%, 100% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
 /* User location dot */
 .user-location-dot {
     position: absolute;
