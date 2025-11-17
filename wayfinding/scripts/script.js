@@ -392,32 +392,52 @@ var setModel = function (model, entity) {
     }
 
     // Attach model URL (actual load may be deferred by caller for stabilization)
+    // Ensure the GLTF model is properly configured for raycaster detection
     entity.setAttribute('gltf-model', model.url);
 
     // derive a display name from the model info (before first comma)
     const name = (model.info && model.info.split(',')[0]) || 'Asset';
     entity.setAttribute('class', 'detectable');
     entity.setAttribute('data-asset-name', name);
-
-    // Add a collision box for raycaster detection (invisible, larger than model)
-    // This ensures the raycaster can detect the model even if the GLTF doesn't have proper collision geometry
-    // Wait for model to load before adding collision box to ensure proper sizing
+    // Make sure the entity itself is raycastable
+    entity.setAttribute('raycastable', '');
+    
+    // Add a collision box for raycaster detection - needed for models with large scales
+    // Wait for model to load to ensure proper sizing
     entity.addEventListener('model-loaded', function() {
-        // Scale the collision box based on model scale - make it larger to ensure detection
+        // Parse the scale values
         const scaleValues = model.scale ? model.scale.split(' ').map(parseFloat) : [1, 1, 1];
         const maxScale = Math.max(...scaleValues);
-        // Use a larger multiplier to ensure the box is big enough - at least 3 units, or 1.5x the max scale
-        const boxSize = Math.max(3, maxScale * 1.5);
         
+        // For large-scaled models, we need a collision box that accounts for the scale
+        // The box will be a child of the scaled entity, so it inherits the scale
+        // We want an effective size that scales with the model size
+        // For scale 10, we want effective size of ~15 units (1.5 * scale)
+        // For scale 1, we want effective size of ~3 units
+        // So: effectiveSize = max(3, maxScale * 1.5)
+        const effectiveSize = Math.max(3, maxScale * 1.5);
+        const boxSize = effectiveSize / maxScale;
+        
+        // Create invisible collision box
         const collisionBox = document.createElement('a-box');
-        collisionBox.setAttribute('geometry', { width: boxSize, height: boxSize, depth: boxSize });
-        collisionBox.setAttribute('material', { visible: false, transparent: true, opacity: 0 });
+        collisionBox.setAttribute('geometry', { 
+            width: boxSize, 
+            height: boxSize, 
+            depth: boxSize 
+        });
+        collisionBox.setAttribute('material', { 
+            visible: false, 
+            transparent: true, 
+            opacity: 0 
+        });
         collisionBox.setAttribute('class', 'detectable');
         collisionBox.setAttribute('data-asset-name', name);
         collisionBox.setAttribute('position', '0 0 0');
-        // Make sure the collision box is also detectable by raycaster
         collisionBox.setAttribute('raycastable', '');
+        
         entity.appendChild(collisionBox);
+        
+        console.log(`Collision box for ${name}: scale=${maxScale}, boxSize=${boxSize}, effectiveSize=${effectiveSize}`);
     }, { once: true });
 
     const div = document.querySelector('.instructions');
