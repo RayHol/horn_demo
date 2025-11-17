@@ -1,0 +1,651 @@
+
+function getQueryParam(name) {
+    const p = new URLSearchParams(location.search).get(name);
+    return p && decodeURIComponent(p);
+}
+
+async function loadAnimalConfig() {
+    try {
+        // Switch between testing and production data by commenting/uncommenting the appropriate line:
+        const res = await fetch('./data/animals.json', { cache: 'no-cache' }); // Production/Onsite
+        // const res = await fetch('./data/testing.json', { cache: 'no-cache' }); // Testing/Home
+        const cfg = await res.json();
+        const id = getQueryParam('animalId');
+        const list = Array.isArray(cfg.animals) ? cfg.animals : [];
+        return list.find(a => a.id === id) || list[0] || null;
+    } catch (e) {
+        return null;
+    }
+}
+
+window.onload = async () => {
+    const button = document.querySelector('button[data-action="camera-btn"]');
+    if (button) {
+        button.innerText = '';
+        button.disabled = true; // disabled until animal is found
+    }
+
+    // Load animal config (by id) and render
+    const animal = await loadAnimalConfig();
+    if (!animal) {
+        console.error('No animal config found. Please ensure animals.json is available.');
+        return;
+    }
+
+    // Build model descriptor from animal.model
+    models = [
+        {
+            url: animal.model && animal.model.url ? animal.model.url : './assets/model/scene.glb',
+            scale: animal.model && animal.model.scale ? animal.model.scale : '1 1 1',
+            info: animal.name || 'Asset',
+            rotation: animal.model && animal.model.rotation ? animal.model.rotation : '0 180 0',
+            position: animal.model && animal.model.position ? animal.model.position : undefined
+        }
+    ];
+    modelIndex = 0;
+
+    const places = [ { name: animal.name || 'Animal', location: animal.location } ];
+    renderPlaces(places);
+
+    // Debug proximity UI: show distance, accuracy, effective
+    try {
+        const proximityEl = document.getElementById('proximityDebug');
+        const cameraEl = document.getElementById('mainCamera');
+        const radius = (animal && animal.radiusMeters) ? animal.radiusMeters : 10;
+        if (proximityEl) proximityEl.innerText = 'Proximity: waiting for GPS…';
+        if (proximityEl && animal && animal.location) {
+            // Live GPS stabilizer (EMA + accuracy gating)
+            function makeGpsStabilizer(opts) {
+                const cfg = Object.assign({ minAccuracy: 20, alpha: 0.4, minDelta: 0.3, emitIntervalMs: 100 }, opts || {});
+                let state = null; let lastEmit = 0;
+                function dist(a, b) {
+                    const toRad = d => d * Math.PI / 180; const R = 6371000;
+                    const dLat = toRad(b.lat - a.lat); const dLng = toRad(b.lng - a.lng);
+                    const lat1 = toRad(a.lat), lat2 = toRad(b.lat);
+                    const h = Math.sin(dLat/2)**2 + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)**2;
+                    return 2*R*Math.atan2(Math.sqrt(h), Math.sqrt(1-h));
+                }
+                return function push(raw, onEmit) {
+                    if (!raw) return;
+                    const acc = (raw.accuracy != null && isFinite(raw.accuracy)) ? raw.accuracy : Infinity;
+                    if (acc > cfg.minAccuracy) return;
+                    const sample = { lat: raw.latitude, lng: raw.longitude, acc: acc };
+                    if (!state) { state = sample; onEmit && onEmit(state); lastEmit = Date.now(); return; }
+                    state = { lat: state.lat + cfg.alpha * (sample.lat - state.lat), lng: state.lng + cfg.alpha * (sample.lng - state.lng), acc: (state.acc + sample.acc) / 2 };
+                    const now = Date.now(); const moved = dist(state, sample);
+                    if (moved < cfg.minDelta) return; if (now - lastEmit < cfg.emitIntervalMs) return; lastEmit = now; onEmit && onEmit(state);
+                };
+            }
+            const pushStabilized = makeGpsStabilizer({ minAccuracy: 20, alpha: 0.4, minDelta: 0.3, emitIntervalMs: 100 });
+            const VISIBILITY_THRESHOLD_METERS = 20; // Show model within 20 meters
+            const GPS_ACCURACY_THRESHOLD = 30; // Hide model if GPS accuracy is worse than this (meters) - increased to be less restrictive
+            const infoDiv = document.querySelector('.instructions');
+            
+            // Animation for scanning dots
+            let dotCount = 0;
+            
+            function startScanningAnimation() {
+                const infoDiv = document.querySelector('.instructions');
+                if (!infoDiv) return;
+                
+                // Clear any existing animation
+                if (scanningAnimationInterval) {
+                    clearInterval(scanningAnimationInterval);
+                }
+                dotCount = 0;
+                
+                scanningAnimationInterval = setInterval(function() {
+                    const infoDiv = document.querySelector('.instructions');
+                    if (!infoDiv || infoDiv.classList.contains('instructions--found')) {
+                        // Stop animation if element doesn't exist or animal is found
+                        if (window.stopScanningAnimation) window.stopScanningAnimation();
+                        return;
+                    }
+                    
+                    // Check if we're still in scanning mode (not loading, calibrating, or too far)
+                    const loaderOverlay = document.getElementById('sceneLoader');
+                    const loaderVisible = loaderOverlay && loaderOverlay.classList.contains('is-visible');
+                    const currentText = infoDiv.innerHTML || infoDiv.innerText;
+                    
+                    if (loaderVisible || currentText.includes('Calibrating GPS') || currentText.includes('too far away')) {
+                        if (window.stopScanningAnimation) window.stopScanningAnimation();
+                        return;
+                    }
+                    
+                    // Cycle through dots: 1, 2, 3
+                    dotCount = (dotCount % 3) + 1;
+                    const dots = '.'.repeat(dotCount);
+                    infoDiv.innerHTML = 'Scanning the area' + dots + '<br>look around the area to find the animals';
+                }, 500); // Update every 500ms
+            }
+            
+            function stopScanningAnimation() {
+                if (scanningAnimationInterval) {
+                    clearInterval(scanningAnimationInterval);
+                    scanningAnimationInterval = null;
+                }
+            }
+            
+            // Make functions globally accessible
+            window.startScanningAnimation = startScanningAnimation;
+            window.stopScanningAnimation = stopScanningAnimation;
+            const update = function (pos) {
+                if (!pos) return;
+                const lat = (pos.latitude != null) ? pos.latitude : pos.lat;
+                const lng = (pos.longitude != null) ? pos.longitude : pos.lng;
+                const accVal = (pos.accuracy != null && isFinite(pos.accuracy)) ? pos.accuracy : (pos.acc != null ? pos.acc : null);
+                if (lat == null || lng == null) return;
+                const d = haversineDistanceMeters({ lat: lat, lng: lng }, animal.location);
+                const accuracy = accVal != null ? Math.max(0, Math.round(accVal)) : 0;
+                const effective = Math.max(0, Math.round(d - (accVal != null ? accVal : 0)));
+                const within = effective <= radius;
+                proximityEl.innerHTML = `TESTING- ${animal.name || 'Animal'}: ${Math.round(d)}m away`;
+                
+                // Check GPS accuracy - fade out if accuracy is too low
+                const gpsAccuracyLow = accVal != null && accVal > GPS_ACCURACY_THRESHOLD;
+                
+                // Distance-based visibility: show model within 20 meters, hide beyond
+                if (currentModelEntity && currentModelEntity.object3D) {
+                    const shouldBeVisible = d <= VISIBILITY_THRESHOLD_METERS && !gpsAccuracyLow;
+                    
+                    // Handle GPS calibration (low accuracy)
+                    if (gpsAccuracyLow && isModelVisible && !isGpsCalibrating) {
+                        // GPS accuracy dropped, fade out model
+                        isGpsCalibrating = true;
+                        isModelVisible = false;
+                        fadeOutGltf(currentModelEntity, 500);
+                    } else if (!gpsAccuracyLow && isGpsCalibrating) {
+                        // GPS accuracy improved, can show model again if within range
+                        isGpsCalibrating = false;
+                        if (d <= VISIBILITY_THRESHOLD_METERS) {
+                            isModelVisible = true;
+                            fadeInGltf(currentModelEntity, 500);
+                        }
+                    }
+                    
+                    // Handle distance-based visibility (only if GPS is accurate)
+                    if (!gpsAccuracyLow) {
+                        if (shouldBeVisible && !isModelVisible && !isGpsCalibrating) {
+                            // Fade in when entering 20 meter range
+                            isModelVisible = true;
+                            fadeInGltf(currentModelEntity, 500);
+                        } else if (!shouldBeVisible && isModelVisible) {
+                            // Fade out when leaving 20 meter range
+                            isModelVisible = false;
+                            fadeOutGltf(currentModelEntity, 500);
+                        }
+                    }
+                }
+                
+                // Update instructions text based on distance and GPS accuracy
+                // Only update if loader is not visible (loader visibility is handled by showLoader/hideLoader)
+                if (infoDiv && !infoDiv.classList.contains('instructions--found')) {
+                    // Check if loader is visible - if so, don't update text (it's handled by showLoader/hideLoader)
+                    const loaderOverlay = document.getElementById('sceneLoader');
+                    const loaderVisible = loaderOverlay && loaderOverlay.classList.contains('is-visible');
+                    
+                    // Skip text updates if loader is visible - it's already set to "Loading..." by showLoader()
+                    if (loaderVisible) {
+                        return; // Don't override the loading text
+                    }
+                    
+                    if (gpsAccuracyLow) {
+                        // GPS accuracy is low - show calibrating message
+                        if (window.stopScanningAnimation) window.stopScanningAnimation(); // Stop animation when calibrating
+                        const calibratingText = 'Calibrating GPS';
+                        if (infoDiv.innerHTML !== calibratingText && infoDiv.innerText !== calibratingText) {
+                            infoDiv.innerText = calibratingText;
+                            infoDiv.classList.remove('instructions--found');
+                            infoDiv.classList.add('instructions--not-found');
+                        }
+                    } else if (d > VISIBILITY_THRESHOLD_METERS) {
+                        // User is too far away
+                        if (window.stopScanningAnimation) window.stopScanningAnimation(); // Stop animation when too far
+                        const tooFarText = 'You are too far away to see the animal';
+                        if (infoDiv.innerHTML !== tooFarText && infoDiv.innerText !== tooFarText) {
+                            infoDiv.innerText = tooFarText;
+                            infoDiv.classList.remove('instructions--found');
+                            infoDiv.classList.add('instructions--not-found');
+                        }
+                    } else {
+                        // Loading complete, show scanning message
+                        if (!infoDiv.classList.contains('instructions--found')) {
+                            infoDiv.classList.remove('instructions--found');
+                            infoDiv.classList.add('instructions--not-found');
+                            // Start the scanning animation if not already running
+                            if (!scanningAnimationInterval && window.startScanningAnimation) {
+                                window.startScanningAnimation();
+                            }
+                        }
+                    }
+                }
+            };
+            if (cameraEl) {
+                cameraEl.addEventListener('gps-camera-update-position', function (e) {
+                    const detail = e && e.detail ? e.detail : null;
+                    if (!detail || !detail.position) return;
+                    pushStabilized(detail.position, update);
+                });
+
+                // Manual stabilized GPS feed to ensure periodic AR.js updates while moving
+                try {
+                    const dispatchGpsUpdate = function (lat, lng, acc) {
+                        const evt = new CustomEvent('gps-camera-update-position', {
+                            detail: { position: { latitude: lat, longitude: lng, accuracy: acc } }
+                        });
+                        cameraEl.dispatchEvent(evt);
+                    };
+
+                    const pushForDispatch = makeGpsStabilizer({ minAccuracy: 20, alpha: 0.4, minDelta: 0.3, emitIntervalMs: 150 });
+
+                    if ('geolocation' in navigator) {
+                        navigator.geolocation.getCurrentPosition(function (p) {
+                            pushForDispatch({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, function (u) {
+                                dispatchGpsUpdate(u.lat, u.lng, u.acc);
+                            });
+                        });
+                        navigator.geolocation.watchPosition(function (p) {
+                            pushForDispatch({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, function (u) {
+                                dispatchGpsUpdate(u.lat, u.lng, u.acc);
+                            });
+                        }, function () { }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
+                    }
+                } catch (_) { }
+            }
+            // Fallback: geolocation directly (if permissions granted)
+            if ('geolocation' in navigator) {
+                try {
+                    navigator.geolocation.getCurrentPosition(function(p){
+                        pushStabilized({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, update);
+                    });
+                    navigator.geolocation.watchPosition(function(p){
+                        pushStabilized({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, update);
+                    }, function(){}, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
+                } catch (_) {}
+            }
+        }
+    } catch (_) { /* noop */ }
+};
+
+var models = [];
+var modelIndex = 0;
+var currentModelEntity = null; // Store reference to the model entity for distance-based visibility
+var isModelVisible = false; // Track current visibility state
+var isFading = false; // Track if a fade animation is currently in progress
+var isLoading = true; // Track if model is still loading
+var isGpsCalibrating = false; // Track if GPS accuracy is low
+var scanningAnimationInterval = null; // Store scanning animation interval globally
+var setModel = function (model, entity) {
+    if (model.scale) {
+        entity.setAttribute('scale', model.scale);
+    }
+
+    if (model.rotation) {
+        entity.setAttribute('rotation', model.rotation);
+    }
+
+    if (model.position) {
+        entity.setAttribute('position', model.position);
+    }
+
+    // Attach model URL (actual load may be deferred by caller for stabilization)
+    entity.setAttribute('gltf-model', model.url);
+
+    // derive a display name from the model info (before first comma)
+    const name = (model.info && model.info.split(',')[0]) || 'Asset';
+    entity.setAttribute('class', 'detectable');
+    entity.setAttribute('data-asset-name', name);
+
+    const div = document.querySelector('.instructions');
+    div.innerText = 'Loading...';
+    div.classList.remove('instructions--found');
+    div.classList.add('instructions--not-found');
+};
+
+function haversineDistanceMeters(a, b) {
+    const toRad = (d) => d * Math.PI / 180;
+    const R = 6371000;
+    const dLat = toRad(b.lat - a.lat);
+    const dLng = toRad(b.lng - a.lng);
+    const lat1 = toRad(a.lat);
+    const lat2 = toRad(b.lat);
+    const sinDLat = Math.sin(dLat / 2);
+    const sinDLng = Math.sin(dLng / 2);
+    const h = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
+    const c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    return R * c;
+}
+
+function waitForStableGPS(cameraEl, options, onStable) {
+    const cfg = Object.assign({ sampleCount: 3, maxDriftMeters: 2.0, maxAccuracyMeters: 30, timeoutMs: 3000 }, options || {});
+    const samples = [];
+    let timeoutId = null;
+
+    function handleUpdate(e) {
+        const detail = e && e.detail ? e.detail : null;
+        if (!detail || !detail.position) return;
+        const pos = detail.position; // { latitude, longitude, accuracy? }
+        const accuracy = detail.accuracy != null ? detail.accuracy : (pos.accuracy != null ? pos.accuracy : Infinity);
+        samples.push({ lat: pos.latitude, lng: pos.longitude, accuracy: accuracy, t: Date.now() });
+        if (samples.length > cfg.sampleCount) samples.shift();
+
+        if (samples.length === cfg.sampleCount) {
+            const avgAccuracy = samples.reduce((s, p) => s + (isFinite(p.accuracy) ? p.accuracy : cfg.maxAccuracyMeters + 1), 0) / cfg.sampleCount;
+            let maxDrift = 0;
+            for (let i = 1; i < samples.length; i++) {
+                maxDrift = Math.max(maxDrift, haversineDistanceMeters(samples[i - 1], samples[i]));
+            }
+            if (maxDrift <= cfg.maxDriftMeters && avgAccuracy <= cfg.maxAccuracyMeters) {
+                cleanup();
+                onStable();
+            }
+        }
+    }
+
+    function cleanup() {
+        cameraEl.removeEventListener('gps-camera-update-position', handleUpdate);
+        if (timeoutId) clearTimeout(timeoutId);
+    }
+
+    cameraEl.addEventListener('gps-camera-update-position', handleUpdate);
+    timeoutId = setTimeout(() => {
+        // Fallback: proceed even if not fully stable after timeout
+        cleanup();
+        onStable();
+    }, cfg.timeoutMs);
+}
+
+function setOpacityRecursive(obj3d, opacity) {
+    if (!obj3d) return;
+    obj3d.traverse(function (node) {
+        if (node.isMesh) {
+            const materials = Array.isArray(node.material) ? node.material : [node.material];
+            materials.forEach(function (m) {
+                if (!m) return;
+                m.transparent = true;
+                m.opacity = Math.max(0, Math.min(1, opacity));
+            });
+        }
+    });
+}
+
+function fadeInGltf(entity, durationMs) {
+    if (isFading) return; // Prevent overlapping animations
+    isFading = true;
+    const duration = durationMs || 600;
+    const start = performance.now();
+    function tick(now) {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // easeInOutQuad
+        const obj = entity.object3D;
+        if (obj) setOpacityRecursive(obj, eased);
+        if (t < 1) {
+            requestAnimationFrame(tick);
+        } else {
+            // ensure fully opaque at end
+            if (obj) setOpacityRecursive(obj, 1);
+            isFading = false;
+        }
+    }
+    // initialize to 0
+    if (entity.object3D) setOpacityRecursive(entity.object3D, 0);
+    requestAnimationFrame(tick);
+}
+
+function fadeOutGltf(entity, durationMs) {
+    if (isFading) return; // Prevent overlapping animations
+    isFading = true;
+    const duration = durationMs || 600;
+    const start = performance.now();
+    const obj = entity.object3D;
+    if (!obj) {
+        isFading = false;
+        return;
+    }
+    
+    // Get current opacity from the first material we find
+    let startOpacity = 1;
+    obj.traverse(function (node) {
+        if (node.isMesh && node.material) {
+            const materials = Array.isArray(node.material) ? node.material : [node.material];
+            if (materials.length > 0 && materials[0] && materials[0].opacity !== undefined) {
+                startOpacity = materials[0].opacity;
+                return;
+            }
+        }
+    });
+    
+    function tick(now) {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // easeInOutQuad
+        const opacity = startOpacity * (1 - eased); // Fade from current opacity to 0
+        if (obj) setOpacityRecursive(obj, opacity);
+        if (t < 1) {
+            requestAnimationFrame(tick);
+        } else {
+            // ensure fully transparent at end
+            if (obj) setOpacityRecursive(obj, 0);
+            isFading = false;
+        }
+    }
+    requestAnimationFrame(tick);
+}
+
+function renderPlaces(places) {
+    let scene = document.querySelector('a-scene');
+    const actionButton = document.querySelector('button[data-action="camera-btn"]');
+    const modal = document.getElementById('miniGameModal');
+    const closeBtn = modal ? modal.querySelector('.modal__close') : null;
+    const loaderOverlay = document.getElementById('sceneLoader');
+    
+    function showLoader() {
+        const loader = document.getElementById('sceneLoader');
+        if (loader) {
+            loader.classList.add('is-visible');
+        }
+        // Update text immediately when loader is shown
+        const infoDiv = document.querySelector('.instructions');
+        if (infoDiv && !infoDiv.classList.contains('instructions--found')) {
+            infoDiv.innerText = 'Loading...';
+        }
+    }
+    function hideLoader() {
+        const loader = document.getElementById('sceneLoader');
+        if (loader) {
+            loader.classList.remove('is-visible');
+        }
+        // Update text immediately when loader is hidden (only if not in special states)
+        const infoDiv = document.querySelector('.instructions');
+        if (infoDiv && !infoDiv.classList.contains('instructions--found')) {
+            // Check if we should show a different message based on current state
+            // The GPS update function will handle setting the correct message
+            // But we can set a default here
+            if (!isGpsCalibrating) {
+                // Start scanning animation when loader is hidden
+                if (window.startScanningAnimation) {
+                    window.startScanningAnimation();
+                }
+            } else {
+                // Stop animation if GPS is calibrating
+                if (window.stopScanningAnimation) {
+                    window.stopScanningAnimation();
+                }
+            }
+        }
+    }
+
+    places.forEach((place) => {
+        let latitude = place.location.lat;
+        let longitude = place.location.lng;
+
+        let model = document.createElement('a-entity');
+        model.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
+
+        // Defer GLTF load until GPS appears stable; append entity immediately (hidden by lack of model)
+        model.setAttribute('animation-mixer', '');
+
+        // New behavior: if active (enabled), tapping launches modal
+        if (actionButton) {
+            actionButton.addEventListener('click', function () {
+                if (actionButton.disabled) return;
+                if (modal) modal.hidden = false;
+            });
+        }
+
+        scene.appendChild(model);
+
+        // Store model reference globally for distance-based visibility control
+        currentModelEntity = model;
+        
+        const cameraGps = document.getElementById('mainCamera');
+        // Function to check initial distance and set visibility accordingly
+        const checkInitialVisibility = function() {
+            if (!model.object3D) return;
+            
+            // Try to get current GPS position to check initial distance
+            const checkDistance = function() {
+                if ('geolocation' in navigator) {
+                    navigator.geolocation.getCurrentPosition(function(p) {
+                        if (!p || !p.coords) {
+                            // No GPS available, hide model
+                            setOpacityRecursive(model.object3D, 0);
+                            isModelVisible = false;
+                            return;
+                        }
+                        
+                        const userPos = { lat: p.coords.latitude, lng: p.coords.longitude };
+                        const animalPos = { lat: place.location.lat, lng: place.location.lng };
+                        const distance = haversineDistanceMeters(userPos, animalPos);
+                        const VISIBILITY_THRESHOLD_METERS = 20;
+                        const GPS_ACCURACY_THRESHOLD = 30; // Same threshold as in update function
+                        const accuracy = p.coords.accuracy != null ? p.coords.accuracy : Infinity;
+                        const gpsAccuracyLow = accuracy > GPS_ACCURACY_THRESHOLD;
+                        
+                        if (distance <= VISIBILITY_THRESHOLD_METERS && !gpsAccuracyLow) {
+                            // User is within range and GPS is accurate enough, show model immediately
+                            setOpacityRecursive(model.object3D, 1);
+                            isModelVisible = true;
+                        } else {
+                            // User is too far or GPS accuracy is low, hide model
+                            setOpacityRecursive(model.object3D, 0);
+                            isModelVisible = false;
+                        }
+                    }, function() {
+                        // GPS error, hide model
+                        if (model.object3D) {
+                            setOpacityRecursive(model.object3D, 0);
+                            isModelVisible = false;
+                        }
+                    }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 2000 });
+                } else {
+                    // No geolocation support, hide model
+                    if (model.object3D) {
+                        setOpacityRecursive(model.object3D, 0);
+                        isModelVisible = false;
+                    }
+                }
+            };
+            
+            // Small delay to ensure model is fully loaded
+            setTimeout(checkDistance, 50);
+        };
+        
+        if (cameraGps) {
+            // Wait for stable GPS before loading the model
+            showLoader(); // This will show the loader and set text to "Loading..."
+            waitForStableGPS(cameraGps, { sampleCount: 3, maxDriftMeters: 2.0, maxAccuracyMeters: 30, timeoutMs: 3000 }, function () {
+                setModel(models[modelIndex], model);
+                model.addEventListener('model-loaded', function () {
+                    checkInitialVisibility();
+                    isLoading = false; // Mark loading as complete
+                    setTimeout(function() {
+                        hideLoader(); // This will hide the loader and set text appropriately
+                    }, 100);
+                }, { once: true });
+            });
+        } else {
+            // Fallback if no gps camera found
+            showLoader(); // This will show the loader and set text to "Loading..."
+            setModel(models[modelIndex], model);
+            model.addEventListener('model-loaded', function () {
+                checkInitialVisibility();
+                isLoading = false; // Mark loading as complete
+                setTimeout(function() {
+                    hideLoader(); // This will hide the loader and set text appropriately
+                }, 100);
+            }, { once: true });
+        }
+    });
+
+    // Set up raycaster hit detection from the center of the screen
+    const cameraEl = document.getElementById('mainCamera');
+    const infoDiv = document.querySelector('.instructions');
+
+    if (cameraEl) {
+        cameraEl.addEventListener('raycaster-intersection', (e) => {
+            if (!e.detail || !e.detail.els || e.detail.els.length === 0) return;
+            // Take the closest intersected element and bubble up to the parent that holds data-asset-name
+            let el = e.detail.els[0];
+            let cursor = el;
+            while (cursor && !cursor.getAttribute('data-asset-name')) {
+                cursor = cursor.parentEl;
+            }
+            if (cursor) {
+                const name = cursor.getAttribute('data-asset-name') || 'Asset';
+                if (window.stopScanningAnimation) window.stopScanningAnimation(); // Stop animation when animal is found
+                const foundText = 'You have found the ' + name + '<br>Take a photo to collect a badge';
+                // Always update to ensure text is current
+                infoDiv.innerHTML = foundText;
+                infoDiv.classList.remove('instructions--not-found');
+                infoDiv.classList.add('instructions--found');
+                if (actionButton) actionButton.disabled = false;
+                
+                // Expand cutout animation
+                const cutout = document.getElementById('arCutout');
+                const background = document.querySelector('.ar-overlay__background');
+                if (cutout) cutout.classList.add('ar-cutout--found');
+                if (background) background.classList.add('ar-background--found');
+            }
+        });
+
+        cameraEl.addEventListener('raycaster-intersection-cleared', () => {
+            const current = document.querySelector('[gps-entity-place]');
+            if (current) {
+                // Check if loader is visible
+                const loaderOverlay = document.getElementById('sceneLoader');
+                const loaderVisible = loaderOverlay && loaderOverlay.classList.contains('is-visible');
+                
+                // Only update text if not in a special state (loading, calibrating, etc.)
+                if (!loaderVisible && !isGpsCalibrating) {
+                    // Start scanning animation when returning to scanning state
+                    if (!scanningAnimationInterval && window.startScanningAnimation) {
+                        window.startScanningAnimation();
+                    }
+                } else if (loaderVisible) {
+                    if (window.stopScanningAnimation) window.stopScanningAnimation(); // Stop animation when loading
+                    // Always update to ensure text is current
+                    infoDiv.innerText = 'Loading...';
+                }
+                infoDiv.classList.remove('instructions--found');
+                infoDiv.classList.add('instructions--not-found');
+                if (actionButton) actionButton.disabled = true;
+                
+                // Contract cutout animation
+                const cutout = document.getElementById('arCutout');
+                const background = document.querySelector('.ar-overlay__background');
+                if (cutout) cutout.classList.remove('ar-cutout--found');
+                if (background) background.classList.remove('ar-background--found');
+            }
+        });
+    }
+
+    // Modal close handling
+    if (closeBtn && modal) {
+        closeBtn.addEventListener('click', function () {
+            modal.hidden = true;
+        });
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) modal.hidden = true; // click outside modal closes
+        });
+    }
+}

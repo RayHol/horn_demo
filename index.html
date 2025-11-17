@@ -1,243 +1,1027 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>
-      // WebXR requires https: to work so ensure redirected if needed.
-      if (location.hostname !== "localhost" && window.location.protocol === "http:" )
-        window.location.protocol = "https:";
-    </script>
-
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Animals Everywhere</title>
+
+    <!-- Resource Hints - removed preload to avoid blocking on iOS Safari -->
 
     <!-- External Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Roboto:wght@700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Roboto:wght@700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Roboto:wght@700&display=swap" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet">
+    </noscript>
+    <link rel="stylesheet" href="style.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="style.css"></noscript>
+
+    <!-- Customer.io Helper (loads before Customer.io snippet) -->
+    <script src="customer-io-helper.js"></script>
+    <!-- Customer.io snippet will go here when available -->
+
     <style>
-      .a-enter-vr-button{
-        display: none;
-      }
-      .a-enter-ar-button{
-        display: none;
-      }
+        /* Orientation Warning Overlay */
+        .orientation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .orientation-content {
+            background-color: #FCF6EF;
+            border: 3px solid #E7D4A3;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            max-width: 300px;
+            margin: 1rem;
+            box-shadow: 0px 4px 0px 0px #E7D4A3;
+        }
+
+        .orientation-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: rotateToPortrait 2.5s ease-in-out infinite;
+            transform-origin: 0 100%;
+            display: inline-block;
+        }
+
+        .orientation-content h2 {
+            color: #C14400;
+            font-family: "Amatic SC", sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            margin: 0 0 1rem 0;
+        }
+
+        .orientation-content p {
+            color: #333;
+            font-size: 1.1rem;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        @keyframes rotateToPortrait {
+            0% { transform: rotate(-90deg); opacity: 1; }
+            40% { transform: rotate(0deg); opacity: 1; }
+            60% { transform: rotate(0deg); opacity: 1; }
+            70% { transform: rotate(0deg); opacity: 0; }
+            71% { transform: rotate(-90deg); opacity: 0; }
+            80% { transform: rotate(-90deg); opacity: 1; }
+            100% { transform: rotate(-90deg); opacity: 1; }
+        }
+
+        /* Hidden class for orientation overlay */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Disable scrolling */
+        body {
+            overflow: hidden;
+        }
+
+        /* Ensure onboarding overlay appears above animated background */
+        #onboarding {
+            background: transparent;
+        }
+
+        /* Animation container - ensure full screen coverage */
+        #animation_container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            background-color: #9CCCE5;
+            overflow: hidden;
+        }
+
+        /* Support for mobile viewport units */
+        @supports (height: 100dvh) {
+            #animation_container {
+                height: 100dvh;
+            }
+        }
+
+        /* Fix for mobile Safari */
+        @supports (-webkit-touch-callout: none) {
+            #animation_container {
+                height: -webkit-fill-available;
+            }
+        }
+
+        /* Canvas - let makeResponsive handle sizing, just ensure it's positioned correctly */
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: block;
+        }
+
+        /* DOM overlay container */
+        #dom_overlay_container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        /* Onboarding element animations - initially hidden */
+        .onboarding-logo,
+        .onboarding-title,
+        #startButton,
+        #continueButton {
+            opacity: 0;
+            transform: scale(0);
+            transition: none;
+        }
+
+        /* Grow animation with overshoot effect */
+        @keyframes growIn {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            80% {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Classes to trigger animations */
+        .onboarding-logo.animate-in {
+            animation: growIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        .onboarding-title.animate-in {
+            animation: growIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        #startButton.animate-in,
+        #continueButton.animate-in {
+            animation: growIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        /* Welcome message should also be hidden initially if shown */
+        #welcomeMessage {
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        /* When welcome message is shown, animate it with the title */
+        #welcomeMessage.animate-in {
+            animation: growIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        /* Butterfly Container - keeps element always in viewport to prevent GIF pausing */
+        .butterfly-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10001;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        /* Butterfly Animation Styles */
+        .butterfly-animation {
+            position: absolute;
+            width: 60px;
+            height: auto;
+            opacity: 0;
+            will-change: transform, opacity;
+            /* Position at top of viewport, centered horizontally */
+            top: 0;
+            left: 50%;
+            transform-origin: center center;
+            /* Force browser to keep animating by ensuring element stays in viewport */
+            image-rendering: auto;
+        }
+
+        /* Butterfly fade in */
+        @keyframes butterflyFadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Butterfly flutter path - slow, organic movement in top portion of screen */
+        /* Element stays within viewport bounds to prevent GIF pausing */
+        /* Using viewport units to keep it in the top area but higher up */
+        @keyframes butterflyFlutter {
+            0% {
+                transform: translate(calc(-50% - 30vw), 8vh) rotate(-25deg);
+            }
+            10% {
+                transform: translate(calc(-50% - 15vw), 6vh) rotate(10deg);
+            }
+            20% {
+                transform: translate(calc(-50% + 0vw), 5vh) rotate(-15deg);
+            }
+            30% {
+                transform: translate(calc(-50% + 20vw), 7vh) rotate(20deg);
+            }
+            40% {
+                transform: translate(calc(-50% + 40vw), 6vh) rotate(-10deg);
+            }
+            50% {
+                transform: translate(calc(-50% + 60vw), 8vh) rotate(15deg);
+            }
+            60% {
+                transform: translate(calc(-50% + 50vw), 9vh) rotate(-20deg);
+            }
+            70% {
+                transform: translate(calc(-50% + 30vw), 7vh) rotate(10deg);
+            }
+            80% {
+                transform: translate(calc(-50% + 10vw), 8vh) rotate(-15deg);
+            }
+            90% {
+                transform: translate(calc(-50% - 10vw), 6vh) rotate(20deg);
+            }
+            100% {
+                transform: translate(calc(-50% - 30vw), 8vh) rotate(-25deg);
+            }
+        }
+
+        /* Butterfly fade out */
+        @keyframes butterflyFadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* Butterfly states */
+        #butterfly.animate-in {
+            animation: butterflyFadeIn 1s ease-in forwards,
+                       butterflyFlutter 25s ease-in-out infinite;
+            /* Force browser to keep GIF animating */
+            animation-play-state: running !important;
+        }
+
+        #butterfly.animate-out {
+            animation: butterflyFadeOut 0.5s ease-in forwards;
+        }
+        
+        /* Additional CSS to prevent GIF pausing - ensure element is always considered visible */
+        #butterfly {
+            content-visibility: auto;
+            contain: none;
+            /* Force browser to keep rendering the GIF */
+            backface-visibility: visible;
+            transform-style: preserve-3d;
+        }
+
+        /* Bee Container - keeps element always in viewport to prevent GIF pausing */
+        .bee-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 10001;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        /* Bee Animation Styles */
+        .bee-animation {
+            position: absolute;
+            width: 50px;
+            height: auto;
+            opacity: 0;
+            will-change: transform, opacity;
+            /* Position at center of viewport */
+            top: 50%;
+            left: 50%;
+            transform-origin: center center;
+            image-rendering: auto;
+        }
+
+        /* Bee fade in */
+        @keyframes beeFadeIn {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Bee erratic path - faster, more erratic movement with hover moments */
+        /* scaleX: -1 flips the bee horizontally when moving right (X increasing), scaleX: 1 when moving left (X decreasing) */
+        @keyframes beeErraticPath {
+            /* 0-12%: Moving right (X: -40vw → -20vw → -10vw) - flip to face right */
+            0% {
+                transform: translate(calc(-50% - 40vw), calc(-50% + 25vh)) rotate(-30deg) scaleX(1);
+            }
+            5% {
+                transform: translate(calc(-50% - 20vw), calc(-50% + 20vh)) rotate(25deg) scaleX(-1);
+            }
+            10% {
+                transform: translate(calc(-50% - 10vw), calc(-50% + 18vh)) rotate(-20deg) scaleX(-1);
+            }
+            12% {
+                transform: translate(calc(-50% - 10vw), calc(-50% + 18vh)) rotate(-20deg) scaleX(-1);
+            }
+            /* 15-42%: Moving right (X: -10vw → +5vw → +25vw → +45vw → +60vw → +80vw) - keep facing right */
+            15% {
+                transform: translate(calc(-50% + 5vw), calc(-50% + 22vh)) rotate(35deg) scaleX(-1);
+            }
+            20% {
+                transform: translate(calc(-50% + 25vw), calc(-50% + 15vh)) rotate(-25deg) scaleX(-1);
+            }
+            25% {
+                transform: translate(calc(-50% + 45vw), calc(-50% + 28vh)) rotate(30deg) scaleX(-1);
+            }
+            28% {
+                transform: translate(calc(-50% + 45vw), calc(-50% + 28vh)) rotate(30deg) scaleX(-1);
+            }
+            32% {
+                transform: translate(calc(-50% + 60vw), calc(-50% + 20vh)) rotate(-35deg) scaleX(-1);
+            }
+            38% {
+                transform: translate(calc(-50% + 80vw), calc(-50% + 25vh)) rotate(20deg) scaleX(-1);
+            }
+            42% {
+                transform: translate(calc(-50% + 80vw), calc(-50% + 25vh)) rotate(20deg) scaleX(-1);
+            }
+            /* 48-100%: Moving left (X: +80vw → +70vw → +50vw → +30vw → +10vw → -15vw → -30vw → -35vw → -40vw) - flip to face left */
+            48% {
+                transform: translate(calc(-50% + 70vw), calc(-50% + 30vh)) rotate(-28deg) scaleX(1);
+            }
+            55% {
+                transform: translate(calc(-50% + 50vw), calc(-50% + 18vh)) rotate(32deg) scaleX(1);
+            }
+            60% {
+                transform: translate(calc(-50% + 30vw), calc(-50% + 24vh)) rotate(-22deg) scaleX(1);
+            }
+            65% {
+                transform: translate(calc(-50% + 30vw), calc(-50% + 24vh)) rotate(-22deg) scaleX(1);
+            }
+            72% {
+                transform: translate(calc(-50% + 10vw), calc(-50% + 20vh)) rotate(28deg) scaleX(1);
+            }
+            78% {
+                transform: translate(calc(-50% - 15vw), calc(-50% + 26vh)) rotate(-30deg) scaleX(1);
+            }
+            82% {
+                transform: translate(calc(-50% - 15vw), calc(-50% + 26vh)) rotate(-30deg) scaleX(1);
+            }
+            88% {
+                transform: translate(calc(-50% - 30vw), calc(-50% + 22vh)) rotate(25deg) scaleX(1);
+            }
+            95% {
+                transform: translate(calc(-50% - 35vw), calc(-50% + 25vh)) rotate(-28deg) scaleX(1);
+            }
+            100% {
+                transform: translate(calc(-50% - 40vw), calc(-50% + 25vh)) rotate(-30deg) scaleX(1);
+            }
+        }
+
+        /* Bee fade out */
+        @keyframes beeFadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* Bee states */
+        #bee.animate-in {
+            animation: beeFadeIn 1s ease-in forwards,
+                       beeErraticPath 18s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            /* Force browser to keep GIF animating */
+            animation-play-state: running !important;
+        }
+
+        #bee.animate-out {
+            animation: beeFadeOut 0.5s ease-in forwards;
+        }
+        
+        /* Additional CSS to prevent GIF pausing - ensure element is always considered visible */
+        #bee {
+            content-visibility: auto;
+            contain: none;
+            /* Force browser to keep rendering the GIF */
+            backface-visibility: visible;
+            transform-style: preserve-3d;
+        }
+
+        /* Fade out animation */
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+
+        /* Classes to trigger fade out */
+        .onboarding-logo.animate-out,
+        .onboarding-title.animate-out,
+        #startButton.animate-out,
+        #continueButton.animate-out,
+        #welcomeMessage.animate-out {
+            animation: fadeOut 0.5s ease-in forwards;
+        }
     </style>
-    <!-- Packages -->
-    <script src="ammo.wasm.js"></script>
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
-    <script src="https://unpkg.com/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/IdeaSpaceVR/aframe-particle-system-component@latest/dist/aframe-particle-system-component.min.js"></script>
-
-    <!-- Local Components -->
-    <script src="ar-utils.js"></script>
-    <script src="actor-utils.js"></script>
-    <script src="planting-utils.js"></script>
-    <script src="physics-utils.js"></script>
-
-    <script>
-      function openOnboarding() {
-        document.getElementById('onboarding').style.display = "flex"
-      }
-      function closeCongratulations() {
-        document.getElementById('congrats').style.display = "none"
-      }
-      function openCongratulations() {
-        document.getElementById('congrats').style.display = "flex"
-      }
-      function openHowToPlay() {
-        document.getElementById('howToPlay').style.display = "flex"
-      }
-      function closeHowToPlay() {
-        document.getElementById('howToPlay').style.display = "none";
-      }
-    </script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XT4SMTQCY2"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-XT4SMTQCY2');
-    </script>
 
   </head>
 
   <body>
-    <video autoplay style="width: 100vw; height: 100vh; object-fit: cover;"></video>
-    <!-- HTML Overlay for AR -->
-    <div id="onboarding" class="overlay">
+    <!-- Landing Page Animated Background (Adobe Animate/CreateJS) -->
+    <div id="animation_container">
+      <canvas id="canvas" width="640" height="1136"></canvas>
+      <div id="dom_overlay_container"></div>
+    </div>
+
+    <!-- Orientation Warning Overlay -->
+    <div id="orientationOverlay" class="orientation-overlay hidden">
+      <div class="orientation-content">
+        <div class="orientation-icon">📱</div>
+        <h2>Please Rotate Your Device</h2>
+        <p>Hold your device in portrait mode for the best experience</p>
+      </div>
+    </div>
+
+    <!-- Butterfly Animation -->
+    <div class="butterfly-container">
+      <img id="butterfly" src="./assets/Landing/bfly-ani.gif" alt="Butterfly" class="butterfly-animation">
+    </div>
+
+    <!-- Bee Animation -->
+    <div class="bee-container">
+      <img id="bee" src="./assets/Landing/bee-ani.gif" alt="Bee" class="bee-animation">
+    </div>
+
+    <!-- HTML Overlay for Onboarding -->
+    <div id="onboarding" class="overlay" style="display: flex;">
       <header>
         <img src="./assets/HMGLogo-Header.png" alt="HMG Logo" class="onboarding-logo">
       </header>
       <main class="onboarding-content">
-        <h1 class="onboarding-title">Animals Everywhere!</h1>
-        <button onclick="window.location.href='menu.html'" class="button" aria-label="Start the game">Start</button>
+        <h1 class="onboarding-title" id="welcomeTitle">Animals Everywhere!</h1>
+        <p id="welcomeMessage" class="description" style="display: none;">Welcome back,<br><span id="welcomeNickname"></span>!</p>
+        <button id="startButton" onclick="handleStartClick('nickname.html')" class="button" aria-label="Start the game" style="display: block;">Start</button>
+        <button id="continueButton" onclick="handleStartClick('menu.html')" class="button" style="display: none;" aria-label="Continue to menu">Continue</button>
       </main>
     </div>
-    <div id="howToPlay" class="overlay hidden">
-      <header>
-          <button class="back-button" onclick="closeHowToPlay()">
-              <img src="./assets/Arrow.png" alt="Back">
-          </button>
-          <h1>How to Play</h1>
-          <div class="header-placeholder"></div>
-      </header>
 
-      <main class="how-to-play">
-        <!-- Instruction 1 -->
-        <div class="instruction">
-          <div class="instruction-icon">
-            <img src="./assets/icon-number.png" alt="Step 1" class="number-icon">
-            <p class="instruction-text">Tap the screen to dig a hole.</p>
-          </div>
-          <img src="./assets/HTPImage.png" alt="Digging a hole" class="instruction-image">
-        </div>
-
-        <!-- Instruction 2 (Reversed layout) -->
-        <div class="instruction reverse">
-            <img src="./assets/HTPImage-2.png" alt="Planting seeds" class="instruction-image">
-            <div class="instruction-icon">
-              <img src="./assets/icon-number-2.png" alt="Step 2" class="number-icon">
-              <p class="instruction-text">Select the seeds, aim and tap in each hole to plant them.</p>
-            </div>
-        </div>
-
-        <!-- Instruction 3 -->
-        <div class="instruction">
-            <div class="instruction-icon">
-              <img src="./assets/icon-number-3.png" alt="Step 3" class="number-icon">
-              <p class="instruction-text">Tap the screen to tip the watering can and water the seedlings.</p>
-            </div>
-            <img src="./assets/HTPImage-3.png" alt="Watering plants" class="instruction-image">
-        </div>
-      </main>
-
-      <footer>
-        <button class="button" onclick="closeHowToPlay()">Let's Go</button>
-      </footer>
-    </div>
-    <!-- ===========================
-    CONGRATULATIONS OVERLAY
-    ============================ -->
-    <div id="congrats" class="overlay hidden">
-      <main class="congrats-content">
-          <img src="./assets/Badge.png" alt="Badge" class="congrats-badge">
-          <h1>Congratulations!</h1>
-          <p class="congrats-message">You did it! Well done.</p>
-      </main>
-
-      <footer> 
-          <button class="congrats-button" onclick="closeCongrats()">Go to Home</button>
-      </footer>
-    </div>
-
-    <div id="overlay" style="position: absolute; z-index: 1; ">
-      <header>
-        <button id="help" class="button" onclick="openHowToPlay()" style="position: absolute; right: 4%; top: 2%; width: 2rem; height: 2rem; padding: 0;">
-          ?
-        </button>
-        <p id="hint">Tap the screen to use the shovel to dig a hole</p>
-        <button id="throwButton" style="padding: 10px 20px; width: 90%; height: 80%; position: absolute; bottom: 15%; left: 50%; right: 50%; translate: -50%; display: block; background-color: none; border: none; opacity: 0%;">Dig Hole</button>
-        <button id="seedButton" onclick="swapSeeds()" aria-label="Select seeds" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 50%; transform:translate(-50%); display: block; background: transparent; border: none; opacity: 100%;">
-          <img src="./assets/Plant_BTN.png" alt="Plant seeds button">
-        </button>
-        <button id="waterButton" onclick="swapWater()" aria-label="Select watering can" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; right: 0; display: block; background: transparent; border: none; opacity: 100%;">
-          <img src="./assets/Water_BTN.png" alt="Water plants button">
-        </button>
-        <button id="shovelButton" onclick="swapShovel()" aria-label="Select shovel" style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: 0; left: 0; display: block; background: transparent; border: none; opacity: 100%;">
-          <img src="./assets/Dig_BTN.png" alt="Dig hole button">
-        </button>
-        <button id="arButton" style="padding: 10px 20px; width: 200px; position: absolute; bottom: 10px; left: 50%; right: 50%; translate: -50%; display: none;">Enter AR</button>
-      </header>
-    </div>
-
-    <!-- Aframe Scene -->
-    <a-scene id="scene" webxr="optionalFeatures: hit-test, dom-overlay; overlayElement: #overlay;" button-enter-ar="buttonID: #arButton;"
-    ar-hit-test="target:#soil;" ar-place-once reflection="directionalLight:#dirlight;"
-    physics=" driver: ammo; debug: false; debugDrawMode: 1; iterations: 100; maxSubSteps: 4; fixedTimeStep: 0.01667"
-    renderer="antialias: true; highRefreshRate: true; colorManagement: true; sortObjects: false; logarithmicDepthBuffer: true; physicallyCorrectLights: true; maxCanvasWidth: 1920; maxCanvasHeight: 1920; foveationLevel: 0;"
-    gltf-model="dracoDecoderPath: https://cdn.jsdelivr.net/npm/three@0.129.0/examples/js/libs/draco/gltf/;">
-      <a-assets>
-        <a-asset-item
-          id="soil-glb"
-          src="./assets/DugSoil.glb"
-        ></a-asset-item>
-        <a-asset-item
-          id="seed-glb"
-          src="./assets/Sunflower_seed.glb"
-        ></a-asset-item>
-        <a-asset-item
-          id="sunflower-glb"
-          src="./assets/SunFlower.glb"
-        ></a-asset-item>
-        <a-asset-item
-          id="seedpack-glb"
-          src="./assets/SeedPacket.glb"
-        ></a-asset-item>
-        <a-asset-item
-          id="wateringcan-glb"
-          src="./assets/WateringCan.glb"
-        ></a-asset-item>
-        <a-asset-item
-          id="shovel-glb"
-          src="./assets/low_poly_shovel.glb"
-        ></a-asset-item>
-        <a-asset-item
-          id="bee-glb"
-          src="./assets/Bee_04_animation.glb"
-        ></a-asset-item>
-      </a-assets>
-
-      <!-- Camera -->
-      <a-entity id="camera" position="0 1.15 0" rotation="0 0 0" camera mouse-cursor look-controls="magicWindowTrackingEnabled: true;"
-        throw-seed="buttonID: #throwButton; modelID: #seed-glb; soilID: #soil; power: 6; enabled: false;"
-        watercan="buttonID: #throwButton; wateringCanID: #wateringcan; raycasterID: #raycaster; enabled: false;"
-        shovel="buttonID: #throwButton; shovelID: #shovel; raycasterID: #raycaster; enabled: true;">
-        <a-entity id="raycaster" raycaster="objects: .raycast; showLine:true;" position="0 0 0"></a-entity>
-        <a-entity cursor="fuse: true; fuseTimeout: 500" position="0 0 -1" geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03" material="color: orange; shader: flat"></a-entity>
+    <script>
+        // Wrap everything to prevent blocking errors on iOS Safari
+        try {
         
-        <a-entity id="seedpacketcontainer" position="0 -0.3 1" show-on-place-ar visible="true"
-          animation__enter="property: position; from: -0.3 -0.3 1; to: 0 -0.3 -0.5; dur: 500; delay: 150; startEvents: seedsEnter;"
-          animation__leave="property: position; from: 0 -0.3 -0.5; to: 0.3 -0.3 1; dur: 500; startEvents: seedsLeave;">
-          <a-entity id="seedpacket" position="0 0 0" gltf-model="#seedpack-glb" visible="true" show-on-place-ar></a-entity>
-        </a-entity>
-        <a-entity id="wateringcancontainer" position="0 -0.3 1" show-on-place-ar visible="true"
-          animation__enter="property: position; from: -0.3 -0.3 1; to: 0 -0.3 -0.5; dur: 500; delay: 150;  startEvents: waterEnter;"
-          animation__leave="property: position; from: 0 -0.3 -0.5; to: 0.3 -0.3 1; dur: 500; startEvents: waterLeave;">
-          <a-entity id="wateringcan" position="0 0 0" rotation="0 -140 0" gltf-model="#wateringcan-glb" scale="0.75 0.75 0.75" visible="true" show-on-place-ar watering="false"
-            animation__tipping="property: rotation; from: 0 -140 0; to: 60 -140 0; dur: 1200; dir: alternate; startEvents: water;"
-            animation__untipping="property: rotation; from: 60 -140 0; to: 0 -140 0; dur: 1200; dir: alternate; startEvents: stopwater;">
-          </a-entity>
-        </a-entity>
-        <a-entity id="shovelcontainer" position="0 -0.3 -0.5" show-on-place-ar visible="true"
-          animation__enter="property: position; from: -0.3 -0.3 1; to: 0 -0.3 -0.5; dur: 500; delay: 150; startEvents: shovelEnter;"
-          animation__leave="property: position; from: 0 -0.3 -0.5; to: 0.3 -0.3 1; dur: 500; startEvents: shovelLeave;">
-          <a-entity id="shovel" position="-0.05 -0.05 0" rotation="20 90 0" scale="0.3 0.3 0.3" gltf-model="#shovel-glb" visible="true" show-on-place-ar
-            animation__digging1="property: object3D.position.y; from: 0.15; to: 0.05; dur: 400; delay: 200; dir: alternate; startEvents: dig; loop: 1;"
-            animation__digging2="property: rotation; from: 20 90 0; to: 20 90 40; dur: 400; delay: 400; dir: alternate; startEvents: dig; loop: 1;"
-            animation__digging3="property: object3D.position.y; from: 0.15; to: 0.05; dur: 400; delay: 1000; dir: alternate; startEvents: animationcomplete__digging1; loop: 1;"
-            animation__digging4="property: rotation; from: 20 90 0; to: 20 90 40; dur: 400; delay: 1200; dir: alternate; startEvents: animationcomplete__digging1; loop: 1;"></a-entity>
-        </a-entity>
-      </a-entity>
-      
-      <a-entity light="type: ambient; color: #fff"></a-entity>
-      
-      <!-- Scene -->
-      <a-entity id="floor" class="raycast" position="0 -0.5 0" geometry="primitive: box; depth: 1000; width: 1000; height: 1;" visible="false" grip="0.9" material="color: lime;"
-      ammo-body="type: static;" ammo-shape="type: box;" hide-on-enter-ar></a-entity>
-    
-      <a-entity id="bee-holder" position="0 10 0" animation__enter="property: scale; from: 0 0 0; to:  1 1 1; dur: 3000; startEvents: enter; easing: linear;" animation__spin="property: rotation; from: 0 0 0; to:  0 360 0; dur: 2000; autoplay: true; loop: true; easing: linear;">
-        <a-entity id="bee" gltf-model="#bee-glb" position="0 0 -0.25" rotation="0 -90 0" scale="3 3 3" animation-mixer="clip: ArmatureAction"></a-entity>
-      </a-entity>
-    </a-scene>
-  </body>
+        // Orientation Detection
+        class OrientationManager {
+            constructor() {
+                this.orientationOverlay = document.getElementById('orientationOverlay');
+                
+                // Ensure overlay starts hidden
+                if (this.orientationOverlay) {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+                
+                this.init();
+            }
+            
+            init() {
+                // Check initial orientation
+                this.checkOrientation();
+                
+                // Listen for orientation changes
+                window.addEventListener('orientationchange', () => {
+                    // Small delay to ensure the orientation change is complete
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+                
+                // Also listen for resize events as a backup
+                window.addEventListener('resize', () => {
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+            }
+            
+            checkOrientation() {
+                try {
+                    // Use screen orientation API if available, fallback to window dimensions
+                    let isLandscape = false;
+                    
+                    if (screen && screen.orientation && typeof screen.orientation.angle !== 'undefined') {
+                        // Use screen orientation API for more accurate detection
+                        isLandscape = screen.orientation.angle === 90 || screen.orientation.angle === 270;
+                    } else {
+                        // Fallback to window dimensions with a small tolerance
+                        isLandscape = window.innerWidth > window.innerHeight + 50;
+                    }
+                    
+                    if (this.orientationOverlay) {
+                        if (isLandscape) {
+                            this.orientationOverlay.classList.remove('hidden');
+                        } else {
+                            this.orientationOverlay.classList.add('hidden');
+                        }
+                    }
+                } catch (e) {
+                    // If orientation check fails, just hide the overlay
+                    if (this.orientationOverlay) {
+                        this.orientationOverlay.classList.add('hidden');
+                    }
+                }
+            }
+        }
 
-  <script src="main.js"></script>
+        // Check if localStorage is available (non-blocking)
+        function isLocalStorageAvailable() {
+            try {
+                if (typeof Storage === 'undefined' || !window.localStorage) {
+                    return false;
+                }
+                const test = '__localStorage_test__';
+                localStorage.setItem(test, test);
+                localStorage.removeItem(test);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // Check if user already exists and show welcome message
+        // This function is called AFTER page load to avoid blocking
+        function checkExistingUser() {
+            // Get elements with null checks
+            const welcomeTitle = document.getElementById('welcomeTitle');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            const welcomeNickname = document.getElementById('welcomeNickname');
+            const startButton = document.getElementById('startButton');
+            const continueButton = document.getElementById('continueButton');
+            
+            // Ensure all elements exist before proceeding
+            if (!welcomeTitle || !welcomeMessage || !welcomeNickname || !startButton || !continueButton) {
+                return; // Elements not ready yet
+            }
+            
+            // Always show default state first (non-blocking)
+            // Then check localStorage asynchronously
+            setTimeout(function() {
+                try {
+                    // Check localStorage availability
+                    if (!isLocalStorageAvailable()) {
+                        // localStorage not available, keep default new user screen
+                        return;
+                    }
+                    
+                    // Safely access localStorage with corruption detection
+                    let userData = null;
+                    try {
+                        const userDataStr = localStorage.getItem('userData');
+                        if (userDataStr) {
+                            try {
+                                userData = JSON.parse(userDataStr);
+                                // Validate userData structure
+                                if (userData && typeof userData !== 'object') {
+                                    throw new Error('Invalid userData format');
+                                }
+                            } catch (parseError) {
+                                // Corrupted data - clear it
+                                console.warn('Corrupted userData detected, clearing:', parseError);
+                                localStorage.removeItem('userData');
+                                return;
+                            }
+                        }
+                    } catch (e) {
+                        // If localStorage fails, keep default screen
+                        console.warn('localStorage access failed:', e);
+                        return;
+                    }
+                    
+                    // Update UI if user exists
+                    if (userData && userData.nickname) {
+                        welcomeNickname.textContent = userData.nickname;
+                        welcomeMessage.style.display = 'block';
+                        startButton.style.display = 'none';
+                        continueButton.style.display = 'block';
+                        
+                        // Sync returning user to Customer.io (will work when snippet is added)
+                        if (typeof syncUserToCustomerIO === 'function') {
+                            syncUserToCustomerIO(userData);
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Error checking existing user:', error);
+                    // Keep default state on any error
+                }
+            }, 100); // Small delay to ensure page is fully rendered
+        }
+
+        // Clean up corrupted localStorage data that might block page load
+        function cleanupCorruptedStorage() {
+            try {
+                if (typeof Storage === 'undefined' || !window.localStorage) {
+                    return;
+                }
+                
+                // Test if localStorage is accessible
+                const testKey = '__storage_test__';
+                localStorage.setItem(testKey, 'test');
+                localStorage.removeItem(testKey);
+                
+                // Try to read userData and check if it's valid JSON
+                try {
+                    const userDataStr = localStorage.getItem('userData');
+                    if (userDataStr) {
+                        JSON.parse(userDataStr); // Test if it's valid JSON
+                    }
+                } catch (e) {
+                    // Corrupted userData - clear it
+                    console.warn('Corrupted userData detected, clearing...');
+                    localStorage.removeItem('userData');
+                }
+                
+                // Try to read collectedBadges and check if it's valid JSON
+                try {
+                    const badgesStr = localStorage.getItem('collectedBadges');
+                    if (badgesStr) {
+                        JSON.parse(badgesStr); // Test if it's valid JSON
+                    }
+                } catch (e) {
+                    // Corrupted collectedBadges - clear it
+                    console.warn('Corrupted collectedBadges detected, clearing...');
+                    localStorage.removeItem('collectedBadges');
+                }
+            } catch (e) {
+                // If localStorage is completely broken, try to clear everything
+                console.warn('localStorage appears corrupted, attempting cleanup...');
+                try {
+                    localStorage.clear();
+                } catch (clearError) {
+                    // Can't even clear - localStorage is completely broken
+                    console.error('Cannot access localStorage:', clearError);
+                }
+            }
+        }
+
+        // Initialize page - only run once, completely non-blocking
+        let initialized = false;
+        function initializePage() {
+            if (initialized) return;
+            initialized = true;
+            
+            try {
+                // Don't clean up storage here - do it later after page loads
+                // This ensures page can render even if localStorage is broken
+                new OrientationManager();
+            } catch (error) {
+                console.error('Error initializing orientation manager:', error);
+            }
+        }
+
+        // Initialize orientation manager immediately (non-blocking)
+        // This doesn't access localStorage, so it's safe
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                try {
+                    initializePage();
+                } catch (e) {
+                    console.error('Error in DOMContentLoaded:', e);
+                }
+            }, false);
+        } else {
+            // DOM already ready
+            try {
+                initializePage();
+            } catch (e) {
+                console.error('Error initializing page:', e);
+            }
+        }
+
+        // Check user data AFTER page is fully loaded and rendered
+        // This is deferred to avoid blocking page load on iOS Safari
+        window.addEventListener('load', function() {
+            // Clean up corrupted storage first, then check user
+            try {
+                cleanupCorruptedStorage();
+            } catch (e) {
+                console.warn('Storage cleanup failed, continuing anyway:', e);
+            }
+            // Wait a bit longer to ensure page is fully rendered
+            setTimeout(function() {
+                try {
+                    checkExistingUser();
+                } catch (e) {
+                    console.error('Error checking existing user:', e);
+                }
+            }, 300);
+        }, false);
+        
+        } catch (e) {
+            // If anything fails, at least the page should still render
+            console.error('Initialization error:', e);
+        }
+    </script>
+
+    <!-- Adobe Animate/CreateJS Animation Scripts -->
+    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+    <script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
+    <script src="landing-ani.js"></script>
+    <script>
+      var canvas, stage, exportRoot, anim_container, dom_overlay_container, fnStartAnimation;
+      var animationLib, isReversing = false, pendingNavigation = null;
+      
+      function init() {
+        canvas = document.getElementById("canvas");
+        anim_container = document.getElementById("animation_container");
+        dom_overlay_container = document.getElementById("dom_overlay_container");
+        var comp = AdobeAn.getComposition("31388C4C00097D4D8EE56250BF6D718A");
+        animationLib = comp.getLibrary();
+        var loader = new createjs.LoadQueue(false);
+        loader.addEventListener("fileload", function(evt){handleFileLoad(evt,comp)});
+        loader.addEventListener("complete", function(evt){handleComplete(evt,comp)});
+        var lib = comp.getLibrary();
+        loader.loadManifest(lib.properties.manifest);
+      }
+      function handleFileLoad(evt, comp) {
+        var images = comp.getImages();	
+        if (evt && (evt.item.type == "image")) { images[evt.item.id] = evt.result; }	
+      }
+      function handleComplete(evt,comp) {
+        var lib = comp.getLibrary();
+        var ss = comp.getSpriteSheet();
+        var queue = evt.target;
+        var ssMetadata = lib.ssMetadata;
+        for(i = 0; i < ssMetadata.length; i++) {
+          ss[ssMetadata[i].name] = new createjs.SpriteSheet( {"images": [queue.getResult(ssMetadata[i].name)], "frames": ssMetadata[i].frames} )
+        }
+        exportRoot = new lib.landingani2();
+        stage = new lib.Stage(canvas);	
+        fnStartAnimation = function() {
+          stage.addChild(exportRoot);
+          createjs.Ticker.framerate = lib.properties.fps;
+          createjs.Ticker.addEventListener("tick", handleAnimationTick);
+          // Start playing the animation forward
+          exportRoot.play();
+        }	    
+        // Ensure container is full screen before makeResponsive runs
+        anim_container.style.width = window.innerWidth + 'px';
+        anim_container.style.height = window.innerHeight + 'px';
+        
+        // Use scaleType 1 (Math.min) to maintain aspect ratio - original setting
+        AdobeAn.makeResponsive(true,'both',true,1,[canvas,anim_container,dom_overlay_container]);
+        
+        // Re-apply container size after makeResponsive (it may override it)
+        setTimeout(function() {
+          anim_container.style.width = window.innerWidth + 'px';
+          anim_container.style.height = window.innerHeight + 'px';
+        }, 50);
+        
+        // Handle resize and orientation changes
+        window.addEventListener('resize', function() {
+          anim_container.style.width = window.innerWidth + 'px';
+          anim_container.style.height = window.innerHeight + 'px';
+        });
+        window.addEventListener('orientationchange', function() {
+          setTimeout(function() {
+            anim_container.style.width = window.innerWidth + 'px';
+            anim_container.style.height = window.innerHeight + 'px';
+          }, 200);
+        });	
+        AdobeAn.compositionLoaded(lib.properties.id);
+        fnStartAnimation();
+        
+        // Animate in onboarding elements after background animation completes
+        // Background animation is 60 frames at 30fps = 2 seconds
+        setTimeout(function() {
+          animateOnboardingElements();
+        }, 2000);
+      }
+      
+      // Function to animate onboarding elements in sequence
+      function animateOnboardingElements() {
+        var logo = document.querySelector('.onboarding-logo');
+        var title = document.querySelector('.onboarding-title');
+        var startButton = document.getElementById('startButton');
+        var continueButton = document.getElementById('continueButton');
+        var butterfly = document.getElementById('butterfly');
+        var bee = document.getElementById('bee');
+        
+        // Determine which button is visible
+        var activeButton = null;
+        if (startButton && startButton.style.display !== 'none') {
+          activeButton = startButton;
+        } else if (continueButton && continueButton.style.display !== 'none') {
+          activeButton = continueButton;
+        }
+        
+        // Animate logo first
+        if (logo) {
+          logo.classList.add('animate-in');
+        }
+        
+        // Animate butterfly - fade in and start fluttering
+        if (butterfly) {
+          setTimeout(function() {
+            butterfly.classList.add('animate-in');
+            // Force GIF to keep animating by periodically "touching" it
+            // This prevents browsers from pausing the GIF when it goes off-screen
+            keepGifAnimating(butterfly);
+          }, 500);
+        }
+        
+        // Animate bee - fade in and start erratic movement
+        if (bee) {
+          setTimeout(function() {
+            bee.classList.add('animate-in');
+            // Force GIF to keep animating
+            keepGifAnimating(bee);
+          }, 800);
+        }
+        
+        // Animate title after 0.3 seconds (and welcome message if shown)
+        setTimeout(function() {
+          if (title) {
+            title.classList.add('animate-in');
+          }
+          var welcomeMessage = document.getElementById('welcomeMessage');
+          if (welcomeMessage && welcomeMessage.style.display !== 'none') {
+            welcomeMessage.classList.add('animate-in');
+          }
+        }, 300);
+        
+        // Animate button after 0.6 seconds
+        setTimeout(function() {
+          if (activeButton) {
+            activeButton.classList.add('animate-in');
+          }
+        }, 600);
+      }
+      
+      // Function to keep GIF animating even when off-screen
+      function keepGifAnimating(imgElement) {
+        if (!imgElement) return;
+        
+        // Periodically force the browser to keep the GIF active
+        // by temporarily changing a property that forces a re-render
+        setInterval(function() {
+          if (imgElement && imgElement.classList.contains('animate-in')) {
+            // Force a reflow/repaint to keep GIF animating
+            var currentSrc = imgElement.src;
+            // Add a cache-busting parameter that doesn't actually change
+            imgElement.src = currentSrc.split('?')[0] + '?t=' + Date.now();
+            // Immediately restore to prevent flicker
+            setTimeout(function() {
+              if (imgElement) {
+                imgElement.src = currentSrc.split('?')[0];
+              }
+            }, 10);
+          }
+        }, 1000); // Check every second
+      }
+      
+      // Handle animation tick to check for reverse completion
+      function handleAnimationTick(event) {
+        if (isReversing && exportRoot) {
+          // Manually step backwards through frames
+          var currentFrame = exportRoot.currentFrame;
+          if (currentFrame > 0) {
+            // Go to previous frame (stop prevents forward auto-advance)
+            exportRoot.stop();
+            exportRoot.gotoAndStop(Math.max(0, currentFrame - 1));
+          } else {
+            // Reached the beginning, stop and navigate
+            isReversing = false;
+            exportRoot.stop();
+            if (pendingNavigation) {
+              window.location.href = pendingNavigation;
+            }
+          }
+        }
+        // Update stage (CreateJS handles normal forward playback automatically)
+        stage.update(event);
+      }
+      
+      // Function to fade out onboarding elements
+      function fadeOutOnboardingElements() {
+        var logo = document.querySelector('.onboarding-logo');
+        var title = document.querySelector('.onboarding-title');
+        var startButton = document.getElementById('startButton');
+        var continueButton = document.getElementById('continueButton');
+        var welcomeMessage = document.getElementById('welcomeMessage');
+        var butterfly = document.getElementById('butterfly');
+        var bee = document.getElementById('bee');
+        
+        // Remove animate-in class and add animate-out class
+        if (logo) {
+          logo.classList.remove('animate-in');
+          logo.classList.add('animate-out');
+        }
+        if (title) {
+          title.classList.remove('animate-in');
+          title.classList.add('animate-out');
+        }
+        if (startButton) {
+          startButton.classList.remove('animate-in');
+          startButton.classList.add('animate-out');
+        }
+        if (continueButton) {
+          continueButton.classList.remove('animate-in');
+          continueButton.classList.add('animate-out');
+        }
+        if (welcomeMessage) {
+          welcomeMessage.classList.remove('animate-in');
+          welcomeMessage.classList.add('animate-out');
+        }
+        if (butterfly) {
+          butterfly.classList.remove('animate-in');
+          butterfly.classList.add('animate-out');
+        }
+        if (bee) {
+          bee.classList.remove('animate-in');
+          bee.classList.add('animate-out');
+        }
+      }
+      
+      // Handle button click - reverse animation then navigate
+      function handleStartClick(url) {
+        // Prevent multiple clicks
+        if (isReversing) return;
+        
+        // Disable buttons
+        var startButton = document.getElementById('startButton');
+        var continueButton = document.getElementById('continueButton');
+        if (startButton) startButton.disabled = true;
+        if (continueButton) continueButton.disabled = true;
+        
+        // Fade out onboarding elements
+        fadeOutOnboardingElements();
+        
+        // Store the URL to navigate to
+        pendingNavigation = url;
+        
+        // Start reversing the animation
+        if (exportRoot && exportRoot.totalFrames > 0) {
+          isReversing = true;
+          // Stop normal playback - tick handler will manually reverse
+          exportRoot.stop();
+        } else {
+          // If animation isn't ready, just navigate
+          window.location.href = url;
+        }
+      }
+      
+      // Initialize animation when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    </script>
+
+    <!-- Google tag (gtag.js) - moved to end to avoid blocking page load -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XT4SMTQCY2"></script>
+    <script>
+      try {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XT4SMTQCY2');
+      } catch (e) {
+        console.warn('Google Analytics initialization failed:', e);
+      }
+    </script>
+  </body>
 </html>

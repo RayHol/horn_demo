@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animals Everywhere! - Badges</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="menu.css">
+    
+    <!-- Custom Fonts -->
+    <style>
+        @font-face {
+            font-family: 'BentonSans';
+            src: url('./assets/fonts/BentonSansCompBlackRegular.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+        }
+        
+        @font-face {
+            font-family: 'BentonSans Book';
+            src: url('./assets/fonts/BentonSans Book.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+        }
+        
+        @font-face {
+            font-family: 'Amatic SC';
+            src: url('./assets/fonts/Amatic SC Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+        }
+        
+        @font-face {
+            font-family: 'Amatic SC';
+            src: url('./assets/fonts/Amatic-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
+    </style>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Dynamic viewport height support */
+        @supports (height: 100dvh) {
+            body {
+                height: 100dvh;
+            }
+        }
+
+        /* Fix for mobile Safari */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                min-height: -webkit-fill-available;
+            }
+        }
+
+        body {
+            background: linear-gradient(to bottom, #FFFFFF 0%, #C6C8C6 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 12px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0px 4px 0px 0px var(--button-shadow);
+        }
+
+        .back-button:hover {
+            transform: translateY(2px);
+            box-shadow: 0px 2px 0px 0px var(--button-shadow);
+        }
+
+        .back-button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .back-button img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .title {
+            font-family: "Amatic SC", sans-serif;
+            font-size: 27px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-color);
+            margin-top: 20px;
+            width: 100%;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Orientation Warning Overlay */
+        .orientation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .orientation-content {
+            background-color: #FCF6EF;
+            border: 3px solid #E7D4A3;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            max-width: 300px;
+            margin: 1rem;
+            box-shadow: 0px 4px 0px 0px #E7D4A3;
+        }
+
+        .orientation-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: rotateToPortrait 2.5s ease-in-out infinite;
+            transform-origin: 0 100%;
+            display: inline-block;
+        }
+
+        .orientation-content h2 {
+            color: #C14400;
+            font-family: "Amatic SC", sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            margin: 0 0 1rem 0;
+        }
+
+        .orientation-content p {
+            color: #333;
+            font-size: 1.1rem;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        @keyframes rotateToPortrait {
+            0% { transform: rotate(-90deg); opacity: 1; }
+            40% { transform: rotate(0deg); opacity: 1; }
+            60% { transform: rotate(0deg); opacity: 1; }
+            70% { transform: rotate(0deg); opacity: 0; }
+            71% { transform: rotate(-90deg); opacity: 0; }
+            80% { transform: rotate(-90deg); opacity: 1; }
+            100% { transform: rotate(-90deg); opacity: 1; }
+        }
+
+        /* Hidden class for orientation overlay */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Badge Detail Popup Styling */
+        .badge-detail-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #FCF6EF;
+            background-image: url('./assets/Background-spread.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 10000;
+        }
+
+        .badge-detail-popup .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #D64D1B;
+            border: none;
+            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .badge-detail-popup .back-button:hover {
+            background-color: #B83D15;
+        }
+
+        .badge-detail-popup .back-button img {
+            width: 24px;
+            height: 24px;
+            filter: invert(1);
+        }
+
+        .badge-detail-popup .title {
+            font-family: "Amatic SC", sans-serif;
+            font-size: 27px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-color);
+            margin-top: 20px;
+            width: 100%;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .badge-detail-main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding-top: 125px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+
+        .badge-detail-icon {
+            width: 275px;
+            height: 275px;
+            object-fit: contain;
+            margin-bottom: 2rem;
+        }
+
+        .badge-detail-name {
+            font-family: "Amatic SC";
+            font-size: 48px;
+            font-weight: 700;
+            color: #3A2E27;
+            margin: 0 0 1rem 0;
+            text-align: center;
+            line-height: 100%;
+        }
+
+        .badge-detail-date {
+            font-family: "BentonSans Book", sans-serif;
+            font-size: 16px;
+            color: #3A2E27;
+            margin: 0 0 1.5rem 0;
+            text-align: center;
+            line-height: 140%;
+        }
+
+        .badge-detail-description {
+            color: var(--Texts-textMain, #3A2E27);
+            text-align: center;
+            font-family: "BentonSans Book", sans-serif;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 140%; /* 22.4px */
+            margin: 0;
+        }
+
+        /* Responsive adjustments for badge detail popup */
+        @media (max-width: 480px) {
+            .badge-detail-content {
+                width: 95%;
+                padding: 1.5rem;
+            }
+            
+            .badge-detail-title {
+                font-size: 36px;
+            }
+            
+            .badge-detail-icon {
+                width: 206px;
+                height: 206px;
+            }
+            
+            .badge-detail-name {
+                font-size: 36px;
+            }
+            
+            .badge-detail-description {
+                font-size: 16px;
+            }
+        }
+
+        /* Disable scrolling */
+        body {
+            overflow: hidden;
+        }
+
+        /* Badge Grid Styling */
+        .badge-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 5px 3px;
+            padding: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+            margin-top: 140px;
+        }
+
+        .badge-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1;
+            position: relative;
+        }
+
+        .badge-image {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+            max-width: 180px;
+            max-height: 180px;
+            transition: transform 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        /* Collected badges are 25% bigger than placeholder badges */
+        .collected-badge {
+            opacity: 0;
+            transform: scale(0.3);
+            transform-origin: center center;
+            width: 90% !important;
+            height: 90% !important;
+            max-width: 180px !important;
+            max-height: 180px !important;
+            object-fit: contain !important;
+            will-change: transform, opacity;
+            backface-visibility: hidden;
+        }
+
+        /* Scale collected badges to be 25% bigger after animation */
+        .collected-badge.animation-complete {
+            transform: scale(1.5625) !important;
+            transform-origin: center center;
+            width: 90% !important;
+            height: 90% !important;
+            max-width: 180px !important;
+            max-height: 180px !important;
+            object-fit: contain !important;
+        }
+
+        .badge-item:hover .badge-image {
+            transform: scale(1.20);
+        }
+
+        @keyframes badgeCollect {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            60% {
+                opacity: 1;
+                transform: scale(1.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.5625);
+            }
+        }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .badge-grid {
+                gap: 8px 4px;
+                padding: 15px;
+                margin-top: 100px;
+            }
+            
+            .badge-image {
+                max-width: 140px;
+                max-height: 140px;
+            }
+            
+            .collected-badge {
+                width: 90% !important;
+                height: 90% !important;
+                max-width: 140px !important;
+                max-height: 140px !important;
+                object-fit: contain !important;
+            }
+            
+            .collected-badge.animation-complete {
+                transform: scale(1.5625) !important;
+                width: 90% !important;
+                height: 90% !important;
+                max-width: 140px !important;
+                max-height: 140px !important;
+                object-fit: contain !important;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .badge-grid {
+                gap: 6px 3px;
+                padding: 10px;
+                margin-top: 80px;
+            }
+            
+            .badge-image {
+                max-width: 120px;
+                max-height: 120px;
+            }
+            
+            .collected-badge {
+                width: 90% !important;
+                height: 90% !important;
+                max-width: 120px !important;
+                max-height: 120px !important;
+                object-fit: contain !important;
+            }
+            
+            .collected-badge.animation-complete {
+                transform: scale(1.5625) !important;
+                width: 90% !important;
+                height: 90% !important;
+                max-width: 120px !important;
+                max-height: 120px !important;
+                object-fit: contain !important;
+            }
+        }
+    </style>
+    
+    <!-- Customer.io Helper (loads before Customer.io snippet) -->
+    <script src="customer-io-helper.js"></script>
+    <!-- Customer.io snippet will go here when available -->
+</head>
+<body>
+    <!-- Orientation Warning Overlay -->
+    <div id="orientationOverlay" class="orientation-overlay hidden">
+        <div class="orientation-content">
+            <div class="orientation-icon">📱</div>
+            <h2>Please Rotate Your Device</h2>
+            <p>Hold your device in portrait mode for the best experience</p>
+        </div>
+    </div>
+
+    <button class="back-button" onclick="window.location.href='menu.html'" aria-label="Back to menu">
+        <img src="./assets/Arrow2.png" alt="Back">
+    </button>
+    <h1 class="title">Badge Board</h1>
+
+    <!-- Badge Grid Container -->
+    <div class="badge-grid">
+        <!-- Row 1 -->
+        <div class="badge-item" data-badge="sunflower">
+            <img src="./assets/badges/Badge.png" alt="Badge 1" class="badge-image">
+            <img src="./assets/badges/icons/bee-badge.svg" alt="Bee Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+        <div class="badge-item">
+            <img src="./assets/badges/Badge.png" alt="Badge 2" class="badge-image">
+        </div>
+        <div class="badge-item">
+            <img src="./assets/badges/Badge.png" alt="Badge 3" class="badge-image">
+        </div>
+
+        <!-- Row 2 -->
+        <div class="badge-item" data-badge="walrus">
+            <img src="./assets/badges/Badge.png" alt="Badge 5" class="badge-image">
+            <img src="./assets/badges/icons/walrusFeeding-badge.svg" alt="Walrus Feeding Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+        <div class="badge-item" data-badge="anemone">
+            <img src="./assets/badges/Badge.png" alt="Badge 6" class="badge-image">
+            <img src="./assets/badges/icons/clownfish-game-badge.svg" alt="Clownfish Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+        <div class="badge-item">
+            <img src="./assets/badges/Badge.png" alt="Badge 6" class="badge-image">
+        </div>
+
+        <!-- Row 3 -->
+        <div class="badge-item" data-badge="photographer">
+            <img src="./assets/badges/Badge.png" alt="Badge 7" class="badge-image">
+            <img src="./assets/badges/icons/peacock-game-badge.svg" alt="Proud Photographer Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+        <div class="badge-item">
+            <img src="./assets/badges/Badge.png" alt="Badge 8" class="badge-image">
+        </div>
+        <div class="badge-item">
+            <img src="./assets/badges/Badge.png" alt="Badge 9" class="badge-image">
+        </div>
+
+        <!-- Row 4 -->
+        <div class="badge-item">
+            <img src="./assets/badges/Badge.png" alt="Badge 10" class="badge-image">
+        </div>
+        <div class="badge-item">
+            <img src="./assets/badges/Badge.png" alt="Badge 11" class="badge-image">
+        </div>
+        <div class="badge-item">
+            <img src="./assets/badges/Badge.png" alt="Badge 12" class="badge-image">
+        </div>
+    </div>
+
+    <!-- Badge Detail Popup -->
+    <div id="badgeDetailPopup" class="badge-detail-popup hidden">
+        <button class="back-button" onclick="closeBadgeDetail()">
+            <img src="./assets/Arrow.png" alt="Back">
+        </button>
+        <h1 class="title">BADGE DETAILS</h1>
+        
+        <div class="badge-detail-main">
+            <img id="badgeDetailIcon" src="" alt="Badge" class="badge-detail-icon">
+            <h2 id="badgeDetailName" class="badge-detail-name"></h2>
+            <p id="badgeDetailDate" class="badge-detail-date"></p>
+            <p id="badgeDetailDescription" class="badge-detail-description"></p>
+        </div>
+    </div>
+
+    <script>
+        // Orientation Detection
+        class OrientationManager {
+            constructor() {
+                this.orientationOverlay = document.getElementById('orientationOverlay');
+                
+                // Ensure overlay starts hidden
+                if (this.orientationOverlay) {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+                
+                this.init();
+            }
+            
+            init() {
+                // Check initial orientation
+                this.checkOrientation();
+                
+                // Listen for orientation changes
+                window.addEventListener('orientationchange', () => {
+                    // Small delay to ensure the orientation change is complete
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+                
+                // Also listen for resize events as a backup
+                window.addEventListener('resize', () => {
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+            }
+            
+            checkOrientation() {
+                // Use screen orientation API if available, fallback to window dimensions
+                let isLandscape = false;
+                
+                if (screen.orientation) {
+                    // Use screen orientation API for more accurate detection
+                    isLandscape = screen.orientation.angle === 90 || screen.orientation.angle === 270;
+                } else {
+                    // Fallback to window dimensions with a small tolerance
+                    isLandscape = window.innerWidth > window.innerHeight + 50;
+                }
+                
+                if (isLandscape) {
+                    this.orientationOverlay.classList.remove('hidden');
+                } else {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+            }
+        }
+
+        // Initialize orientation manager when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new OrientationManager();
+            initializeBadgeCollection();
+            addBadgeClickListeners();
+        });
+
+        // Badge Collection System
+        function initializeBadgeCollection() {
+            // Check localStorage for collected badges
+            const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+            
+            // Show collected badges and hide placeholder badges
+            collectedBadges.forEach(badgeId => {
+                const badgeItem = document.querySelector(`[data-badge="${badgeId}"]`);
+                if (badgeItem) {
+                    const placeholder = badgeItem.querySelector('.badge-image:not(.collected-badge)');
+                    const collectedBadge = badgeItem.querySelector('.collected-badge');
+                    
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
+                    }
+                    if (collectedBadge) {
+                        collectedBadge.style.display = 'block';
+                        // Mark as ready for animation
+                        collectedBadge.setAttribute('data-ready', 'true');
+                    }
+                }
+            });
+            
+            console.log('Collected badges from localStorage:', collectedBadges);
+            
+            // Trigger truly sequential animations - each badge waits for previous to finish
+            setTimeout(() => {
+                const collectedBadgeElements = document.querySelectorAll('.collected-badge[data-ready="true"]');
+                const visibleBadges = Array.from(collectedBadgeElements).filter(badge => 
+                    badge.style.display !== 'none' && badge.offsetParent !== null
+                );
+                
+                console.log('Found badges to animate:', visibleBadges.length);
+                
+                // Function to animate a single badge and then trigger the next
+                function animateBadgeSequentially(badgeIndex) {
+                    if (badgeIndex >= visibleBadges.length) {
+                        console.log('All badges animated');
+                        return; // All badges animated
+                    }
+                    
+                    const badge = visibleBadges[badgeIndex];
+                    console.log('Animating badge', badgeIndex, badge);
+                    
+                    // Reset badge state
+                    badge.style.animation = 'none';
+                    badge.style.opacity = '0';
+                    badge.style.transform = 'scale(0.3)';
+                    
+                    // Force reflow
+                    badge.offsetHeight;
+                    
+                    // Start animation
+                    badge.style.animation = 'badgeCollect 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+                    
+                    // Wait for this badge to finish, then animate the next one
+                    const handleAnimationEnd = () => {
+                        console.log('Badge animation ended:', badgeIndex);
+                        badge.classList.add('animation-complete');
+                        badge.removeEventListener('animationend', handleAnimationEnd);
+                        
+                        // Start the next badge after a small pause
+                        setTimeout(() => {
+                            animateBadgeSequentially(badgeIndex + 1);
+                        }, 120); // Reduced pause for smoother flow
+                    };
+                    
+                    badge.addEventListener('animationend', handleAnimationEnd);
+                }
+                
+                // Start the sequential animation
+                if (visibleBadges.length > 0) {
+                    animateBadgeSequentially(0);
+                }
+            }, 300);
+        }
+
+        // Function to add a badge (called from games)
+        function addBadge(badgeId) {
+            let collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+            if (!collectedBadges.includes(badgeId)) {
+                collectedBadges.push(badgeId);
+                localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
+                
+                // Also sync with userData.progress.badges if userData exists
+                const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+                if (userData) {
+                    if (!userData.progress) {
+                        userData.progress = { gamesCompleted: [], badges: [], highScores: {} };
+                    }
+                    if (!userData.progress.badges) {
+                        userData.progress.badges = [];
+                    }
+                    if (!userData.progress.badgeDates) {
+                        userData.progress.badgeDates = {};
+                    }
+                    if (!userData.progress.badges.includes(badgeId)) {
+                        userData.progress.badges.push(badgeId);
+                        // Store the collection date
+                        userData.progress.badgeDates[badgeId] = new Date().toISOString();
+                        localStorage.setItem('userData', JSON.stringify(userData));
+                    }
+                    
+                    // Update Customer.io when badge is collected (will work when snippet is added)
+                    if (typeof updateBadgeInCustomerIO === 'function') {
+                        updateBadgeInCustomerIO(badgeId);
+                    }
+                }
+            }
+        }
+
+        // Badge detail popup functionality
+        function showBadgeDetail(badgeId) {
+            const popup = document.getElementById('badgeDetailPopup');
+            const icon = document.getElementById('badgeDetailIcon');
+            const name = document.getElementById('badgeDetailName');
+            const date = document.getElementById('badgeDetailDate');
+            const description = document.getElementById('badgeDetailDescription');
+            
+            // Badge data
+            const badgeData = {
+                'sunflower': {
+                    icon: './assets/badges/icons/bee-badge.svg',
+                    name: 'Garden Grower',
+                    description: 'A true garden grower! You\'ve planted, watered, and nurtured a beautiful home for the bees.'
+                },
+                'walrus': {
+                    icon: './assets/badges/icons/walrusFeeding-badge.svg',
+                    name: 'Fancy Feeder',
+                    description: 'Top marks for aim and timing! You\'ve become the walrus\'s favorite feeder.'
+                },
+                'anemone': {
+                    icon: './assets/badges/icons/clownfish-game-badge.svg',
+                    name: 'Careful Cleaner',
+                    description: 'Great care! You\'ve scrubbed the anemones spotless for the Clownfish.'
+                },
+                'photographer': {
+                    icon: './assets/badges/icons/peacock-game-badge.svg',
+                    name: 'Proud Photographer',
+                    description: 'You captured the peacock\'s proudest moment.'
+                }
+            };
+            
+            if (badgeData[badgeId]) {
+                icon.src = badgeData[badgeId].icon;
+                name.textContent = badgeData[badgeId].name;
+                
+                // Get the actual collection date from userData
+                let collectionDate = null;
+                try {
+                    const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+                    if (userData && userData.progress && userData.progress.badgeDates && userData.progress.badgeDates[badgeId]) {
+                        collectionDate = new Date(userData.progress.badgeDates[badgeId]);
+                    }
+                } catch (e) {
+                    console.warn('Error retrieving badge date:', e);
+                }
+                
+                // Format and display the date
+                const monthNames = ["January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"];
+                
+                if (collectionDate && !isNaN(collectionDate.getTime())) {
+                    // Use the stored collection date
+                    const month = monthNames[collectionDate.getMonth()];
+                    const day = collectionDate.getDate();
+                    const year = collectionDate.getFullYear();
+                    date.textContent = `Collected in ${month} ${day}, ${year}`;
+                } else {
+                    // Fallback to current date if no stored date (for backwards compatibility)
+                    const currentDate = new Date();
+                    const month = monthNames[currentDate.getMonth()];
+                    const day = currentDate.getDate();
+                    const year = currentDate.getFullYear();
+                    date.textContent = `Collected in ${month} ${day}, ${year}`;
+                }
+                
+                description.textContent = badgeData[badgeId].description;
+                
+                popup.classList.remove('hidden');
+            }
+        }
+
+        function closeBadgeDetail() {
+            document.getElementById('badgeDetailPopup').classList.add('hidden');
+        }
+
+        // Add click event listeners to collected badges
+        function addBadgeClickListeners() {
+            const collectedBadges = document.querySelectorAll('.collected-badge');
+            collectedBadges.forEach(badge => {
+                badge.addEventListener('click', function() {
+                    // Find the parent badge item to get the data-badge attribute
+                    const badgeItem = this.closest('.badge-item');
+                    if (badgeItem) {
+                        const badgeId = badgeItem.getAttribute('data-badge');
+                        if (badgeId) {
+                            showBadgeDetail(badgeId);
+                        }
+                    }
+                });
+                
+                // Add cursor pointer to indicate clickable
+                badge.style.cursor = 'pointer';
+            });
+        }
+    </script>
+</body>
+</html> 

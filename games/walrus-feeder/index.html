@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script>
+      // WebXR requires https: to work so ensure redirected if needed.
+      if (location.hostname !== "localhost" && window.location.protocol === "http:" )
+        window.location.protocol = "https:";
+    </script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+    <title>Animals Everywhere</title>
+<!--     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> -->
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+  </head>
+
+  <!-- External Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .a-enter-vr-button{
+      display: none;
+    }
+    .a-enter-ar-button{
+      display: none;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .overlay.hidden {
+      display: none;
+    }
+    .popup-content {
+      width: 85%;
+      max-width: 550px;
+      height: 75%;
+      max-height: 650px;
+      margin: -10vh auto 0;
+      background-color: #FFF5E9;
+      border-radius: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .popup-content header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 15px;
+      background-color: #FFF5E9;
+    }
+    .popup-content h1 {
+      margin: 0;
+      font-family: 'Amatic', cursive;
+      font-size: 1.8rem;
+      color: #333;
+    }
+     .how-to-play {
+       flex: 1;
+       padding: 8px 15px 80px 15px;
+       display: flex;
+       flex-direction: column;
+       justify-content: space-between;
+       align-items: center;
+       gap: 8px;
+     }
+     .instruction {
+       width: 100%;
+       margin-bottom: 8px;
+       display: flex;
+       align-items: center;
+       gap: 8px;
+     }
+     .instruction.reverse {
+       flex-direction: row;
+     }
+     .instruction.reverse .instruction-icon {
+       flex-direction: row;
+     }
+    .instruction-icon {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+     .instruction-image {
+       flex-shrink: 0;
+       width: 80px;
+       height: 80px;
+       object-fit: contain;
+     }
+     .instruction img.number-icon {
+       width: 30px;
+       height: auto;
+     }
+    .instruction-text {
+      font-size: 0.9rem;
+      margin: 0;
+      flex: 1;
+      word-wrap: break-word;
+      line-height: 1.4;
+    }
+      .instruction img.instruction-image {
+        max-width: 100%;
+        height: auto;
+        max-height: 80px;
+        object-fit: contain;
+      }
+     #howToPlay .popup-content footer {
+       position: absolute !important;
+       bottom: 24px !important;
+       left: 0 !important;
+       right: 0 !important;
+       width: 100% !important;
+       display: flex !important;
+       justify-content: center !important;
+       align-items: center !important;
+       padding: 0 !important;
+       margin: 0 !important;
+       height: 60px !important;
+     }
+     
+     #howToPlay .popup-content footer .main-button {
+       margin: 0 !important;
+       transform: none !important;
+     }
+     
+     #howToPlay .popup-content footer .main-button:hover {
+       transform: none !important;
+     }
+     
+     #howToPlay .popup-content footer .main-button:active {
+       transform: none !important;
+     }
+     
+     #howToPlay .popup-content header {
+       padding-top: 24px !important;
+     }
+     
+     #howToPlay .popup-content header h1 {
+       color: #3A2E27 !important;
+       text-align: center !important;
+       -webkit-text-stroke-width: 0.5px !important;
+       -webkit-text-stroke-color: #3A2E27 !important;
+       font-family: "Amatic" !important;
+       font-size: 32px !important;
+       font-style: normal !important;
+       font-weight: 400 !important;
+       line-height: 120% !important;
+     }
+     
+     #howToPlay .popup-content {
+       border-radius: 24px !important;
+       border: 2px solid #E7D4A3 !important;
+       background: #FCF6EF !important;
+       box-shadow: 0 4px 0 0 #E7D4A3 !important;
+     }
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'BentonSans', sans-serif;
+      font-weight: 400;
+      font-size: 24px;
+      padding: 12px;
+      background: #BD3B00;
+      color: #FCEFE1;
+      box-shadow: 0px 4px 0px 0px #962F00;
+      transition: all 0.2s ease;
+    }
+    .back-button:hover {
+      transform: translateY(2px);
+      box-shadow: 0px 2px 0px 0px #962F00;
+    }
+    .back-button:active {
+      transform: translateY(4px);
+      box-shadow: none;
+    }
+     .back-button img {
+       width: 24px;
+       height: 24px;
+     }
+    .header-placeholder {
+      width: 48px;
+    }
+    .main-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'BentonSans', sans-serif;
+      font-weight: 400;
+      font-size: 24px;
+      padding: 12px 24px;
+      background: #BD3B00;
+      color: #FCEFE1;
+      width: 220px;
+      box-shadow: 0px 4px 0px 0px #962F00;
+      transition: all 0.2s ease;
+    }
+    .main-button:hover {
+      transform: translateY(2px);
+      box-shadow: 0px 2px 0px 0px #962F00;
+    }
+     .main-button:active {
+       transform: translateY(4px);
+       box-shadow: none;
+     }
+     .main-button:disabled {
+       background: #999;
+       color: #ccc;
+       box-shadow: 0px 4px 0px 0px #666;
+       cursor: not-allowed;
+       opacity: 0.6;
+     }
+     .main-button:disabled:hover {
+       transform: none;
+       box-shadow: 0px 4px 0px 0px #666;
+     }
+     .main-button:disabled:active {
+       transform: none;
+       box-shadow: 0px 4px 0px 0px #666;
+     }
+    @media (max-height: 700px) {
+      .popup-content {
+        height: 70%;
+        margin: -15vh auto 0;
+      }
+      .how-to-play {
+        gap: 5px;
+      }
+      .instruction {
+        margin-bottom: 4px;
+      }
+      .instruction img.instruction-image {
+        max-height: 80px;
+      }
+    }
+
+    /* Orientation Warning Overlay */
+    .orientation-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .orientation-content {
+      background-color: #FCF6EF;
+      border: 3px solid #E7D4A3;
+      border-radius: 1rem;
+      padding: 2rem;
+      text-align: center;
+      max-width: 300px;
+      margin: 1rem;
+      box-shadow: 0px 4px 0px 0px #E7D4A3;
+    }
+
+        .orientation-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: rotateToPortrait 2.5s ease-in-out infinite;
+            transform-origin: 0 100%;
+            display: inline-block;
+        }
+
+    .orientation-content h2 {
+      color: #C14400;
+      font-family: "Amatic", sans-serif;
+      font-weight: 700;
+      font-size: 2rem;
+      margin: 0 0 1rem 0;
+    }
+
+    .orientation-content p {
+      color: #333;
+      font-size: 1.1rem;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+        @keyframes rotateToPortrait {
+            0% { transform: rotate(-90deg); opacity: 1; }
+            40% { transform: rotate(0deg); opacity: 1; }
+            60% { transform: rotate(0deg); opacity: 1; }
+            70% { transform: rotate(0deg); opacity: 0; }
+            71% { transform: rotate(-90deg); opacity: 0; }
+            80% { transform: rotate(-90deg); opacity: 1; }
+            100% { transform: rotate(-90deg); opacity: 1; }
+        }
+
+        /* Hidden class for orientation overlay */
+        .hidden {
+            display: none !important;
+        }
+  </style>
+  <!-- Packages -->
+  <script src="ammo.wasm.js"></script>
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.3/dist/aframe-physics-system.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/IdeaSpaceVR/aframe-particle-system-component@latest/dist/aframe-particle-system-component.min.js"></script>
+  
+  <!-- Local Components -->
+  <script src="physics-utils.js"></script>
+  <script src="animation-utils.js"></script>
+  <script src="thrower.js"></script>
+  <script src="placer.js"></script>
+  <script src="audio-manager.js"></script>
+
+  <!--  Overlay functions  -->
+  <script>
+    function openHowToPlay() {
+      document.getElementById('howToPlay').classList.remove('hidden');
+    }
+    function closeHowToPlay() {
+      // Play button tap sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
+      document.getElementById('howToPlay').classList.add('hidden');
+    }
+    function backHowToPlay() {
+      // Play button tap sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
+      window.top.location.href = '../../menu.html';
+    }
+    function openCongratulations() {
+      // Play TaDA celebration sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('tada').catch(error => {
+          console.warn('Failed to play tada sound:', error);
+        });
+      }
+      document.getElementById('gamecomplete').classList.remove('hidden')
+    }
+    function closeCongratulations() {
+      document.getElementById('gamecomplete').classList.add('hidden')
+    }
+    
+    function goHome() {
+      // Play button tap sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
+      window.top.location.href = '../../badges.html';
+    }
+    
+    function showBadgeCollection() {
+      // Play TaDA celebration sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('tada').catch(error => {
+          console.warn('Failed to play tada sound:', error);
+        });
+      }
+      
+      // Add badge to collection
+      if (typeof addBadge === 'function') {
+        addBadge('walrus');
+      } else {
+        // Fallback for when badges page isn't loaded
+        let collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+        if (!collectedBadges.includes('walrus')) {
+          collectedBadges.push('walrus');
+          localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
+        }
+      }
+      
+      // Hide the game complete popup
+      document.getElementById('gamecomplete').classList.add('hidden');
+      
+      // Show the badge splash with congratulations
+      const badgeSplash = document.getElementById('badgeSplash');
+      badgeSplash.classList.remove('hidden');
+      
+      // Auto-dismiss splash after 4 seconds and show detail screen
+      setTimeout(() => {
+        badgeSplash.classList.add('hidden');
+        document.getElementById('badgeCollection').classList.remove('hidden');
+      }, 4000);
+    }
+    
+    function restartGame() {
+      // Play button tap sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
+      
+      // Reset catch counter
+      window.catchCounter = 0
+      
+      // Reset all food images to obscured state
+      document.querySelector('#clamImg').classList.add('obscured')
+      document.querySelector('#codImg').classList.add('obscured')
+      document.querySelector('#shrimpImg').classList.add('obscured')
+      document.querySelector('#musselImg').classList.add('obscured')
+      
+      // Reset thrower game to first item (clam)
+      document.querySelector('#throwergame').setAttribute('throwergame', {
+        throwableGLTF: '#clam-glb',
+        throwableScale: '1.2 1.2 1.2',
+        enabled: true
+      })
+      
+      // Reset hand indicator and text if they exist
+      const handIndicator = document.getElementById('hand-indicator')
+      const dragText = document.getElementById('drag-text')
+      if (handIndicator) {
+        handIndicator.style.display = 'block'
+        handIndicator.style.opacity = '1'
+      }
+      if (dragText) {
+        dragText.style.display = 'block'
+        dragText.style.opacity = '1'
+      }
+      
+      // Close congratulations popup
+      document.getElementById('gamecomplete').classList.add('hidden')
+    }
+
+    // Add this at the start of your script section
+    window.onload = function() {
+      // Skip directly to how-to-play like sunflower game
+      openHowToPlay();
+      setTimeout(() => {
+        document.getElementById('closehowto').disabled = false;
+      }, 5000);
+    }
+  </script>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XT4SMTQCY2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XT4SMTQCY2');
+  </script>
+
+  <body>
+    <!-- Orientation Warning Overlay -->
+    <div id="orientationOverlay" class="orientation-overlay hidden">
+      <div class="orientation-content">
+        <div class="orientation-icon">📱</div>
+        <h2>Please Rotate Your Device</h2>
+        <p>Hold your device in portrait mode for the best experience</p>
+      </div>
+    </div>
+
+    <video autoplay style="width: 100vw; height: 100vh; object-fit: cover;"></video>
+    
+    <!-- How to Play Overlay -->
+    <div id="howToPlay" class="overlay hidden">
+      <div class="popup-content">
+        <header>
+          <button class="back-button" onclick="backHowToPlay()">
+            <img src="assets/Arrow.png" alt="Back">
+          </button>
+          <h1>How to Play</h1>
+          <div class="header-placeholder"></div>
+        </header>
+
+        <main class="how-to-play">
+          <!-- Instruction 1 -->
+          <div class="instruction">
+            <div class="instruction-icon">
+              <img src="assets/icon-number.png" alt="Step 1" class="number-icon">
+              <p class="instruction-text">The Horniman's Walrus is very hungry! Help him build up his fat reserves for winter with his favorite snacks.</p>
+            </div>
+            <img src="assets/walrushow1.png" alt="Hungry walrus" class="instruction-image">
+          </div>
+
+          <!-- Instruction 2 (Reversed layout) -->
+          <div class="instruction reverse">
+            <img src="assets/walrushow2.png" alt="Swipe to toss" class="instruction-image">
+            <div class="instruction-icon">
+              <img src="assets/icon-number-2.png" alt="Step 2" class="number-icon">
+              <p class="instruction-text">Swipe up to toss a mollusc to the Walrus.</p>
+            </div>
+          </div>
+
+          <!-- Instruction 3 -->
+          <div class="instruction">
+            <div class="instruction-icon">
+              <img src="assets/icon-number-3.png" alt="Step 3" class="number-icon">
+              <p class="instruction-text">Aim for the Walrus! It opens its mouth when you're holding something tasty.</p>
+            </div>
+            <img src="assets/walrushow3.png" alt="Aiming for walrus" class="instruction-image">
+          </div>
+
+          <!-- Instruction 4 (Reversed layout) -->
+          <div class="instruction reverse">
+            <img src="assets/walrushow4.png" alt="Complete the game" class="instruction-image">
+            <div class="instruction-icon">
+              <img src="assets/icon-number-4.png" alt="Step 4" class="number-icon">
+              <p class="instruction-text">Feed the Walrus 4 times to complete the game.</p>
+            </div>
+          </div>
+        </main>
+
+        <footer>
+          <button id="closehowto" class="main-button" onclick="closeHowToPlay()" disabled>Let's Go</button>
+        </footer>
+      </div>
+    </div>
+
+    <!--   Game Complete   -->
+    <div id="gamecomplete" class="popupWindow hidden" style="overflow: unset;">
+      <div class="starRow">
+        <img class="star" src="assets/Star.png">
+        <img class="star" src="assets/Star.png">
+        <img class="star" src="assets/Star.png">
+      </div>
+      <div class="popupContent" style="padding: 1rem 0rem 0rem 0rem;">
+        <div style="width: 100%">
+          <h2 class="amatic-sc-bold" style="margin: 0; font-size: 2.5rem;">Game Complete</h2>
+          <hr style="width: 80%; border: none; background-color: #E7D4A3; color: #E7D4A3; height: 1px;">
+        </div>
+        <p style="font-size: 1.25rem; font-family: 'BentonSans Book', sans-serif;">Well done! The walrus won't go hungry this winter.</p>
+        <div class="buttonRow">
+          <button class="secondaryButton popupButtonSmall" onclick="">
+            <img src="assets/Share.png" style="object-fit: contain; width: 2rem;">
+          </button>
+          <button class="secondaryButton popupButtonSmall" onclick="restartGame()">
+            <img src="assets/PlayAgain.png" style="object-fit: contain; width: 2rem;">
+          </button>
+          <button class="primaryButton popupButtonSmall" onclick="showBadgeCollection()" style="font-family: 'BentonSans', sans-serif;">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Badge Congratulations Splash (4s auto-dismiss) -->
+    <div id="badgeSplash" class="badge-splash hidden">
+      <div class="splash-content">
+        <img src="../../assets/badges/icons/walrusFeeding-badge.svg" class="splash-badge-icon">
+        <h1 class="splash-title">Congratulations</h1>
+        <p class="splash-subtitle">You earned a badge!</p>
+      </div>
+    </div>
+
+    <!-- Badge Collection Detail Screen -->
+    <div id="badgeCollection" class="badge-collection hidden">
+      <div class="badge-detail-content">
+        <img src="../../assets/badges/icons/walrusFeeding-badge.svg" class="badge-detail-icon">
+        <h2 class="badge-name">Fancy Feeder</h2>
+        <p class="badge-description">Top marks for aim and timing! You've become the walrus's favorite feeder.</p>
+        <button class="primaryButton" onclick="goHome()">Continue</button>
+      </div>
+    </div>
+    
+    <!-- HTML Overlay -->
+    <div id="overlay" style="position: absolute; z-index: 1;">
+      <div id="foodCounter" style="display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: 1fr; grid-column-gap: 8px;">
+        <div id="clamImg" class="obscured" style="display: flex;">
+          <img src="assets/mollusc-1.png" style="object-fit: contain; width: 100%; max-height: 100%;" />
+        </div>
+        <div id="codImg" class="obscured" style="display: flex;">
+          <img src="assets/mollusc-4.png" style="object-fit: contain; width: 100%; max-height: 100%;" />
+        </div>
+        <div id="shrimpImg" class="obscured" style="display: flex;">
+          <img src="assets/mollusc-3.png" style="object-fit: contain; width: 100%; max-height: 100%;" />
+        </div>
+        <div id="musselImg" class="obscured" style="display: flex;">
+          <img src="assets/mollusc-2.png" style="object-fit: contain; width: 100%; max-height: 100%;" />
+        </div>
+        <div style="display: flex; justify-content: center; align-items: center;">
+          <button class="secondaryButton squareButton" onclick="openHowToPlay()">
+            <img src="assets/Help.png" style="object-fit: contain; width: 2rem;">
+          </button>
+        </div>
+      </div>
+      <div id="walrusHint">
+        <p class="popupWindow" style="top: 15%; width: 80%; text-align: center; padding: 0.5rem 1rem;">
+          Tap anywhere on the green area to place the walrus on the floor.
+        </p>
+      </div>
+    </div>
+
+    <!-- Aframe Scene -->
+    <a-scene id="scene" webxr="optionalFeatures: hit-test, dom-overlay; overlayElement: #overlay;" button-enter-ar="buttonID: #arButton;"
+    cursor="rayOrigin: mouse; fuse: false;" raycaster="objects: .raycast;"
+    physics=" driver: ammo; debug: false; debugDrawMode: 1; iterations: 100; maxSubSteps: 4; fixedTimeStep: 0.005"
+    renderer="antialias: true; highRefreshRate: true; colorManagement: true; sortObjects: false; logarithmicDepthBuffer: true; physicallyCorrectLights: true; maxCanvasWidth: 1920; maxCanvasHeight: 1920; foveationLevel: 0;"
+    gltf-model="dracoDecoderPath: https://cdn.jsdelivr.net/npm/three@0.129.0/examples/js/libs/draco/gltf/;">
+      
+      <!-- Assets -->
+      <a-assets>
+        <a-asset-item
+          id="walrus-glb"
+          src="assets/walrus.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="bucket-glb"
+          src="assets/bucket.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="clam-glb"
+          src="assets/clam.glb">
+        </a-asset-item>
+        <a-asset-item
+          id="cod-glb"
+          src="assets/cod.glb">
+        </a-asset-item>
+        <a-asset-item
+          id="shrimp-glb"
+          src="assets/shrimp.glb">
+        </a-asset-item>
+        <a-asset-item
+          id="mussel-glb"
+          src="assets/mussel.glb">
+        </a-asset-item>
+        <a-asset-item
+          id="hand-select"
+          src="assets/HandSelect.png">
+        </a-asset-item>
+      </a-assets>
+
+      <!-- Camera -->
+      <a-entity id="camera" position="0 1.15 0" rotation="0 0 0" camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false;">
+        <a-entity id="bucket" gltf-model="#bucket-glb" position="0 -0.65 -0.4" rotation="0 45 0" scale="1 1 1"
+            animation="property: position; to: 0 -0.4 -0.55; loop: false; dur: 1500; startEvents: enter;">
+        </a-entity>
+      </a-entity>
+      
+      <!-- Light & Sound -->
+      <a-entity light="type: ambient; color: #fff; intensity: 5;"></a-entity>
+      
+      <!-- Scene contents -->
+      <a-entity id="floor" position="0 -0.5 0" geometry="primitive: cylinder; radius: 50; height: 1;" visible="false" grip="0.9"
+      ammo-body="type: static; emitCollisionEvents: true;" ammo-shape="type: cylinder;"></a-entity>
+      <a-ring id="placezone" class="raycast" position="0 0 0" rotation="-90 0 0" material="color: green; transparent: true; opacity: 0.5;" 
+        radius-inner="2.5" radius-outer="5"></a-ring>
+      
+      <a-entity id="animal" gltf-model="#walrus-glb" position="0 0 -3.5" rotation="0 0 0" scale="1 1 1" animation-mixer="clip: Idle; loop: repeat; crossFadeDuration: 0.25"
+        animation-events="events: hit, drop, ready; animations: Eating, Miss, OpenMouth; loops: once, once, once; clamps: false, false, once;" ar-place="floorID: #placezone;">
+        <a-entity id="throwergame" position="0 0.75 0.55"></a-entity>
+        <a-entity id="back" position="0 0 -0.75" geometry="primitive: box; width: 50; depth: 1; height: 50;" visible="false"></a-entity>
+      </a-entity>
+      
+    </a-scene>
+  </body>
+
+  <script src="main.js"></script>
+  
+  <script>
+      // Orientation Detection
+        class OrientationManager {
+            constructor() {
+                this.orientationOverlay = document.getElementById('orientationOverlay');
+                
+                // Ensure overlay starts hidden
+                if (this.orientationOverlay) {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+                
+                this.init();
+            }
+          
+          init() {
+              // Check initial orientation
+              this.checkOrientation();
+              
+              // Listen for orientation changes
+              window.addEventListener('orientationchange', () => {
+                  // Small delay to ensure the orientation change is complete
+                  setTimeout(() => this.checkOrientation(), 100);
+              });
+              
+              // Also listen for resize events as a backup
+              window.addEventListener('resize', () => {
+                  setTimeout(() => this.checkOrientation(), 100);
+              });
+          }
+          
+            checkOrientation() {
+                // Use screen orientation API if available, fallback to window dimensions
+                let isLandscape = false;
+                
+                if (screen.orientation) {
+                    // Use screen orientation API for more accurate detection
+                    isLandscape = screen.orientation.angle === 90 || screen.orientation.angle === 270;
+                } else {
+                    // Fallback to window dimensions with a small tolerance
+                    isLandscape = window.innerWidth > window.innerHeight + 50;
+                }
+                
+                if (isLandscape) {
+                    this.orientationOverlay.classList.remove('hidden');
+                } else {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+            }
+      }
+
+      // Initialize orientation manager when page loads
+      document.addEventListener('DOMContentLoaded', () => {
+          new OrientationManager();
+      });
+  </script>
+</html>

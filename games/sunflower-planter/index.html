@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script>
+      // WebXR requires https: to work so ensure redirected if needed.
+      if (location.hostname !== "localhost" && window.location.protocol === "http:" )
+        window.location.protocol = "https:";
+    </script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animals Everywhere</title>
+  </head>
+
+  <!-- External Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .a-enter-vr-button{
+      display: none;
+    }
+    .a-enter-ar-button{
+      display: none;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .overlay.hidden {
+      display: none;
+    }
+    .popup-content {
+      width: 85%;
+      max-width: 550px;
+      height: 75%;
+      max-height: 650px;
+      margin: -10vh auto 0;
+      background-color: #FFF5E9;
+      border-radius: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .popup-content header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 15px;
+      background-color: #FFF5E9;
+    }
+    .popup-content h1 {
+      margin: 0;
+      font-family: 'Amatic', cursive;
+      font-size: 1.8rem;
+      color: #333;
+    }
+     .how-to-play {
+       flex: 1;
+       padding: 8px 15px 80px 15px;
+       display: flex;
+       flex-direction: column;
+       justify-content: space-between;
+       align-items: center;
+       gap: 8px;
+     }
+    .instruction {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+    .instruction-icon {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .instruction img.number-icon {
+      width: 40px;
+      height: auto;
+    }
+    .instruction-text {
+      font-size: 0.9rem;
+      margin: 0;
+    }
+     .instruction img.instruction-image {
+       max-width: 100%;
+       height: auto;
+       max-height: 100px;
+       object-fit: contain;
+     }
+     
+     /* Walrus-style popup classes */
+     .popupWindow {
+       background-color: #FCF6EF;
+       position: absolute;
+       top: 50%;
+       left: 50%;
+       transform: translate(-50%, -50%);
+       z-index: 2;
+       border: 3px solid #E7D4A3;
+       border-radius: 1rem;
+       filter: drop-shadow(0px 4px 0px #E7D4A3);
+       overflow: hidden;
+     }
+     
+     .popupContent {
+       display: flex;
+       flex-direction: column;
+       align-items: center;
+       text-align: center;
+       gap: 10px;
+       height: 95%;
+       margin: 1rem;
+     }
+     
+     .buttonRow {
+       display: flex;
+       flex-direction: row;
+       gap: 1rem;
+     }
+     
+     .starRow {
+       display: flex;
+       flex-direction: row;
+       justify-content: center;
+       position: absolute;
+       width: 100%;
+       top: -15%;
+     }
+     
+     .starRow > img:nth-child(1) {
+       width: 4rem;
+     }
+     .starRow > img:nth-child(2) {
+       bottom: 1rem;
+       position: relative;
+       width: 4.75rem;
+     }
+     .starRow > img:nth-child(3) {
+       width: 4rem;
+     }
+     
+     .popupButtonSmall {
+       padding: 0.5rem 0.75rem;
+       font-size: 1.25rem;
+       font-weight: bold;
+     }
+     
+     .primaryButton {
+       background-color: #C14400;
+       border: 2px solid #962F00;
+       border-radius: 0.5rem;
+       filter: drop-shadow(0px 3px 0px #962F00);
+       min-height: 2.5rem;
+       min-width: 2.5rem;
+       color: #FCEFE1;
+       cursor: pointer;
+     }
+     
+     .secondaryButton {
+       background-color: #FCEFE1;
+       border: 2px solid #E7D4A3;
+       border-radius: 0.5rem;
+       filter: drop-shadow(0px 3px 0px #E7D4A3);
+       min-height: 2.5rem;
+       min-width: 2.5rem;
+       cursor: pointer;
+     }
+     
+     .amatic-sc-bold {
+       font-family: "Amatic", sans-serif;
+       font-weight: 700;
+       font-style: normal;
+     }
+     #howToPlay .popup-content footer {
+       position: absolute !important;
+       bottom: 24px !important;
+       left: 0 !important;
+       right: 0 !important;
+       width: 100% !important;
+       display: flex !important;
+       justify-content: center !important;
+       align-items: center !important;
+       padding: 0 !important;
+       margin: 0 !important;
+       height: 60px !important;
+     }
+     
+     #howToPlay .popup-content footer .main-button {
+       margin: 0 !important;
+       transform: none !important;
+     }
+     
+     #howToPlay .popup-content footer .main-button:hover {
+       transform: none !important;
+     }
+     
+     #howToPlay .popup-content footer .main-button:active {
+       transform: none !important;
+     }
+     
+     #howToPlay .popup-content header {
+       padding-top: 24px !important;
+     }
+     
+     #howToPlay .popup-content header h1 {
+       color: #3A2E27 !important;
+       text-align: center !important;
+       -webkit-text-stroke-width: 0.5px !important;
+       -webkit-text-stroke-color: #3A2E27 !important;
+       font-family: "Amatic SC" !important;
+       font-size: 32px !important;
+       font-style: normal !important;
+       font-weight: 400 !important;
+       line-height: 120% !important;
+     }
+     
+     #howToPlay .popup-content {
+       border-radius: 24px !important;
+       border: 2px solid #E7D4A3 !important;
+       background: #FCF6EF !important;
+       box-shadow: 0 4px 0 0 #E7D4A3 !important;
+     }
+    .back-button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'BentonSans', sans-serif;
+      font-weight: 400;
+      font-size: 24px;
+      padding: 12px;
+      background: #BD3B00;
+      color: #FCEFE1;
+      box-shadow: 0px 4px 0px 0px #962F00;
+      transition: all 0.2s ease;
+    }
+    .back-button:hover {
+      transform: translateY(2px);
+      box-shadow: 0px 2px 0px 0px #962F00;
+    }
+    .back-button:active {
+      transform: translateY(4px);
+      box-shadow: none;
+    }
+    .back-button img {
+      width: 24px;
+      height: 24px;
+      filter: invert(1);
+    }
+    .header-placeholder {
+      width: 48px;
+    }
+    .onboarding-content {
+      text-align: center;
+      padding: 20px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .onboarding-title {
+      font-family: 'Amatic', cursive;
+      font-size: 3rem;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .main-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'BentonSans', sans-serif;
+      font-weight: 400;
+      font-size: 24px;
+      padding: 12px 24px;
+      background: #BD3B00;
+      color: #FCEFE1;
+      width: 220px;
+      box-shadow: 0px 4px 0px 0px #962F00;
+      transition: all 0.2s ease;
+    }
+    .main-button:hover {
+      transform: translateY(2px);
+      box-shadow: 0px 2px 0px 0px #962F00;
+    }
+    .main-button:active {
+      transform: translateY(4px);
+      box-shadow: none;
+    }
+    .main-button:disabled {
+      background: #999;
+      color: #ccc;
+      box-shadow: 0px 4px 0px 0px #666;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .main-button:disabled:hover {
+      transform: none;
+      box-shadow: 0px 4px 0px 0px #666;
+    }
+    .main-button:disabled:active {
+      transform: none;
+      box-shadow: 0px 4px 0px 0px #666;
+    }
+    #onboarding {
+      background-color: #FFF5E9 !important;
+      background-image: none !important;
+    }
+    @media (max-height: 700px) {
+      .popup-content {
+        height: 70%;
+        margin: -15vh auto 0;
+      }
+      .how-to-play {
+        gap: 5px;
+      }
+      .instruction {
+        margin-bottom: 4px;
+      }
+      .instruction img.instruction-image {
+        max-height: 80px;
+      }
+    }
+
+    /* Orientation Warning Overlay */
+    .orientation-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .orientation-content {
+      background-color: #FCF6EF;
+      border: 3px solid #E7D4A3;
+      border-radius: 1rem;
+      padding: 2rem;
+      text-align: center;
+      max-width: 300px;
+      margin: 1rem;
+      box-shadow: 0px 4px 0px 0px #E7D4A3;
+    }
+
+        .orientation-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: rotateToPortrait 2.5s ease-in-out infinite;
+            transform-origin: 0 100%;
+            display: inline-block;
+        }
+
+    .orientation-content h2 {
+      color: #C14400;
+      font-family: "Amatic SC", sans-serif;
+      font-weight: 700;
+      font-size: 2rem;
+      margin: 0 0 1rem 0;
+    }
+
+    .orientation-content p {
+      color: #333;
+      font-size: 1.1rem;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+        @keyframes rotateToPortrait {
+            0% { transform: rotate(-90deg); opacity: 1; }
+            40% { transform: rotate(0deg); opacity: 1; }
+            60% { transform: rotate(0deg); opacity: 1; }
+            70% { transform: rotate(0deg); opacity: 0; }
+            71% { transform: rotate(-90deg); opacity: 0; }
+            80% { transform: rotate(-90deg); opacity: 1; }
+            100% { transform: rotate(-90deg); opacity: 1; }
+        }
+
+        /* Hidden class for orientation overlay */
+        .hidden {
+            display: none !important;
+        }
+  </style>
+  <!-- Packages -->
+  <script src="ammo.wasm.js"></script>
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://unpkg.com/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+  <script src="https://unpkg.com/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/IdeaSpaceVR/aframe-particle-system-component@latest/dist/aframe-particle-system-component.min.js"></script>
+  
+  <!-- Local Components -->
+  <script src="ar-utils.js"></script>
+  <script src="actor-utils.js"></script>
+  <script src="planting-utils.js"></script>
+  <script src="physics-utils.js"></script>
+  <script src="audio-manager.js"></script>
+
+  <script>
+    function closeOnboarding() {
+      // Play button tap sound at 50% volume
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
+      document.getElementById('onboarding').style.display = "none";
+      openHowToPlay();
+      setTimeout(() => {
+        document.getElementById('closehowto').disabled = false;
+      }, 5000);
+    }
+    function openOnboarding() {
+      document.getElementById('onboarding').style.display = "flex";
+    }
+    function closeCongratulations() {
+      document.getElementById('congrats').classList.add('hidden');
+    }
+    function openCongratulations() {
+      // Play TaDA celebration sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('tada').catch(error => {
+          console.warn('Failed to play tada sound:', error);
+        });
+      }
+      document.getElementById('congrats').classList.remove('hidden');
+    }
+    
+    function goHome() {
+      // Play button tap sound at 50% volume
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
+      window.top.location.href = '../../badges.html';
+    }
+    
+    function showBadgeCollection() {
+      // Stop looping bee sound
+      if (window.AudioManager) {
+        window.AudioManager.stopLoopingAudio();
+      }
+      
+      // Play TaDA celebration sound
+      if (window.AudioManager) {
+        window.AudioManager.playSound('tada').catch(error => {
+          console.warn('Failed to play tada sound:', error);
+        });
+      }
+      
+      // Add badge to collection
+      if (typeof addBadge === 'function') {
+        addBadge('sunflower');
+      } else {
+        // Fallback for when badges page isn't loaded
+        let collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+        if (!collectedBadges.includes('sunflower')) {
+          collectedBadges.push('sunflower');
+          localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
+        }
+      }
+      
+      // Hide the game complete popup
+      document.getElementById('congrats').classList.add('hidden');
+      
+      // Show the badge splash with congratulations
+      const badgeSplash = document.getElementById('badgeSplash');
+      badgeSplash.classList.remove('hidden');
+      
+      // Auto-dismiss splash after 4 seconds and show detail screen
+      setTimeout(() => {
+        badgeSplash.classList.add('hidden');
+        document.getElementById('badgeCollection').classList.remove('hidden');
+      }, 4000);
+    }
+    
+    // Show badge collection on game start for testing
+    function startGameWithBadge() {
+      // Hide onboarding and show badge collection
+      document.getElementById('onboarding').classList.add('hidden');
+      showBadgeCollection();
+    }
+    
+    function restartGame() {
+      // Stop looping bee sound
+      if (window.AudioManager) {
+        window.AudioManager.stopLoopingAudio();
+      }
+      
+      // Play button tap sound at 50% volume
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
+      // Close congratulations popup
+      document.getElementById('congrats').classList.add('hidden');
+      
+      // Reset game state variables
+      window.flowersgrown = 0;
+      window.currentMode = 2; // Start with shovel mode
+      
+      // Reset all dirt patches - remove any planted elements
+      const scene = document.getElementById('scene');
+      const dirtPatches = scene.querySelectorAll('.waterable.raycast');
+      dirtPatches.forEach(patch => {
+        // Remove any planted elements (seedlings, sunflowers, shoots)
+        const seedling = patch.querySelector('.seedling');
+        const sunflower = patch.querySelector('.sunflower');
+        const shoot = patch.querySelector('.shoot');
+        
+        if (seedling) seedling.remove();
+        if (sunflower) sunflower.remove();
+        if (shoot) shoot.remove();
+        
+        // Reset dirt patch state
+        patch.setAttribute('planted', false);
+        patch.planted = false;
+        
+        // Remove the entire dirt patch
+        patch.remove();
+      });
+      
+      // Reset bees - hide them and reset positions
+      const bee1 = document.getElementById('bee1');
+      const bee2 = document.getElementById('bee2');
+      const bee3 = document.getElementById('bee3');
+      const beeHolder1 = document.getElementById('bee-holder1');
+      const beeHolder2 = document.getElementById('bee-holder2');
+      const beeHolder3 = document.getElementById('bee-holder3');
+      
+      if (beeHolder1) {
+        beeHolder1.setAttribute('position', '0 10 0');
+        beeHolder1.setAttribute('scale', '0 0 0');
+      }
+      if (beeHolder2) {
+        beeHolder2.setAttribute('position', '0 10 0');
+        beeHolder2.setAttribute('scale', '0 0 0');
+      }
+      if (beeHolder3) {
+        beeHolder3.setAttribute('position', '0 10 0');
+        beeHolder3.setAttribute('scale', '0 0 0');
+      }
+      
+      // Reset UI elements
+      document.getElementById('hint').innerHTML = 'Tap the ground to dig a hole for your seeds';
+      document.getElementById('shovelButton').classList.remove('pulse');
+      document.getElementById('waterButton').classList.remove('pulse');
+      document.getElementById('seedButton').classList.remove('pulse');
+      
+      // Reset tool modes
+      document.getElementById('seedpacket').setAttribute('seedpacket', { enabled: false });
+      document.getElementById('camera').setAttribute('watercan', { enabled: false });
+      document.getElementById('camera').setAttribute('shovel', { enabled: true });
+      
+      // Reset tool containers
+      document.getElementById('seedpacketcontainer').emit('seedsLeave');
+      document.getElementById('wateringcancontainer').emit('waterLeave');
+      document.getElementById('shovelcontainer').emit('shovelEnter');
+      
+      // Re-enable raycast for shovel mode
+      document.getElementById('dragpad').classList.remove('raycast');
+    }
+    function openHowToPlay() {
+      document.getElementById('howToPlay').classList.remove('hidden');
+    }
+    function closeHowToPlay() {
+      // Play button tap sound at 50% volume
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
+      document.getElementById('howToPlay').classList.add('hidden');
+    }
+    function backHowToPlay() {
+      // Play button tap sound at 50% volume
+      if (window.AudioManager) {
+        window.AudioManager.playSound('buttonTap', 0.35).catch(error => {
+          console.warn('Failed to play button tap sound:', error);
+        });
+      }
+      window.top.location.href = '../../menu.html';
+    }
+
+    // Add this at the start of your script section
+    window.onload = function() {
+      const nickname = localStorage.getItem('nickname');
+      document.getElementById('nickname').textContent = nickname;
+      // Hide onboarding and show how-to-play directly
+      document.getElementById('onboarding').style.display = "none";
+      openHowToPlay();
+      setTimeout(() => {
+        document.getElementById('closehowto').disabled = false;
+      }, 5000);
+    }
+  </script>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XT4SMTQCY2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-XT4SMTQCY2');
+  </script>
+
+  <body>
+    <!-- Orientation Warning Overlay -->
+    <div id="orientationOverlay" class="orientation-overlay hidden">
+      <div class="orientation-content">
+        <div class="orientation-icon">📱</div>
+        <h2>Please Rotate Your Device</h2>
+        <p>Hold your device in portrait mode for the best experience</p>
+      </div>
+    </div>
+
+    <video autoplay style="width: 100vw; height: 100vh; object-fit: cover;"></video>
+    <!-- HTML Overlay for AR -->
+    <div id="onboarding" class="overlay" style="display: none;">
+      <main class="onboarding-content">
+        <h1 class="onboarding-title">Hey <span id="nickname"></span></h1>
+        <button onclick="closeOnboarding()" class="main-button">Start</button>
+      </main>
+    </div>
+    <div id="howToPlay" class="overlay hidden">
+      <div class="popup-content">
+        <header>
+          <button class="back-button" onclick="backHowToPlay()">
+            <img src="assets/Arrow.png" alt="Back">
+          </button>
+          <h1>How to Play</h1>
+          <div class="header-placeholder"></div>
+        </header>
+
+        <main class="how-to-play">
+          <!-- Instruction 1 -->
+          <div class="instruction">
+            <div class="instruction-icon">
+              <img src="assets/icon-number.png" alt="Step 1" class="number-icon">
+              <p class="instruction-text">Tap the ground where you want to dig a hole.</p>
+            </div>
+            <img src="assets/HTPImage.png" alt="Digging a hole" class="instruction-image">
+          </div>
+
+          <!-- Instruction 2 (Reversed layout) -->
+          <div class="instruction reverse">
+            <img src="assets/HTPImage-2.png" alt="Planting seeds" class="instruction-image">
+            <div class="instruction-icon">
+              <img src="assets/icon-number-2.png" alt="Step 2" class="number-icon">
+              <p class="instruction-text">Select the seeds, and swipe from the packet to throw them to the holes.</p>
+            </div>
+          </div>
+
+          <!-- Instruction 3 -->
+          <div class="instruction">
+            <div class="instruction-icon">
+              <img src="assets/icon-number-3.png" alt="Step 3" class="number-icon">
+              <p class="instruction-text">Tap your seedling to use the watering can.</p>
+            </div>
+            <img src="assets/HTPImage-3.png" alt="Watering plants" class="instruction-image">
+          </div>
+        </main>
+
+        <footer>
+          <button id="closehowto" class="main-button" onclick="closeHowToPlay()" disabled>Let's Go</button>
+        </footer>
+      </div>
+    </div>
+    <!-- ===========================
+    CONGRATULATIONS OVERLAY
+    ============================ -->
+    <div id="congrats" class="popupWindow hidden" style="overflow: unset;">
+      <div class="starRow">
+        <img class="star" src="assets/Star.png">
+        <img class="star" src="assets/Star.png">
+        <img class="star" src="assets/Star.png">
+      </div>
+      <div class="popupContent" style="padding: 1rem 0rem 0rem 0rem;">
+        <div style="width: 100%">
+          <h2 class="amatic-sc-bold" style="margin: 0; font-size: 2.5rem;">Game Complete</h2>
+          <hr style="width: 80%; border: none; background-color: #E7D4A3; color: #E7D4A3; height: 1px;">
+        </div>
+        <p style="font-size: 1.25rem; font-family: 'BentonSans Book', sans-serif;">Well done! Your sunflower garden is thriving.</p>
+        <div class="buttonRow">
+          <button class="secondaryButton popupButtonSmall" onclick="">
+            <img src="assets/Share.png" style="object-fit: contain; width: 2rem;">
+          </button>
+          <button class="secondaryButton popupButtonSmall" onclick="restartGame()">
+            <img src="assets/PlayAgain.png" style="object-fit: contain; width: 2rem;">
+          </button>
+          <button class="primaryButton popupButtonSmall" onclick="showBadgeCollection()" style="font-family: 'BentonSans', sans-serif;">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Badge Congratulations Splash (4s auto-dismiss) -->
+    <div id="badgeSplash" class="badge-splash hidden">
+      <div class="splash-content">
+        <img src="../../assets/badges/icons/feeding-badge.svg" class="splash-badge-icon">
+        <h1 class="splash-title">Congratulations</h1>
+        <p class="splash-subtitle">You earned a badge!</p>
+      </div>
+    </div>
+
+    <!-- Badge Collection Detail Screen -->
+    <div id="badgeCollection" class="badge-collection hidden">
+      <div class="badge-detail-content">
+        <img src="../../assets/badges/icons/feeding-badge.svg" class="badge-detail-icon">
+        <h2 class="badge-name">Garden Grower</h2>
+        <p class="badge-description">A true garden grower! You've planted, watered, and nurtured a beautiful home for the bees.</p>
+        <button class="primaryButton" onclick="goHome()">Continue</button>
+      </div>
+    </div>
+
+    <div id="overlay" style="position: absolute; z-index: 1; ">
+      <header>
+        <button id="help" onclick="openHowToPlay()" style="position: absolute; right: 4%; top: 2%; padding: 12px;">
+          <img src="assets/Help.png" alt="Help" style="width: 24px; height: 24px; object-fit: contain;">
+        </button>
+        <p id="hint">Tap the screen to use the shovel to dig a hole</p>       
+        <div style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: max(60px, 10vh); left: 50%; transform:translate(-50%); display: block; text-align: center;">
+          <button id="seedButton" onclick="swapSeeds()" style="background: transparent; border: none; opacity: 100%;" title="Plant Seeds">
+            <img src="assets/button-bag.png" alt="Plant Seeds Button" style="width: 90px; height: 90px; object-fit: contain;">
+          </button>
+        </div>
+        <div style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: max(60px, 10vh); right: 0; display: block; text-align: center;">
+          <button id="waterButton" onclick="swapWater()" style="background: transparent; border: none; opacity: 100%;" title="Water Plants">
+            <img src="assets/button-watering.png" alt="Water Plants Button" style="width: 90px; height: 90px; object-fit: contain;">
+          </button>
+        </div>
+        <div style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: max(60px, 10vh); left: 0; display: block; text-align: center;">
+          <button id="shovelButton" onclick="swapShovel()" style="background: transparent; border: none; opacity: 100%;" title="Use Shovel">
+            <img src="assets/button-shovel.png" alt="Dig with Shovel Button" style="width: 90px; height: 90px; object-fit: contain;">
+          </button>
+        </div>
+        <button id="arButton" style="padding: 10px 20px; width: 200px; position: absolute; bottom: 10px; left: 50%; right: 50%; translate: -50%; display: none;">Enter AR</button>
+      </header>
+    </div>
+
+    <!-- Aframe Scene -->
+    <a-scene id="scene" webxr="optionalFeatures: hit-test, dom-overlay; overlayElement: #overlay;" button-enter-ar="buttonID: #arButton;"
+    ar-hit-test="target:#soil;" ar-place-once reflection="directionalLight:#dirlight;"
+    cursor="rayOrigin: mouse; fuse: false;" raycaster="objects: .raycast;"
+    physics=" driver: ammo; debug: false; debugDrawMode: 1; iterations: 100; maxSubSteps: 4; fixedTimeStep: 0.01667"
+    renderer="antialias: true; highRefreshRate: true; colorManagement: true; sortObjects: false; logarithmicDepthBuffer: true; physicallyCorrectLights: true; maxCanvasWidth: 1920; maxCanvasHeight: 1920; foveationLevel: 0;"
+    gltf-model="dracoDecoderPath: https://cdn.jsdelivr.net/npm/three@0.129.0/examples/js/libs/draco/gltf/;">
+      <a-assets>
+        <a-asset-item
+          id="soil-glb"
+          src="assets/DugSoil.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="seed-glb"
+          src="assets/Sunflower_seed.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="sunflower-glb"
+          src="assets/SunFlower.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="seedpack-glb"
+          src="assets/SeedPacket.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="wateringcan-glb"
+          src="assets/WateringCan.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="shovel-glb"
+          src="assets/shovel.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="seedling-glb"
+          src="assets/seedling.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="bee-glb"
+          src="assets/Bee_04_animation.glb"
+        ></a-asset-item>
+        <a-asset-item
+          id="waterpour-obj"
+          src="assets/waterpour.obj"
+        ></a-asset-item>
+        
+        <img id="water-texture" src="assets/WaterPour_texture.png" alt="Water Pour Texture">
+      </a-assets>
+
+      <!-- Camera -->
+      <a-entity id="camera" position="0 1.15 0" rotation="0 0 0" camera look-controls="magicWindowTrackingEnabled: true; touchEnabled: false;">
+        
+        <a-entity id="seedpacketcontainer" position="0 -0.2 1" show-on-place-ar visible="true"
+          animation__enter="property: position; from: -0.3 -0.2 1; to: 0 -0.2 -0.5; dur: 500; delay: 150; startEvents: seedsEnter;"
+          animation__leave="property: position; from: 0 -0.2 -0.5; to: 0.3 -0.2 1; dur: 500; startEvents: seedsLeave;">
+          <a-entity seedpacket id="seedpacket" class="raycast" position="0 0 0" gltf-model="#seedpack-glb" visible="true" show-on-place-ar
+            animation__squeeze="property: object3D.scale.x; from: 1; to: 0.8; dur: 200; delay: 0; dir: alternate; startEvents: squeeze; loop: 1;"
+            animation__stretch="property: object3D.scale.y; from: 1; to: 1.1; dur: 200; delay: 0; dir: alternate; startEvents: squeeze; loop: 1;"></a-entity>
+        </a-entity>
+        <a-entity id="wateringcancontainer" position="0 -0.2 1" show-on-place-ar visible="true"
+          animation__enter="property: position; from: -0.3 -0.2 1; to: 0 -0.2 -0.5; dur: 500; delay: 150;  startEvents: waterEnter;"
+          animation__leave="property: position; from: 0 -0.2 -0.5; to: 0.3 -0.2 1; dur: 500; startEvents: waterLeave;">
+          <a-entity id="wateringcan" position="0 0 0" rotation="0 -140 0" gltf-model="#wateringcan-glb" scale="0.75 0.75 0.75" visible="true" show-on-place-ar watering="false"
+            animation__tipping="property: rotation; from: 0 -140 0; to: 60 -140 0; dur: 1200; dir: alternate; startEvents: water;"
+            animation__untipping="property: rotation; from: 60 -140 0; to: 0 -140 0; dur: 1200; dir: alternate; startEvents: stopwater;">
+            <a-entity id="waterpour" position="0 0.17 0.2" rotation="0 0 0" scale="0 0 0" obj-model="obj: #waterpour-obj"
+              material="src: #water-texture; transparent: true; repeat: -1 -1;" 
+              animation__spray="property: material.offset; to: 0 -1; loop: true; autoplay: true; easing: linear;"
+              animation__grow="property: scale; from: 0 0 0; to: 1 1 1; startEvents: grow; easing: linear; delay: 750; dur: 500;"
+              animation__fade="property: material.opacity; from: 1; to: 0; startEvents: fade; easing: linear; delay: 250; dur: 400;"
+              animation__show="property: material.opacity; from: 0; to: 1; startEvents: show; easing: linear; dur: 100;">
+            </a-entity>
+          </a-entity>
+        </a-entity>
+        <a-entity id="shovelcontainer" position="0 -0.2 -0.5" show-on-place-ar visible="true"
+          animation__enter="property: position; from: -0.3 -0.2 1; to: 0 -0.2 -0.5; dur: 500; delay: 150; startEvents: shovelEnter;"
+          animation__leave="property: position; from: 0 -0.2 -0.5; to: 0.3 -0.2 1; dur: 500; startEvents: shovelLeave;">
+          <a-entity shovel id="shovel" position="-0.05 -0.05 0" rotation="0 160 20" scale="0.9 0.9 0.9" gltf-model="#shovel-glb" visible="true" show-on-place-ar
+            animation__digging1="property: object3D.position.y; from: 0.15; to: 0.05; dur: 400; delay: 200; dir: alternate; startEvents: dig; loop: 1;"
+            animation__digging2="property: rotation; from: 0 180 20; to: -40 180 20; dur: 400; delay: 400; dir: alternate; startEvents: dig; loop: 1;"
+            animation__digging3="property: object3D.position.y; from: 0.15; to: 0.05; dur: 400; delay: 1000; dir: alternate; startEvents: animationcomplete__digging1; loop: 1;"
+            animation__digging4="property: rotation; from: 0 180 20; to: -40 180 20; dur: 400; delay: 1200; dir: alternate; startEvents: animationcomplete__digging1; loop: 1;"></a-entity>
+        </a-entity>
+      </a-entity>
+      
+      <a-entity light="type: ambient; color: #fff; intensity: 2;"></a-entity>
+      
+      <!-- Scene -->
+      <a-entity id="floor" class="raycast" position="0 -0.5 0" geometry="primitive: cylinder; radius: 3; height: 1;" visible="false" grip="0.9" material="color: lime;"
+      ammo-body="type: static;" ammo-shape="type: cylinder;" hide-on-enter-ar></a-entity>
+      <a-entity id="extrafloor" position="0 -0.5 0" geometry="primitive: cylinder; radius: 50; height: 1;" visible="false" grip="0.9" material="color: lime;"
+      ammo-body="type: static;" ammo-shape="type: cylinder;" hide-on-enter-ar></a-entity>
+    
+      <a-entity id="bee-holder1" position="0 10 0" rotation="0 0 0" scale="0 0 0" animation__enter="property: scale; from: 0 0 0; to:  1 1 1; dur: 3000; startEvents: enter; easing: linear;" animation__spin="property: rotation; from: 0 0 0; to:  0 360 0; dur: 2000; autoplay: true; loop: true; easing: linear;">
+        <a-entity id="bee1" gltf-model="#bee-glb" position="0 0 -0.25" rotation="0 -90 0" scale="3.5 3.5 3.5" animation-mixer="clip: ArmatureAction"></a-entity>
+      </a-entity>
+      
+      <a-entity id="bee-holder2" position="0 10 0" rotation="0 0 0" scale="0 0 0" animation__enter="property: scale; from: 0 0 0; to:  1 1 1; dur: 3000; startEvents: enter; easing: linear;" animation__spin="property: rotation; from: 0 0 0; to:  0 360 0; dur: 2000; autoplay: true; loop: true; easing: linear;">
+        <a-entity id="bee2" gltf-model="#bee-glb" position="-0.15 0.2 -0.15" rotation="0 -90 0" scale="3.5 3.5 3.5" animation-mixer="clip: ArmatureAction"></a-entity>
+      </a-entity>
+      
+      <a-entity id="bee-holder3" position="0 10 0" rotation="0 0 0" scale="0 0 0" animation__enter="property: scale; from: 0 0 0; to:  1 1 1; dur: 3000; startEvents: enter; easing: linear;" animation__spin="property: rotation; from: 0 0 0; to:  0 360 0; dur: 2000; autoplay: true; loop: true; easing: linear;">
+        <a-entity id="bee3" gltf-model="#bee-glb" position="0.1 0.1 -0.2" rotation="0 -90 0" scale="3.5 3.5 3.5" animation-mixer="clip: ArmatureAction"></a-entity>
+      </a-entity>
+    </a-scene>
+    
+    <script src="main.js"></script>
+    
+    <script>
+        // Orientation Detection
+        class OrientationManager {
+            constructor() {
+                this.orientationOverlay = document.getElementById('orientationOverlay');
+                
+                // Ensure overlay starts hidden
+                if (this.orientationOverlay) {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+                
+                this.init();
+            }
+            
+            init() {
+                // Check initial orientation
+                this.checkOrientation();
+                
+                // Listen for orientation changes
+                window.addEventListener('orientationchange', () => {
+                    // Small delay to ensure the orientation change is complete
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+                
+                // Also listen for resize events as a backup
+                window.addEventListener('resize', () => {
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+            }
+            
+            checkOrientation() {
+                // Use screen orientation API if available, fallback to window dimensions
+                let isLandscape = false;
+                
+                if (screen.orientation) {
+                    // Use screen orientation API for more accurate detection
+                    isLandscape = screen.orientation.angle === 90 || screen.orientation.angle === 270;
+                } else {
+                    // Fallback to window dimensions with a small tolerance
+                    isLandscape = window.innerWidth > window.innerHeight + 50;
+                }
+                
+                if (isLandscape) {
+                    this.orientationOverlay.classList.remove('hidden');
+                } else {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+            }
+        }
+
+        // Initialize orientation manager when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new OrientationManager();
+        });
+    </script>
+  </body>
+</html>
