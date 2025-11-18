@@ -33,12 +33,7 @@
         }
 
         body {
-            background-color: #FCF6EF;
-            background-image: url('./assets/Background-spread.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            background: radial-gradient(115.74% 57.45% at 50% 42.55%, #FFF 0%, #FCF6EF 40%);
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
@@ -47,6 +42,35 @@
             display: flex;
             flex-direction: column;
             font-family: 'Amatic SC', sans-serif;
+        }
+
+        .background-starburst {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 1858px;
+            height: 1038px;
+            max-width: 200vw;
+            max-height: 200vh;
+            pointer-events: none;
+            z-index: 0;
+            transform: translate(-50%, -50%);
+        }
+
+        .background-starburst svg {
+            width: 100%;
+            height: 100%;
+            transform-origin: 50% 50%;
+            animation: rotateStarburst 60s linear infinite;
+        }
+
+        @keyframes rotateStarburst {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .back-button {
@@ -62,7 +86,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            z-index: 10;
+            z-index: 100;
             box-shadow: 0px 4px 0px 0px var(--button-shadow);
         }
 
@@ -93,7 +117,7 @@
             top: 34px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 5;
+            z-index: 100;
         }
 
         .leaderboard-container {
@@ -118,7 +142,7 @@
             margin-bottom: 10px;
             flex-shrink: 0;
             padding: 0 20px;
-            margin-top: 140px;
+            margin-top: 180px;
         }
 
         .period-button {
@@ -183,7 +207,7 @@
             flex-shrink: 0;
             position: absolute;
             top: auto;
-            bottom: calc(50% - 100px); /* Extend podiums down into panel area, moved down same as buttons */
+            bottom: calc(50% - 60px);
             left: 0;
             right: 0;
             padding: 0 20px;
@@ -341,7 +365,7 @@
             overflow: hidden;
             min-height: 0;
             position: absolute;
-            top: calc(40% + 120px); /* Moved down same amount as toggle buttons */
+            top: calc(40% + 120px);
             left: 0;
             right: 0;
             bottom: 0;
@@ -366,6 +390,10 @@
             flex-grow: 0;
         }
 
+        .header-badges {
+            text-align: right;
+        }
+
         .leaderboard-row {
             display: grid;
             grid-template-columns: 1fr auto;
@@ -383,7 +411,6 @@
             flex: 1 1 0;
             overflow-y: auto;
             overflow-x: hidden;
-            -webkit-overflow-scrolling: touch;
             min-height: 0;
             max-height: 100%;
         }
@@ -508,6 +535,168 @@
         .hidden {
             display: none !important;
         }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .back-button {
+                width: 44px;
+                height: 44px;
+                top: 16px;
+                left: 16px;
+            }
+
+            .back-button img {
+                width: 20px;
+                height: 20px;
+            }
+
+            .title {
+                font-size: 24px;
+                top: 30px;
+            }
+
+            .period-toggle {
+                margin-top: 140px;
+                gap: 8px;
+                padding: 0 16px;
+            }
+
+            .period-button {
+                width: 90px;
+                height: 36px;
+                padding: 10px 14px;
+                font-size: 18px;
+            }
+
+            .podium-container {
+                gap: 8px;
+                padding: 0 16px;
+                bottom: calc(50% - 40px);
+            }
+
+            .podium-base {
+                width: 56px;
+                padding: 12px;
+            }
+
+            .podium-item.bronze .podium-base {
+                height: 120px;
+            }
+
+            .podium-item.silver .podium-base {
+                height: 140px;
+            }
+
+            .podium-item.gold .podium-base {
+                height: 160px;
+            }
+
+            .podium-nickname {
+                font-size: 14px;
+            }
+
+            .podium-rank {
+                font-size: 20px;
+            }
+
+            .podium-badge-count .badge-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+
+            .leaderboard-list {
+                top: calc(40% + 100px);
+                padding: 12px;
+            }
+
+            .leaderboard-header {
+                padding: 6px 16px;
+                font-size: 16px;
+            }
+
+            .leaderboard-row {
+                padding: 10px 16px;
+                font-size: 14px;
+                gap: 16px;
+            }
+
+            .badge-count .badge-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+        }
+
+        @media (min-width: 481px) and (max-width: 768px) {
+            .period-toggle {
+                margin-top: 180px;
+            }
+
+            .podium-container {
+                bottom: calc(50% - 50px);
+            }
+
+            .leaderboard-list {
+                top: calc(40% + 110px);
+            }
+        }
+
+        @media (min-width: 769px) {
+            .period-toggle {
+                margin-top: 180px;
+            }
+
+            .podium-container {
+                bottom: calc(50% - 60px);
+            }
+
+            .leaderboard-list {
+                top: calc(40% + 120px);
+            }
+        }
+
+        @media (max-height: 700px) {
+            .period-toggle {
+                margin-top: 120px;
+            }
+
+            .podium-container {
+                bottom: calc(50% - 30px);
+                min-height: 200px;
+                max-height: 240px;
+            }
+
+            .podium-item.bronze .podium-base {
+                height: 100px;
+            }
+
+            .podium-item.silver .podium-base {
+                height: 120px;
+            }
+
+            .podium-item.gold .podium-base {
+                height: 140px;
+            }
+
+            .leaderboard-list {
+                top: calc(40% + 80px);
+            }
+        }
+
+        @media (min-height: 900px) {
+            .period-toggle {
+                margin-top: 180px;
+            }
+
+            .podium-container {
+                bottom: calc(50% - 70px);
+            }
+
+            .leaderboard-list {
+                top: calc(40% + 140px);
+            }
+        }
     </style>
 </head>
 <body>
@@ -518,6 +707,19 @@
             <h2>Please Rotate Your Device</h2>
             <p>Hold your device in portrait mode for the best experience</p>
         </div>
+    </div>
+
+    <!-- Animated Starburst Background -->
+    <div class="background-starburst">
+        <svg xmlns="http://www.w3.org/2000/svg" width="374" height="812" viewBox="0 0 374 812" fill="none">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M1116 374L192.653 334.015L1116 294.031V374ZM1116 710.164V628.961L192.323 335.957L1093.33 710.179H1116V710.164ZM1116 540.049V457.581L192.563 334.994L1116 540.049ZM1113.02 210.825C1109.9 183.848 1104.33 157.593 1096.6 132.271L192.563 333.021L1113.02 210.825ZM1064.94 55.253C1052.43 31.4219 1037.83 8.81018 1021.4 -12.266L192.308 332.073L1064.94 55.253ZM964.247 -73.1007C944.129 -90.9101 922.433 -106.928 899.368 -120.898L191.887 331.2L964.247 -73.1007ZM823.74 -157.466C798.48 -166.844 772.198 -173.995 745.059 -178.632L191.315 330.387L823.74 -157.466ZM659.747 -185H584.314L190.624 329.679L659.747 -185ZM515.571 -185H456.677L189.827 329.092L515.571 -185ZM400.505 -185H350.511L188.925 328.686L400.505 -185ZM301.029 -185H255.562L187.977 328.415L301.029 -185ZM209.042 -185H164.943L187 328.34L209.042 -185ZM118.423 -185H72.9556L186.008 328.415L118.423 -185ZM23.4886 -185H-26.5045L185.076 328.686L23.4886 -185ZM-82.6771 -185H-141.586L184.173 329.092L-82.6771 -185ZM-210.314 -185H-285.747L183.376 329.679L-210.314 -185ZM-377.975 -185H-485.389L182.685 330.372L-377.975 -185ZM-599.764 -168.44V-78.0837L182.113 331.17L-599.764 -168.44ZM-719.296 -42.1339H-742V39.0544L181.677 332.058L-719.296 -42.1339ZM-742 127.951V210.449L181.437 333.021L-742 127.951ZM-742 294.031V374L181.347 334.015L-742 294.031ZM-739.023 457.175C-735.896 484.152 -730.347 510.422 -722.619 535.744L181.437 334.994L-739.023 457.175ZM-690.954 612.747C-678.445 636.623 -663.83 659.19 -647.396 680.296L181.693 335.957L-690.954 612.747ZM-590.261 741.131C-570.129 758.91 -548.433 774.928 -525.383 788.929L182.113 336.845L-590.261 741.131ZM-449.739 825.496C-424.48 834.874 -398.168 841.995 -371.059 846.647L182.685 337.658L-449.739 825.496ZM-285.747 853H-210.314L183.376 338.366L-285.747 853ZM-141.586 853H-82.6771L184.173 338.923L-141.586 853ZM-26.4894 853H23.4886L185.076 339.344L-26.4894 853ZM72.9556 853H118.423L186.008 339.585L72.9556 853ZM164.943 853H209.042L187 339.675L164.943 853ZM255.577 853H301.044L187.992 339.585L255.577 853ZM350.511 853H400.505L188.925 339.344L350.511 853ZM456.677 853H515.586L189.827 338.923L456.677 853ZM584.314 853H659.747L190.624 338.351L584.314 853ZM751.99 853H859.419L191.345 337.658L752.005 853H751.99ZM973.764 836.455V746.084L191.887 336.845L973.764 836.455Z" fill="url(#paint0_linear_1878_714)"/>
+            <defs>
+                <linearGradient id="paint0_linear_1878_714" x1="187" y1="-185" x2="187" y2="853" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#D8D8D8" stop-opacity="0.3"/>
+                    <stop offset="1" stop-color="#D8D8D8" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+        </svg>
     </div>
 
     <button class="back-button" onclick="window.location.href='menu.html'" aria-label="Back to menu">
@@ -567,7 +769,7 @@
         <div class="leaderboard-list" id="leaderboardList">
             <div class="leaderboard-header">
                 <div># Player</div>
-                <div style="text-align: right;">Badges</div>
+                <div class="header-badges">Badges</div>
             </div>
             <div id="leaderboardRows"></div>
         </div>
@@ -647,9 +849,40 @@
                     const userDataStr = localStorage.getItem('userData');
                     if (userDataStr) {
                         this.currentUser = JSON.parse(userDataStr);
+                        // Sync badges and ensure all badges have dates
+                        this.syncBadgeDates();
                     }
                 } catch (e) {
                     console.warn('Error loading current user:', e);
+                }
+            }
+
+            // Sync badgeDates for badges that don't have dates
+            syncBadgeDates() {
+                if (!this.currentUser) return;
+                
+                const mergedBadges = this.getMergedBadges(this.currentUser);
+                if (!this.currentUser.progress) {
+                    this.currentUser.progress = { badges: [], badgeDates: {}, gamesCompleted: [], highScores: {} };
+                }
+                if (!this.currentUser.progress.badgeDates) {
+                    this.currentUser.progress.badgeDates = {};
+                }
+                
+                let updated = false;
+                mergedBadges.forEach(badgeId => {
+                    // If badge doesn't have a date, assign current date (for monthly counting)
+                    if (!this.currentUser.progress.badgeDates[badgeId]) {
+                        this.currentUser.progress.badgeDates[badgeId] = new Date().toISOString();
+                        updated = true;
+                    }
+                });
+                
+                // Update badges array to match merged badges
+                this.currentUser.progress.badges = mergedBadges;
+                
+                if (updated) {
+                    localStorage.setItem('userData', JSON.stringify(this.currentUser));
                 }
             }
 
@@ -662,15 +895,24 @@
 
             // Count badges for a specific period
             countBadgesForPeriod(badges, badgeDates, period) {
-                if (!badgeDates) return 0;
+                if (!badges || badges.length === 0) return 0;
                 
                 const now = new Date();
                 const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                 const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
                 
+                // If no badgeDates, count all badges for monthly, none for today
+                if (!badgeDates || Object.keys(badgeDates).length === 0) {
+                    return period === 'monthly' ? badges.length : 0;
+                }
+                
                 return badges.filter(badgeId => {
                     const badgeDate = badgeDates[badgeId];
-                    if (!badgeDate) return false;
+                    
+                    // If badge has no date, include it in monthly count only
+                    if (!badgeDate) {
+                        return period === 'monthly';
+                    }
                     
                     const date = new Date(badgeDate);
                     
