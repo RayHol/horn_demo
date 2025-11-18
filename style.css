@@ -48,6 +48,7 @@
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
+    gap: 50px;
     /* Background image removed - using animated landing background instead */
     background: transparent;
 }
@@ -95,10 +96,24 @@
     font-weight: 700;
     line-height: 90%;
     width: 100%;
-    margin-top: -350px;
+    margin-top: -35vh;
     margin-bottom: 30px;
     margin-left: 0;
     margin-right: 0;
+}
+
+/* Adjust for smaller screens like iPhone 13 Pro */
+@media screen and (max-height: 900px) {
+  .onboarding-title {
+      margin-top: -45vh;  /* Or a smaller fixed value like -300px */
+  }
+}
+
+/* Adjust for very small screens */
+@media screen and (max-height: 700px) {
+  .onboarding-title {
+      margin-top: -45vh;  /* Or -250px */
+  }
 }
 
 /* Description text styling (for welcome message) */
@@ -108,7 +123,7 @@
     font-weight: 400;
     text-align: center;
     color: var(--Texts-textMain, #3A2E27);
-    margin: 0 0 40px 0;
+    margin: 0 0 20px 0;
 }
 
 /* Button styling */
