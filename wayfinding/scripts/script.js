@@ -30,77 +30,77 @@ function getBadgeDataForAnimal(animalName) {
     const badgeMap = {
         'Peacock': {
             badgeId: 'peacock',
-            iconPath: '../../assets/badges/icons/peacock-badge.svg',
+            iconPath: '../assets/badges/icons/peacock-badge.svg',
             badgeName: 'Peacock Spotter',
             description: 'You found the magnificent peacock! A true explorer of the Horniman grounds.',
             gamePath: '../photographer-game.html'
         },
         'Walrus': {
             badgeId: 'walrus-ar',
-            iconPath: '../../assets/badges/icons/walrus-badge.svg',
+            iconPath: '../assets/badges/icons/walrus-badge.svg',
             badgeName: 'Walrus Finder',
             description: 'You discovered the walrus! Great tracking skills on your adventure.',
             gamePath: '../walrus-game.html'
         },
         'Koala': {
             badgeId: 'koala',
-            iconPath: '../../assets/badges/icons/Koala.svg',
+            iconPath: '../assets/badges/icons/Koala.svg',
             badgeName: 'Koala Discoverer',
             description: 'You found the koala! Your keen eye spotted this hidden treasure.'
         },
         'Bee': {
             badgeId: 'bee-ar',
-            iconPath: '../../assets/badges/icons/bee-badge.svg',
+            iconPath: '../assets/badges/icons/bee-badge.svg',
             badgeName: 'Bee Hunter',
             description: 'You found the bee! A tiny but important discovery on your journey.',
             gamePath: '../sunflower-game.html'
         },
         'Clown Fish': {
             badgeId: 'clownfish-ar',
-            iconPath: '../../assets/badges/icons/clownfish-badge.svg',
+            iconPath: '../assets/badges/icons/clownfish-badge.svg',
             badgeName: 'Clownfish Seeker',
             description: 'You found the clownfish! A colorful addition to your collection.',
             gamePath: '../anemone-game.html'
         },
         'Platypus': {
             badgeId: 'platypus',
-            iconPath: '../../assets/badges/icons/platypus.svg',
+            iconPath: '../assets/badges/icons/platypus.svg',
             badgeName: 'Platypus Explorer',
             description: 'You found the platypus! One of nature\'s most unique creatures.'
         },
         'Cephalopod': {
             badgeId: 'cephalopod',
-            iconPath: '../../assets/badges/icons/Shelled Cephalopod.svg',
+            iconPath: '../assets/badges/icons/Shelled Cephalopod.svg',
             badgeName: 'Cephalopod Collector',
             description: 'You found the cephalopod! A fascinating marine discovery.'
         },
         'Stag Beetle': {
             badgeId: 'stag-beetle',
-            iconPath: '../../assets/badges/icons/Stag Beetle.svg',
+            iconPath: '../assets/badges/icons/Stag Beetle.svg',
             badgeName: 'Beetle Spotter',
             description: 'You found the stag beetle! A small but impressive find.'
         },
         'Snowy Owl': {
             badgeId: 'snowy-owl',
-            iconPath: '../../assets/badges/icons/snowy owl.svg',
+            iconPath: '../assets/badges/icons/snowy owl.svg',
             badgeName: 'Owl Watcher',
             description: 'You found the snowy owl! A wise and majestic discovery.'
         },
         'Orangutan': {
             badgeId: 'orangutan',
-            iconPath: '../../assets/badges/icons/orangutan.svg',
+            iconPath: '../assets/badges/icons/orangutan.svg',
             badgeName: 'Orangutan Tracker',
             description: 'You found the orangutan! A great ape discovery on your adventure.'
         },
         'Jellyfish': {
             badgeId: 'jellyfish-ar',
-            iconPath: '../../assets/badges/icons/jellyfish-badge.svg',
+            iconPath: '../assets/badges/icons/jellyfish-badge.svg',
             badgeName: 'Jellyfish Finder',
             description: 'You found the jellyfish! A graceful and mesmerizing discovery.'
         },
         'Robin': {
             badgeId: 'robin',
-            iconPath: '../../assets/badges/icons/Robin.svg',
+            iconPath: '../assets/badges/icons/Robin.svg',
             badgeName: 'Robin Seeker',
             description: 'You found the robin! A cheerful bird to add to your collection.'
         }
@@ -115,7 +115,7 @@ function getBadgeDataForAnimal(animalName) {
     // Fallback to placeholder
     return {
         badgeId: animalName.toLowerCase().replace(/\s+/g, '-'),
-        iconPath: '../../assets/badges/icons/placeholder.svg',
+        iconPath: '../assets/badges/icons/placeholder.svg',
         badgeName: animalName + ' Finder',
         description: 'You found ' + animalName + '! A great discovery on your adventure.'
     };
