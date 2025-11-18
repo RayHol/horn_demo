@@ -7,6 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="menu.css">
     <style>
+        :root {
+            --Texts-textMain: #3A2E27;
+            --UI-primary: #C14400;
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -28,7 +33,8 @@
         }
 
         body {
-            background-image: url('./assets/Leaderboard-bkg.png');
+            background-color: #FCF6EF;
+            background-image: url('./assets/Background-spread.png');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -36,9 +42,11 @@
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
+            overflow-y: hidden;
             width: 100%;
             display: flex;
             flex-direction: column;
+            font-family: 'Amatic SC', sans-serif;
         }
 
         .back-button {
@@ -79,12 +87,364 @@
             font-weight: 700;
             text-align: center;
             color: var(--text-color);
-            margin-top: 20px;
+            margin-top: 0;
             width: 100%;
-            position: absolute;
-            top: 20px;
+            position: fixed;
+            top: 34px;
             left: 50%;
             transform: translateX(-50%);
+            z-index: 5;
+        }
+
+        .leaderboard-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            height: 100vh;
+            max-height: 100dvh;
+            overflow: hidden;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Toggle Buttons */
+        .period-toggle {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+            padding: 0 20px;
+            margin-top: 140px;
+        }
+
+        .period-button {
+            display: flex;
+            width: 103px;
+            height: 38px;
+            padding: 12px 16px;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            border-radius: 32px;
+            background: var(--UI-primary, #C14400);
+            box-shadow: 0 4px 0 0 #962F00;
+            border: none;
+            color: var(--cream-text);
+            font-family: 'BentonSans Comp Black', sans-serif;
+            font-size: 20px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .period-button:hover {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 0 #962F00;
+        }
+
+        .period-button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .period-button.active {
+            background: var(--UI-primary, #C14400);
+            color: var(--cream-text);
+            box-shadow: 0 4px 0 0 #962F00;
+        }
+
+        .period-button.active:hover {
+            box-shadow: 0 2px 0 0 #962F00;
+        }
+
+        .period-button:not(.active) {
+            background: var(--button-bg);
+            color: var(--orange-text);
+            box-shadow: 0 4px 0 0 var(--cream-button-shadow);
+        }
+
+        .period-button:not(.active):hover {
+            box-shadow: 0 2px 0 0 var(--cream-button-shadow);
+        }
+
+        /* Podium Section */
+        .podium-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 12px;
+            margin: 20px 0 0 0;
+            min-height: 250px;
+            max-height: 280px;
+            flex-shrink: 0;
+            position: absolute;
+            top: auto;
+            bottom: calc(50% - 100px); /* Extend podiums down into panel area, moved down same as buttons */
+            left: 0;
+            right: 0;
+            padding: 0 20px;
+            padding-bottom: 0;
+            z-index: 1;
+        }
+
+        .podium-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            opacity: 0;
+            transform: translateY(100px) scale(0.8);
+        }
+
+        .podium-item.animate-in {
+            animation: podiumBounceIn 700ms cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        .podium-item.bronze {
+            animation-delay: 0ms;
+        }
+
+        .podium-item.silver {
+            animation-delay: 200ms;
+        }
+
+        .podium-item.gold {
+            animation-delay: 400ms;
+        }
+
+        @keyframes podiumBounceIn {
+            0% {
+                opacity: 0;
+                transform: translateY(100px) scale(0.8);
+            }
+            70% {
+                opacity: 1;
+                transform: translateY(0) scale(1.15);
+            }
+            85% {
+                transform: translateY(-10px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .podium-nickname {
+            color: var(--Texts-textMain, #3A2E27);
+            font-family: "BentonSans Comp Black", sans-serif;
+            font-size: 16px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 90%;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-align: center;
+            min-height: 28px;
+        }
+
+        .podium-base {
+            width: 64px;
+            height: 132px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 16px;
+            gap: 2px;
+            position: relative;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .podium-item.bronze .podium-base {
+            background: #CD7F32;
+            height: 140px;
+        }
+
+        .podium-item.silver .podium-base {
+            background: #C0C0C0;
+            height: 160px;
+        }
+
+        .podium-item.gold .podium-base {
+            background: #FFD700;
+            height: 180px;
+        }
+
+        .podium-rank {
+            color: var(--Texts-textMain, #3A2E27);
+            text-align: center;
+            font-family: "BentonSans", "BentonSans Medium", sans-serif;
+            font-size: 24px;
+            font-style: normal;
+            font-weight: 500;
+            line-height: 90%;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .podium-badge-count {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0;
+            position: relative;
+        }
+
+        .badge-icon {
+            width: 32px;
+            height: 32px;
+            background-image: url('./assets/badgecount.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'BentonSans Comp Black', sans-serif;
+            font-size: 20px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 22px;
+            letter-spacing: 1px;
+            color: var(--Texts-textMain, #3A2E27);
+            text-align: center;
+        }
+
+        .podium-badge-count .badge-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+        }
+
+        /* Leaderboard List */
+        .leaderboard-list {
+            background: #FFFFFF;
+            border-radius: 0;
+            border-top: 3px solid #E7D4A3;
+            border-left: none;
+            border-right: none;
+            border-bottom: none;
+            padding: 16px;
+            margin-top: 0;
+            opacity: 0;
+            transition: opacity 300ms ease;
+            box-shadow: none;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+            position: absolute;
+            top: calc(40% + 120px); /* Moved down same amount as toggle buttons */
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            z-index: 2;
+        }
+
+        .leaderboard-list.fade-in {
+            opacity: 1;
+        }
+
+        .leaderboard-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            padding: 8px 20px;
+            border-bottom: 2px solid #E7D4A3;
+            margin-bottom: 8px;
+            font-family: 'BentonSans Comp Black', sans-serif;
+            font-size: 18px;
+            color: var(--orange-text);
+            flex-shrink: 0;
+            flex-grow: 0;
+        }
+
+        .leaderboard-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            padding: 12px 20px;
+            border-bottom: none;
+            font-family: 'BentonSans Book', sans-serif;
+            font-size: 16px;
+            color: var(--text-color);
+            transition: background-color 0.2s ease;
+            gap: 20px;
+            align-items: center;
+        }
+
+        #leaderboardRows {
+            flex: 1 1 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            min-height: 0;
+            max-height: 100%;
+        }
+
+        .leaderboard-row.current-user {
+            background: rgba(189, 59, 0, 0.1);
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
+        .rank-number {
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-name {
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .badge-count {
+            text-align: right;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .badge-count .badge-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 16px;
+            background-image: url('./assets/badgecount.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            color: var(--Texts-textMain, #3A2E27);
+            font-family: 'BentonSans Comp Black', sans-serif;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 22px;
+            letter-spacing: 1px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-color);
+            font-family: 'BentonSans Book', sans-serif;
+            font-size: 18px;
         }
 
         /* Orientation Warning Overlay */
@@ -145,14 +505,8 @@
             100% { transform: rotate(-90deg); opacity: 1; }
         }
 
-        /* Hidden class for orientation overlay */
         .hidden {
             display: none !important;
-        }
-
-        /* Disable scrolling */
-        body {
-            overflow: hidden;
         }
     </style>
 </head>
@@ -169,7 +523,55 @@
     <button class="back-button" onclick="window.location.href='menu.html'" aria-label="Back to menu">
         <img src="./assets/Arrow2.png" alt="Back">
     </button>
-    <h1 class="title">Leaderboard</h1>
+    <h1 class="title">LEADERBOARD</h1>
+
+    <div class="leaderboard-container">
+        <!-- Period Toggle Buttons -->
+        <div class="period-toggle">
+            <button class="period-button active" id="todayButton" data-period="today">Today</button>
+            <button class="period-button" id="monthlyButton" data-period="monthly">Monthly</button>
+        </div>
+
+        <!-- Podium Section -->
+        <div class="podium-container">
+            <div class="podium-item silver" id="podium2">
+                <div class="podium-nickname" id="nickname2">-</div>
+                <div class="podium-base">
+                    <div class="podium-rank">2</div>
+                    <div class="podium-badge-count">
+                        <div class="badge-icon" id="badgeCount2">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="podium-item gold" id="podium1">
+                <div class="podium-nickname" id="nickname1">-</div>
+                <div class="podium-base">
+                    <div class="podium-rank">1</div>
+                    <div class="podium-badge-count">
+                        <div class="badge-icon" id="badgeCount1">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="podium-item bronze" id="podium3">
+                <div class="podium-nickname" id="nickname3">-</div>
+                <div class="podium-base">
+                    <div class="podium-rank">3</div>
+                    <div class="podium-badge-count">
+                        <div class="badge-icon" id="badgeCount3">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard List -->
+        <div class="leaderboard-list" id="leaderboardList">
+            <div class="leaderboard-header">
+                <div># Player</div>
+                <div style="text-align: right;">Badges</div>
+            </div>
+            <div id="leaderboardRows"></div>
+        </div>
+    </div>
 
     <script>
         // Orientation Detection
@@ -177,7 +579,6 @@
             constructor() {
                 this.orientationOverlay = document.getElementById('orientationOverlay');
                 
-                // Ensure overlay starts hidden
                 if (this.orientationOverlay) {
                     this.orientationOverlay.classList.add('hidden');
                 }
@@ -186,30 +587,23 @@
             }
             
             init() {
-                // Check initial orientation
                 this.checkOrientation();
                 
-                // Listen for orientation changes
                 window.addEventListener('orientationchange', () => {
-                    // Small delay to ensure the orientation change is complete
                     setTimeout(() => this.checkOrientation(), 100);
                 });
                 
-                // Also listen for resize events as a backup
                 window.addEventListener('resize', () => {
                     setTimeout(() => this.checkOrientation(), 100);
                 });
             }
             
             checkOrientation() {
-                // Use screen orientation API if available, fallback to window dimensions
                 let isLandscape = false;
                 
                 if (screen.orientation) {
-                    // Use screen orientation API for more accurate detection
                     isLandscape = screen.orientation.angle === 90 || screen.orientation.angle === 270;
                 } else {
-                    // Fallback to window dimensions with a small tolerance
                     isLandscape = window.innerWidth > window.innerHeight + 50;
                 }
                 
@@ -221,9 +615,316 @@
             }
         }
 
-        // Initialize orientation manager when page loads
+        // Leaderboard Manager
+        class LeaderboardManager {
+            constructor() {
+                this.currentPeriod = 'today';
+                this.currentUser = null;
+                this.allUsers = [];
+                this.init();
+            }
+
+            init() {
+                // Load current user data
+                this.loadCurrentUser();
+                
+                // Generate or load test data
+                this.ensureTestData();
+                
+                // Load all users
+                this.loadAllUsers();
+                
+                // Render initial leaderboard
+                this.renderLeaderboard();
+                
+                // Set up event listeners
+                document.getElementById('todayButton').addEventListener('click', () => this.switchPeriod('today'));
+                document.getElementById('monthlyButton').addEventListener('click', () => this.switchPeriod('monthly'));
+            }
+
+            loadCurrentUser() {
+                try {
+                    const userDataStr = localStorage.getItem('userData');
+                    if (userDataStr) {
+                        this.currentUser = JSON.parse(userDataStr);
+                    }
+                } catch (e) {
+                    console.warn('Error loading current user:', e);
+                }
+            }
+
+            // Merge badges from userData.progress.badges and collectedBadges
+            getMergedBadges(userData) {
+                const progressBadges = userData?.progress?.badges || [];
+                const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+                return [...new Set([...progressBadges, ...collectedBadges])];
+            }
+
+            // Count badges for a specific period
+            countBadgesForPeriod(badges, badgeDates, period) {
+                if (!badgeDates) return 0;
+                
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                
+                return badges.filter(badgeId => {
+                    const badgeDate = badgeDates[badgeId];
+                    if (!badgeDate) return false;
+                    
+                    const date = new Date(badgeDate);
+                    
+                    if (period === 'today') {
+                        const badgeDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                        return badgeDay.getTime() === today.getTime();
+                    } else {
+                        return date >= monthStart && date <= now;
+                    }
+                }).length;
+            }
+
+            // Generate test data
+            generateTestData() {
+                const firstNames = ['Flora', 'Garden', 'Honey', 'Jellyfish', 'Megalodon', 'Nectar', 'Ocean', 'Plant', 'Sea', 'Walrus'];
+                const secondNames = ['Fox', 'Explorer', 'Hero', 'Team', 'Savior', 'Ninja', 'Boss', 'Champion'];
+                const testUsers = [];
+                
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                
+                // Generate 20 test users to ensure we have enough for leaderboard
+                for (let i = 0; i < 20; i++) {
+                    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+                    const secondName = secondNames[Math.floor(Math.random() * secondNames.length)];
+                    const randomNum = Math.floor(Math.random() * 90 + 10);
+                    const nickname = `${firstName}${secondName}${randomNum}`;
+                    const userId = `test_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`;
+                    
+                    // Generate random badge counts
+                    const dailyBadgeCount = Math.floor(Math.random() * 13); // 0-12
+                    const monthlyBadgeCount = Math.floor(Math.random() * 15) + 6; // 6-20
+                    
+                    // Generate badge dates
+                    const badgeDates = {};
+                    const allBadges = [];
+                    
+                    // Daily badges (today)
+                    for (let j = 0; j < dailyBadgeCount; j++) {
+                        const badgeId = `test_badge_${i}_${j}`;
+                        allBadges.push(badgeId);
+                        const hours = Math.floor(Math.random() * 24);
+                        const minutes = Math.floor(Math.random() * 60);
+                        const badgeDate = new Date(today);
+                        badgeDate.setHours(hours, minutes, 0, 0);
+                        badgeDates[badgeId] = badgeDate.toISOString();
+                    }
+                    
+                    // Monthly badges (within current month, including today)
+                    const additionalMonthly = monthlyBadgeCount - dailyBadgeCount;
+                    for (let j = 0; j < additionalMonthly; j++) {
+                        const badgeId = `test_badge_monthly_${i}_${j}`;
+                        allBadges.push(badgeId);
+                        const daysAgo = Math.floor(Math.random() * (now - monthStart) / (1000 * 60 * 60 * 24));
+                        const badgeDate = new Date(monthStart);
+                        badgeDate.setDate(badgeDate.getDate() + daysAgo);
+                        badgeDates[badgeId] = badgeDate.toISOString();
+                    }
+                    
+                    testUsers.push({
+                        userId: userId,
+                        nickname: nickname,
+                        created: new Date().toISOString(),
+                        progress: {
+                            badges: allBadges,
+                            badgeDates: badgeDates,
+                            gamesCompleted: [],
+                            highScores: {}
+                        }
+                    });
+                }
+                
+                localStorage.setItem('leaderboardTestData', JSON.stringify(testUsers));
+                return testUsers;
+            }
+
+            ensureTestData() {
+                let testData = null;
+                try {
+                    const testDataStr = localStorage.getItem('leaderboardTestData');
+                    if (testDataStr) {
+                        testData = JSON.parse(testDataStr);
+                    }
+                } catch (e) {
+                    console.warn('Error loading test data:', e);
+                }
+                
+                if (!testData || testData.length < 8) {
+                    this.generateTestData();
+                }
+            }
+
+            loadAllUsers() {
+                const allUsers = [];
+                
+                // Add current user if exists
+                if (this.currentUser) {
+                    allUsers.push(this.currentUser);
+                }
+                
+                // Load test users
+                try {
+                    const testDataStr = localStorage.getItem('leaderboardTestData');
+                    if (testDataStr) {
+                        const testUsers = JSON.parse(testDataStr);
+                        allUsers.push(...testUsers);
+                    }
+                } catch (e) {
+                    console.warn('Error loading test users:', e);
+                }
+                
+                this.allUsers = allUsers;
+            }
+
+            // Rank users for current period
+            rankUsers() {
+                const currentUserId = this.currentUser?.userId;
+                
+                return this.allUsers.map(user => {
+                    const mergedBadges = this.getMergedBadges(user);
+                    const badgeDates = user.progress?.badgeDates || {};
+                    const count = this.countBadgesForPeriod(mergedBadges, badgeDates, this.currentPeriod);
+                    
+                    return {
+                        ...user,
+                        badgeCount: count,
+                        isCurrentUser: user.userId === currentUserId
+                    };
+                }).sort((a, b) => {
+                    // Sort by badge count descending
+                    if (b.badgeCount !== a.badgeCount) {
+                        return b.badgeCount - a.badgeCount;
+                    }
+                    // If same count, current user appears above others
+                    if (a.isCurrentUser && !b.isCurrentUser) return -1;
+                    if (!a.isCurrentUser && b.isCurrentUser) return 1;
+                    return 0;
+                }).map((user, index) => ({
+                    ...user,
+                    rank: index + 1
+                }));
+            }
+
+            renderLeaderboard() {
+                const rankedUsers = this.rankUsers();
+                
+                // Render top 3 podiums
+                this.renderPodiums(rankedUsers.slice(0, 3));
+                
+                // Render leaderboard list (2 above, 6 below current user)
+                this.renderLeaderboardList(rankedUsers);
+            }
+
+            renderPodiums(topThree) {
+                // Reset animations
+                const podiums = ['podium1', 'podium2', 'podium3'];
+                podiums.forEach(id => {
+                    const podium = document.getElementById(id);
+                    podium.classList.remove('animate-in');
+                    void podium.offsetWidth; // Trigger reflow
+                });
+                
+                // Set podium data
+                if (topThree[0]) {
+                    document.getElementById('nickname1').textContent = topThree[0].nickname || '-';
+                    document.getElementById('badgeCount1').textContent = topThree[0].badgeCount || 0;
+                }
+                if (topThree[1]) {
+                    document.getElementById('nickname2').textContent = topThree[1].nickname || '-';
+                    document.getElementById('badgeCount2').textContent = topThree[1].badgeCount || 0;
+                }
+                if (topThree[2]) {
+                    document.getElementById('nickname3').textContent = topThree[2].nickname || '-';
+                    document.getElementById('badgeCount3').textContent = topThree[2].badgeCount || 0;
+                }
+                
+                // Trigger animations
+                setTimeout(() => {
+                    podiums.forEach(id => {
+                        document.getElementById(id).classList.add('animate-in');
+                    });
+                }, 50);
+            }
+
+            renderLeaderboardList(rankedUsers) {
+                const listContainer = document.getElementById('leaderboardRows');
+                const currentUserId = this.currentUser?.userId;
+                
+                // Find current user's position
+                const currentUserIndex = rankedUsers.findIndex(u => u.userId === currentUserId);
+                
+                // Show top 20 users (ranks 4-23, since top 3 are in podium)
+                let startIndex = 3; // Start after top 3
+                let endIndex = Math.min(rankedUsers.length, 23); // Show up to rank 23 (20 users after top 3)
+                
+                // Get users to display
+                const usersToShow = rankedUsers.slice(startIndex, endIndex);
+                
+                if (usersToShow.length === 0) {
+                    listContainer.innerHTML = '<div class="empty-state">No players to display</div>';
+                    return;
+                }
+                
+                listContainer.innerHTML = usersToShow.map(user => {
+                    const isCurrentUser = user.userId === currentUserId;
+                    return `
+                        <div class="leaderboard-row ${isCurrentUser ? 'current-user' : ''}" data-user-id="${user.userId}" data-rank="${user.rank}">
+                            <div class="rank-number">
+                                <span>${user.rank}.</span>
+                                <span class="player-name">${user.nickname || 'Unknown'}</span>
+                            </div>
+                            <div class="badge-count">
+                                <div class="badge-icon">${user.badgeCount || 0}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Fade in list
+                const list = document.getElementById('leaderboardList');
+                list.classList.remove('fade-in');
+                setTimeout(() => {
+                    list.classList.add('fade-in');
+                    
+                    // Scroll to current user after content is rendered
+                    if (currentUserIndex >= 0 && currentUserIndex >= 3) {
+                        const currentUserRow = listContainer.querySelector(`[data-user-id="${currentUserId}"]`);
+                        if (currentUserRow) {
+                            // Scroll the current user into view, centered if possible
+                            currentUserRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                }, 50);
+            }
+
+            switchPeriod(period) {
+                if (this.currentPeriod === period) return;
+                
+                this.currentPeriod = period;
+                
+                // Update button states
+                document.getElementById('todayButton').classList.toggle('active', period === 'today');
+                document.getElementById('monthlyButton').classList.toggle('active', period === 'monthly');
+                
+                // Re-render leaderboard (will auto-scroll to current user)
+                this.renderLeaderboard();
+            }
+        }
+
+        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', () => {
             new OrientationManager();
+            new LeaderboardManager();
         });
     </script>
 </body>
