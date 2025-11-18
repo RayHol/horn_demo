@@ -1,4 +1,7 @@
 
+// Global variable to store current animal config
+let currentAnimalConfig = null;
+
 function getQueryParam(name) {
     const p = new URLSearchParams(location.search).get(name);
     return p && decodeURIComponent(p);
@@ -12,10 +15,110 @@ async function loadAnimalConfig() {
         const cfg = await res.json();
         const id = getQueryParam('animalId');
         const list = Array.isArray(cfg.animals) ? cfg.animals : [];
-        return list.find(a => a.id === id) || list[0] || null;
+        const animal = list.find(a => a.id === id) || list[0] || null;
+        if (animal) {
+            currentAnimalConfig = animal;
+        }
+        return animal;
     } catch (e) {
         return null;
     }
+}
+
+// Animal to Badge Mapping
+function getBadgeDataForAnimal(animalName) {
+    const badgeMap = {
+        'Peacock': {
+            badgeId: 'peacock',
+            iconPath: '../../assets/badges/icons/peacock-badge.svg',
+            badgeName: 'Peacock Spotter',
+            description: 'You found the magnificent peacock! A true explorer of the Horniman grounds.',
+            gamePath: '../photographer-game.html'
+        },
+        'Walrus': {
+            badgeId: 'walrus-ar',
+            iconPath: '../../assets/badges/icons/walrus-badge.svg',
+            badgeName: 'Walrus Finder',
+            description: 'You discovered the walrus! Great tracking skills on your adventure.',
+            gamePath: '../walrus-game.html'
+        },
+        'Koala': {
+            badgeId: 'koala',
+            iconPath: '../../assets/badges/icons/Koala.svg',
+            badgeName: 'Koala Discoverer',
+            description: 'You found the koala! Your keen eye spotted this hidden treasure.'
+        },
+        'Bee': {
+            badgeId: 'bee-ar',
+            iconPath: '../../assets/badges/icons/bee-badge.svg',
+            badgeName: 'Bee Hunter',
+            description: 'You found the bee! A tiny but important discovery on your journey.',
+            gamePath: '../sunflower-game.html'
+        },
+        'Clown Fish': {
+            badgeId: 'clownfish-ar',
+            iconPath: '../../assets/badges/icons/clownfish-badge.svg',
+            badgeName: 'Clownfish Seeker',
+            description: 'You found the clownfish! A colorful addition to your collection.',
+            gamePath: '../anemone-game.html'
+        },
+        'Platypus': {
+            badgeId: 'platypus',
+            iconPath: '../../assets/badges/icons/platypus.svg',
+            badgeName: 'Platypus Explorer',
+            description: 'You found the platypus! One of nature\'s most unique creatures.'
+        },
+        'Cephalopod': {
+            badgeId: 'cephalopod',
+            iconPath: '../../assets/badges/icons/Shelled Cephalopod.svg',
+            badgeName: 'Cephalopod Collector',
+            description: 'You found the cephalopod! A fascinating marine discovery.'
+        },
+        'Stag Beetle': {
+            badgeId: 'stag-beetle',
+            iconPath: '../../assets/badges/icons/Stag Beetle.svg',
+            badgeName: 'Beetle Spotter',
+            description: 'You found the stag beetle! A small but impressive find.'
+        },
+        'Snowy Owl': {
+            badgeId: 'snowy-owl',
+            iconPath: '../../assets/badges/icons/snowy owl.svg',
+            badgeName: 'Owl Watcher',
+            description: 'You found the snowy owl! A wise and majestic discovery.'
+        },
+        'Orangutan': {
+            badgeId: 'orangutan',
+            iconPath: '../../assets/badges/icons/orangutan.svg',
+            badgeName: 'Orangutan Tracker',
+            description: 'You found the orangutan! A great ape discovery on your adventure.'
+        },
+        'Jellyfish': {
+            badgeId: 'jellyfish-ar',
+            iconPath: '../../assets/badges/icons/jellyfish-badge.svg',
+            badgeName: 'Jellyfish Finder',
+            description: 'You found the jellyfish! A graceful and mesmerizing discovery.'
+        },
+        'Robin': {
+            badgeId: 'robin',
+            iconPath: '../../assets/badges/icons/Robin.svg',
+            badgeName: 'Robin Seeker',
+            description: 'You found the robin! A cheerful bird to add to your collection.'
+        }
+    };
+    
+    // Return badge data or use placeholder
+    const badgeData = badgeMap[animalName];
+    if (badgeData) {
+        return badgeData;
+    }
+    
+    // Fallback to placeholder
+    return {
+        badgeId: animalName.toLowerCase().replace(/\s+/g, '-'),
+        iconPath: '../../assets/badges/icons/placeholder.svg',
+        badgeName: animalName + ' Finder',
+        description: 'You found ' + animalName + '! A great discovery on your adventure.'
+    };
 }
 
 window.onload = async () => {
@@ -289,12 +392,53 @@ var setModel = function (model, entity) {
     }
 
     // Attach model URL (actual load may be deferred by caller for stabilization)
+    // Ensure the GLTF model is properly configured for raycaster detection
     entity.setAttribute('gltf-model', model.url);
 
     // derive a display name from the model info (before first comma)
     const name = (model.info && model.info.split(',')[0]) || 'Asset';
     entity.setAttribute('class', 'detectable');
     entity.setAttribute('data-asset-name', name);
+    // Make sure the entity itself is raycastable
+    entity.setAttribute('raycastable', '');
+    
+    // Add a collision box for raycaster detection - needed for models with large scales
+    // Wait for model to load to ensure proper sizing
+    entity.addEventListener('model-loaded', function() {
+        // Parse the scale values
+        const scaleValues = model.scale ? model.scale.split(' ').map(parseFloat) : [1, 1, 1];
+        const maxScale = Math.max(...scaleValues);
+        
+        // For large-scaled models, we need a collision box that accounts for the scale
+        // The box will be a child of the scaled entity, so it inherits the scale
+        // We want an effective size that scales with the model size
+        // For scale 10, we want effective size of ~15 units (1.5 * scale)
+        // For scale 1, we want effective size of ~3 units
+        // So: effectiveSize = max(3, maxScale * 1.5)
+        const effectiveSize = Math.max(3, maxScale * 1.5);
+        const boxSize = effectiveSize / maxScale;
+        
+        // Create invisible collision box
+        const collisionBox = document.createElement('a-box');
+        collisionBox.setAttribute('geometry', { 
+            width: boxSize, 
+            height: boxSize, 
+            depth: boxSize 
+        });
+        collisionBox.setAttribute('material', { 
+            visible: false, 
+            transparent: true, 
+            opacity: 0 
+        });
+        collisionBox.setAttribute('class', 'detectable');
+        collisionBox.setAttribute('data-asset-name', name);
+        collisionBox.setAttribute('position', '0 0 0');
+        collisionBox.setAttribute('raycastable', '');
+        
+        entity.appendChild(collisionBox);
+        
+        console.log(`Collision box for ${name}: scale=${maxScale}, boxSize=${boxSize}, effectiveSize=${effectiveSize}`);
+    }, { once: true });
 
     const div = document.querySelector('.instructions');
     div.innerText = 'Loading...';
@@ -434,8 +578,6 @@ function fadeOutGltf(entity, durationMs) {
 function renderPlaces(places) {
     let scene = document.querySelector('a-scene');
     const actionButton = document.querySelector('button[data-action="camera-btn"]');
-    const modal = document.getElementById('miniGameModal');
-    const closeBtn = modal ? modal.querySelector('.modal__close') : null;
     const loaderOverlay = document.getElementById('sceneLoader');
     
     function showLoader() {
@@ -484,11 +626,13 @@ function renderPlaces(places) {
         // Defer GLTF load until GPS appears stable; append entity immediately (hidden by lack of model)
         model.setAttribute('animation-mixer', '');
 
-        // New behavior: if active (enabled), tapping launches modal
+        // New behavior: if active (enabled), tapping collects badge
         if (actionButton) {
             actionButton.addEventListener('click', function () {
                 if (actionButton.disabled) return;
-                if (modal) modal.hidden = false;
+                if (currentAnimalConfig && currentAnimalConfig.name) {
+                    showBadgeCollection(currentAnimalConfig.name);
+                }
             });
         }
 
@@ -639,13 +783,119 @@ function renderPlaces(places) {
         });
     }
 
-    // Modal close handling
-    if (closeBtn && modal) {
-        closeBtn.addEventListener('click', function () {
-            modal.hidden = true;
-        });
-        modal.addEventListener('click', function (e) {
-            if (e.target === modal) modal.hidden = true; // click outside modal closes
-        });
+}
+
+// Badge Collection Functions
+function showBadgeCollection(animalName) {
+    const badgeData = getBadgeDataForAnimal(animalName);
+    
+    // Add badge to collection
+    addBadge(badgeData.badgeId);
+    
+    // Update userData
+    try {
+        let userData = JSON.parse(localStorage.getItem('userData') || 'null');
+        if (!userData) {
+            userData = {
+                userId: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                created: new Date().toISOString(),
+                progress: {
+                    gamesCompleted: [],
+                    badges: [],
+                    badgeDates: {},
+                    highScores: {}
+                }
+            };
+        }
+        if (!userData.progress) {
+            userData.progress = { badges: [], badgeDates: {} };
+        }
+        if (!userData.progress.badges) {
+            userData.progress.badges = [];
+        }
+        if (!userData.progress.badgeDates) {
+            userData.progress.badgeDates = {};
+        }
+        
+        if (!userData.progress.badges.includes(badgeData.badgeId)) {
+            userData.progress.badges.push(badgeData.badgeId);
+            userData.progress.badgeDates[badgeData.badgeId] = new Date().toISOString();
+            localStorage.setItem('userData', JSON.stringify(userData));
+            
+            // Sync to Customer.io
+            if (typeof updateBadgeInCustomerIO === 'function') {
+                updateBadgeInCustomerIO(badgeData.badgeId);
+            }
+        }
+    } catch (e) {
+        console.warn('Error saving badge to userData:', e);
+    }
+    
+    // Play tada sound
+    const tadaAudio = document.getElementById('tada-audio');
+    if (tadaAudio) {
+        tadaAudio.play().catch(e => console.log('TaDA audio play failed:', e));
+    }
+    
+    // Show badge splash
+    const badgeSplash = document.getElementById('badgeSplash');
+    const badgeSplashIcon = document.getElementById('badgeSplashIcon');
+    if (badgeSplash && badgeSplashIcon) {
+        badgeSplashIcon.src = badgeData.iconPath;
+        badgeSplash.classList.remove('hidden');
+    }
+    
+    // Auto-dismiss splash after 4 seconds and show detail screen
+    setTimeout(() => {
+        if (badgeSplash) {
+            badgeSplash.classList.add('hidden');
+        }
+        const badgeCollection = document.getElementById('badgeCollection');
+        const badgeDetailIcon = document.getElementById('badgeDetailIcon');
+        const badgeDetailName = document.getElementById('badgeDetailName');
+        const badgeDetailDescription = document.getElementById('badgeDetailDescription');
+        const playGameButton = document.getElementById('playGameButton');
+        
+        if (badgeCollection && badgeDetailIcon && badgeDetailName && badgeDetailDescription) {
+            badgeDetailIcon.src = badgeData.iconPath;
+            badgeDetailName.textContent = badgeData.badgeName;
+            badgeDetailDescription.textContent = badgeData.description;
+            
+            // Show/hide Play Game button based on whether game exists
+            if (badgeData.gamePath && playGameButton) {
+                playGameButton.style.display = 'flex';
+                playGameButton.setAttribute('data-game-path', badgeData.gamePath);
+            } else if (playGameButton) {
+                playGameButton.style.display = 'none';
+            }
+            
+            badgeCollection.classList.remove('hidden');
+        }
+    }, 4000);
+}
+
+function playGame() {
+    const playGameButton = document.getElementById('playGameButton');
+    if (playGameButton) {
+        const gamePath = playGameButton.getAttribute('data-game-path');
+        if (gamePath) {
+            window.location.href = gamePath;
+        }
+    }
+}
+
+function goHome() {
+    window.location.href = './wayfinding.html';
+}
+
+function addBadge(badgeId) {
+    try {
+        let collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+        if (!collectedBadges.includes(badgeId)) {
+            collectedBadges.push(badgeId);
+            localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
+        }
+    } catch (e) {
+        console.warn('Error adding badge to localStorage:', e);
     }
 }

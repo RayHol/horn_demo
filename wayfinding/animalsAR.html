@@ -34,8 +34,14 @@
     <script>
         THREEx.ArToolkitContext.baseURL = 'https://raw.githack.com/jeromeetienne/ar.js/master/three.js/'
     </script>
+    <script src="../../customer-io-helper.js"></script>
     <script src="./scripts/script.js"></script>
     <link rel="stylesheet" type="text/css" href="./scripts/style.css"/>
+    <style>
+        .hidden {
+            display: none !important;
+        }
+    </style>
 </head>
 
 <body style='margin: 0; overflow: hidden; background: var(--Background-main);'>
@@ -65,17 +71,33 @@
 <div class="centered centered--debug">
     <div id="proximityDebug" style="font-size: 0.9em; color: var(--Texts-textWhite); text-align: center; font-family: 'BentonSans Book', sans-serif;"></div>
 </div>
-<div class="modal-overlay" id="miniGameModal" hidden>
-    <div class="modal">
-        <div class="modal__content">You have a badge</div>
-        <button class="modal__close" aria-label="Close">✕</button>
-    </div>
-    
+<!-- Badge Congratulations Splash (4s auto-dismiss) -->
+<div id="badgeSplash" class="badge-splash hidden">
+  <div class="splash-content">
+    <img id="badgeSplashIcon" src="" class="splash-badge-icon">
+    <h1 class="splash-title">Congratulations</h1>
+    <p class="splash-subtitle">You earned a badge!</p>
+  </div>
 </div>
+
+<!-- Badge Collection Detail Screen -->
+<div id="badgeCollection" class="badge-collection hidden">
+  <div class="badge-detail-content">
+    <img id="badgeDetailIcon" src="" class="badge-detail-icon">
+    <h2 id="badgeDetailName" class="badge-name"></h2>
+    <p id="badgeDetailDescription" class="badge-description"></p>
+    <div class="badge-buttons">
+      <button id="playGameButton" class="secondaryButton" onclick="playGame()" style="display: none;">Play Game</button>
+      <button class="primaryButton" onclick="goHome()">Continue</button>
+    </div>
+  </div>
+</div>
+
 <div class="loader-overlay" id="sceneLoader">
     <div class="loader"></div>
     
 </div>
+<audio id="tada-audio" src="../../games/anemone-cleaning/assets/audio/tada.mp3" preload="auto"></audio>
 </body>
 
 </html>

@@ -61,6 +61,7 @@
 
         body {
             background: linear-gradient(to bottom, #FFFFFF 0%, #C6C8C6 100%);
+            background-attachment: fixed;
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
@@ -277,7 +278,83 @@
             font-style: normal;
             font-weight: 400;
             line-height: 140%; /* 22.4px */
-            margin: 0;
+            margin: 0 0 2rem 0;
+        }
+
+        .badge-detail-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 1rem;
+        }
+
+        .badge-detail-popup .primaryButton {
+            display: flex;
+            width: 220px;
+            min-width: 104px;
+            padding: 12px 16px;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            border-radius: 12px;
+            background: var(--UI-primary, #C14400);
+            box-shadow: 0 4px 0 0 #962F00;
+            color: var(--Texts-textWhite, #FCEFE1);
+            text-align: center;
+            font-family: "BentonSans" !important;
+            font-size: 24px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 120%;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .badge-detail-popup .primaryButton:hover {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 0 #962F00;
+        }
+
+        .badge-detail-popup .primaryButton:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .badge-detail-popup .secondaryButton {
+            display: flex;
+            width: 220px;
+            min-width: 104px;
+            padding: 12px 16px;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            border-radius: 12px;
+            background: var(--Background-main, #FCEFE1);
+            border: 2px solid var(--UI-primary, #E7D4A3);
+            box-shadow: 0 3px 0 0 var(--UI-primary, #E7D4A3);
+            color: var(--Texts-textMain, #3A2E27);
+            text-align: center;
+            font-family: "BentonSans" !important;
+            font-size: 24px;
+            font-style: normal;
+            font-weight: 400;
+            line-height: 120%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .badge-detail-popup .secondaryButton:hover {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 0 var(--UI-primary, #E7D4A3);
+        }
+
+        .badge-detail-popup .secondaryButton:active {
+            transform: translateY(3px);
+            box-shadow: none;
         }
 
         /* Responsive adjustments for badge detail popup */
@@ -305,21 +382,23 @@
             }
         }
 
-        /* Disable scrolling */
+        /* Enable vertical scrolling for badges */
         body {
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         /* Badge Grid Styling */
         .badge-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(4, 1fr);
+            grid-auto-rows: 1fr;
             gap: 5px 3px;
             padding: 10px;
             max-width: 600px;
             margin: 0 auto;
             margin-top: 140px;
+            padding-bottom: 40px;
         }
 
         .badge-item {
@@ -391,6 +470,7 @@
                 gap: 8px 4px;
                 padding: 15px;
                 margin-top: 100px;
+                padding-bottom: 40px;
             }
             
             .badge-image {
@@ -421,6 +501,7 @@
                 gap: 6px 3px;
                 padding: 10px;
                 margin-top: 80px;
+                padding-bottom: 40px;
             }
             
             .badge-image {
@@ -468,52 +549,87 @@
 
     <!-- Badge Grid Container -->
     <div class="badge-grid">
-        <!-- Row 1 -->
+        <!-- Row 1 - Game Badges -->
         <div class="badge-item" data-badge="sunflower">
             <img src="./assets/badges/Badge.png" alt="Badge 1" class="badge-image">
             <img src="./assets/badges/icons/bee-badge.svg" alt="Bee Badge" class="badge-image collected-badge" style="display: none;">
         </div>
-        <div class="badge-item">
-            <img src="./assets/badges/Badge.png" alt="Badge 2" class="badge-image">
-        </div>
-        <div class="badge-item">
-            <img src="./assets/badges/Badge.png" alt="Badge 3" class="badge-image">
-        </div>
-
-        <!-- Row 2 -->
         <div class="badge-item" data-badge="walrus">
-            <img src="./assets/badges/Badge.png" alt="Badge 5" class="badge-image">
+            <img src="./assets/badges/Badge.png" alt="Badge 2" class="badge-image">
             <img src="./assets/badges/icons/walrusFeeding-badge.svg" alt="Walrus Feeding Badge" class="badge-image collected-badge" style="display: none;">
         </div>
         <div class="badge-item" data-badge="anemone">
-            <img src="./assets/badges/Badge.png" alt="Badge 6" class="badge-image">
+            <img src="./assets/badges/Badge.png" alt="Badge 3" class="badge-image">
             <img src="./assets/badges/icons/clownfish-game-badge.svg" alt="Clownfish Badge" class="badge-image collected-badge" style="display: none;">
         </div>
-        <div class="badge-item">
-            <img src="./assets/badges/Badge.png" alt="Badge 6" class="badge-image">
-        </div>
 
-        <!-- Row 3 -->
+        <!-- Row 2 - Game Badges -->
         <div class="badge-item" data-badge="photographer">
-            <img src="./assets/badges/Badge.png" alt="Badge 7" class="badge-image">
+            <img src="./assets/badges/Badge.png" alt="Badge 4" class="badge-image">
             <img src="./assets/badges/icons/peacock-game-badge.svg" alt="Proud Photographer Badge" class="badge-image collected-badge" style="display: none;">
         </div>
-        <div class="badge-item">
-            <img src="./assets/badges/Badge.png" alt="Badge 8" class="badge-image">
+        <!-- Animal AR Badges -->
+        <div class="badge-item" data-badge="peacock">
+            <img src="./assets/badges/Badge.png" alt="Peacock Badge" class="badge-image">
+            <img src="./assets/badges/icons/peacock-badge.svg" alt="Peacock Badge" class="badge-image collected-badge" style="display: none;">
         </div>
-        <div class="badge-item">
-            <img src="./assets/badges/Badge.png" alt="Badge 9" class="badge-image">
+        <div class="badge-item" data-badge="walrus-ar">
+            <img src="./assets/badges/Badge.png" alt="Walrus AR Badge" class="badge-image">
+            <img src="./assets/badges/icons/walrus-badge.svg" alt="Walrus Badge" class="badge-image collected-badge" style="display: none;">
         </div>
 
-        <!-- Row 4 -->
-        <div class="badge-item">
-            <img src="./assets/badges/Badge.png" alt="Badge 10" class="badge-image">
+        <!-- Row 3 - Animal AR Badges -->
+        <div class="badge-item" data-badge="koala">
+            <img src="./assets/badges/Badge.png" alt="Koala Badge" class="badge-image">
+            <img src="./assets/badges/icons/Koala.svg" alt="Koala Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+        <div class="badge-item" data-badge="bee-ar">
+            <img src="./assets/badges/Badge.png" alt="Bee AR Badge" class="badge-image">
+            <img src="./assets/badges/icons/bee-badge.svg" alt="Bee Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+        <div class="badge-item" data-badge="clownfish-ar">
+            <img src="./assets/badges/Badge.png" alt="Clownfish AR Badge" class="badge-image">
+            <img src="./assets/badges/icons/clownfish-badge.svg" alt="Clownfish Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+
+        <!-- Row 4 - Animal AR Badges -->
+        <div class="badge-item" data-badge="platypus">
+            <img src="./assets/badges/Badge.png" alt="Platypus Badge" class="badge-image">
+            <img src="./assets/badges/icons/platypus.svg" alt="Platypus Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+        <div class="badge-item" data-badge="cephalopod">
+            <img src="./assets/badges/Badge.png" alt="Cephalopod Badge" class="badge-image">
+            <img src="./assets/badges/icons/Shelled Cephalopod.svg" alt="Cephalopod Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+        <div class="badge-item" data-badge="stag-beetle">
+            <img src="./assets/badges/Badge.png" alt="Stag Beetle Badge" class="badge-image">
+            <img src="./assets/badges/icons/Stag Beetle.svg" alt="Stag Beetle Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+
+        <!-- Row 5 - Animal AR Badges -->
+        <div class="badge-item" data-badge="snowy-owl">
+            <img src="./assets/badges/Badge.png" alt="Snowy Owl Badge" class="badge-image">
+            <img src="./assets/badges/icons/snowy owl.svg" alt="Snowy Owl Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+        <div class="badge-item" data-badge="orangutan">
+            <img src="./assets/badges/Badge.png" alt="Orangutan Badge" class="badge-image">
+            <img src="./assets/badges/icons/orangutan.svg" alt="Orangutan Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+        <div class="badge-item" data-badge="jellyfish-ar">
+            <img src="./assets/badges/Badge.png" alt="Jellyfish AR Badge" class="badge-image">
+            <img src="./assets/badges/icons/jellyfish-badge.svg" alt="Jellyfish Badge" class="badge-image collected-badge" style="display: none;">
+        </div>
+
+        <!-- Row 6 - Animal AR Badges -->
+        <div class="badge-item" data-badge="robin">
+            <img src="./assets/badges/Badge.png" alt="Robin Badge" class="badge-image">
+            <img src="./assets/badges/icons/Robin.svg" alt="Robin Badge" class="badge-image collected-badge" style="display: none;">
         </div>
         <div class="badge-item">
-            <img src="./assets/badges/Badge.png" alt="Badge 11" class="badge-image">
+            <img src="./assets/badges/Badge.png" alt="Badge Placeholder" class="badge-image">
         </div>
         <div class="badge-item">
-            <img src="./assets/badges/Badge.png" alt="Badge 12" class="badge-image">
+            <img src="./assets/badges/Badge.png" alt="Badge Placeholder" class="badge-image">
         </div>
     </div>
 
@@ -529,6 +645,9 @@
             <h2 id="badgeDetailName" class="badge-detail-name"></h2>
             <p id="badgeDetailDate" class="badge-detail-date"></p>
             <p id="badgeDetailDescription" class="badge-detail-description"></p>
+            <div class="badge-detail-buttons">
+                <button id="badgePlayGameButton" class="secondaryButton" onclick="playGame()" style="display: none;">Play Game</button>
+            </div>
         </div>
     </div>
 
@@ -642,7 +761,7 @@
                     badge.offsetHeight;
                     
                     // Start animation
-                    badge.style.animation = 'badgeCollect 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+                    badge.style.animation = 'badgeCollect 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
                     
                     // Wait for this badge to finish, then animate the next one
                     const handleAnimationEnd = () => {
@@ -653,7 +772,7 @@
                         // Start the next badge after a small pause
                         setTimeout(() => {
                             animateBadgeSequentially(badgeIndex + 1);
-                        }, 120); // Reduced pause for smoother flow
+                        }, 60); // Reduced pause for faster flow
                     };
                     
                     badge.addEventListener('animationend', handleAnimationEnd);
@@ -663,7 +782,7 @@
                 if (visibleBadges.length > 0) {
                     animateBadgeSequentially(0);
                 }
-            }, 300);
+            }, 150);
         }
 
         // Function to add a badge (called from games)
@@ -710,25 +829,95 @@
             
             // Badge data
             const badgeData = {
+                // Game Badges
                 'sunflower': {
                     icon: './assets/badges/icons/bee-badge.svg',
                     name: 'Garden Grower',
-                    description: 'A true garden grower! You\'ve planted, watered, and nurtured a beautiful home for the bees.'
+                    description: 'A true garden grower! You\'ve planted, watered, and nurtured a beautiful home for the bees.',
+                    gamePath: './games/sunflower-planter/index.html'
                 },
                 'walrus': {
                     icon: './assets/badges/icons/walrusFeeding-badge.svg',
                     name: 'Fancy Feeder',
-                    description: 'Top marks for aim and timing! You\'ve become the walrus\'s favorite feeder.'
+                    description: 'Top marks for aim and timing! You\'ve become the walrus\'s favorite feeder.',
+                    gamePath: './games/walrus-feeder/index.html'
                 },
                 'anemone': {
                     icon: './assets/badges/icons/clownfish-game-badge.svg',
                     name: 'Careful Cleaner',
-                    description: 'Great care! You\'ve scrubbed the anemones spotless for the Clownfish.'
+                    description: 'Great care! You\'ve scrubbed the anemones spotless for the Clownfish.',
+                    gamePath: './games/anemone-cleaning/index.html'
                 },
                 'photographer': {
                     icon: './assets/badges/icons/peacock-game-badge.svg',
                     name: 'Proud Photographer',
-                    description: 'You captured the peacock\'s proudest moment.'
+                    description: 'You captured the peacock\'s proudest moment.',
+                    gamePath: './games/proud-photographer/index.html'
+                },
+                // Animal AR Badges
+                'peacock': {
+                    icon: './assets/badges/icons/peacock-badge.svg',
+                    name: 'Peacock Spotter',
+                    description: 'You found the magnificent peacock! A true explorer of the Horniman grounds.',
+                    gamePath: './games/proud-photographer/index.html'
+                },
+                'walrus-ar': {
+                    icon: './assets/badges/icons/walrus-badge.svg',
+                    name: 'Walrus Finder',
+                    description: 'You discovered the walrus! Great tracking skills on your adventure.',
+                    gamePath: './games/walrus-feeder/index.html'
+                },
+                'koala': {
+                    icon: './assets/badges/icons/Koala.svg',
+                    name: 'Koala Discoverer',
+                    description: 'You found the koala! Your keen eye spotted this hidden treasure.'
+                },
+                'bee-ar': {
+                    icon: './assets/badges/icons/bee-badge.svg',
+                    name: 'Bee Hunter',
+                    description: 'You found the bee! A tiny but important discovery on your journey.',
+                    gamePath: './games/sunflower-planter/index.html'
+                },
+                'clownfish-ar': {
+                    icon: './assets/badges/icons/clownfish-badge.svg',
+                    name: 'Clownfish Seeker',
+                    description: 'You found the clownfish! A colorful addition to your collection.',
+                    gamePath: './games/anemone-cleaning/index.html'
+                },
+                'platypus': {
+                    icon: './assets/badges/icons/platypus.svg',
+                    name: 'Platypus Explorer',
+                    description: 'You found the platypus! One of nature\'s most unique creatures.'
+                },
+                'cephalopod': {
+                    icon: './assets/badges/icons/Shelled Cephalopod.svg',
+                    name: 'Cephalopod Collector',
+                    description: 'You found the cephalopod! A fascinating marine discovery.'
+                },
+                'stag-beetle': {
+                    icon: './assets/badges/icons/Stag Beetle.svg',
+                    name: 'Beetle Spotter',
+                    description: 'You found the stag beetle! A small but impressive find.'
+                },
+                'snowy-owl': {
+                    icon: './assets/badges/icons/snowy owl.svg',
+                    name: 'Owl Watcher',
+                    description: 'You found the snowy owl! A wise and majestic discovery.'
+                },
+                'orangutan': {
+                    icon: './assets/badges/icons/orangutan.svg',
+                    name: 'Orangutan Tracker',
+                    description: 'You found the orangutan! A great ape discovery on your adventure.'
+                },
+                'jellyfish-ar': {
+                    icon: './assets/badges/icons/jellyfish-badge.svg',
+                    name: 'Jellyfish Finder',
+                    description: 'You found the jellyfish! A graceful and mesmerizing discovery.'
+                },
+                'robin': {
+                    icon: './assets/badges/icons/Robin.svg',
+                    name: 'Robin Seeker',
+                    description: 'You found the robin! A cheerful bird to add to your collection.'
                 }
             };
             
@@ -768,7 +957,24 @@
                 
                 description.textContent = badgeData[badgeId].description;
                 
+                // Show/hide Play Game button based on gamePath
+                const playGameButton = document.getElementById('badgePlayGameButton');
+                if (badgeData[badgeId].gamePath && playGameButton) {
+                    playGameButton.style.display = 'flex';
+                    playGameButton.setAttribute('data-game-path', badgeData[badgeId].gamePath);
+                } else if (playGameButton) {
+                    playGameButton.style.display = 'none';
+                }
+                
                 popup.classList.remove('hidden');
+            }
+        }
+
+        function playGame() {
+            const playGameButton = document.getElementById('badgePlayGameButton');
+            const gamePath = playGameButton.getAttribute('data-game-path');
+            if (gamePath) {
+                window.location.href = gamePath;
             }
         }
 
