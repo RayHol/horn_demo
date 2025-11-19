@@ -59,8 +59,13 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            z-index: 100;
+            z-index: 1000;
             box-shadow: 0px 4px 0px 0px var(--button-shadow);
+            pointer-events: auto;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .back-button:hover {
@@ -76,6 +81,7 @@
         .back-button img {
             width: 24px;
             height: 24px;
+            pointer-events: none;
         }
 
         .title {
@@ -333,6 +339,7 @@
             margin-top: 0;
             opacity: 0;
             transition: opacity 300ms ease;
+            visibility: hidden;
             box-shadow: none;
             flex: 1;
             display: flex;
@@ -343,13 +350,25 @@
             top: calc(40% + 120px);
             left: 0;
             right: 0;
-            bottom: 0;
+            bottom: -100px;
             width: 100%;
             z-index: 2;
         }
 
+        .leaderboard-list::after {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: #FFFFFF;
+            z-index: 1;
+        }
+
         .leaderboard-list.fade-in {
             opacity: 1;
+            visibility: visible;
         }
 
         .leaderboard-header {
@@ -391,9 +410,11 @@
         }
 
         .leaderboard-row.current-user {
-            background: rgba(189, 59, 0, 0.1);
-            border-radius: 8px;
-            font-weight: 700;
+            border-radius: 4px;
+            border: 1px solid var(--UI-primary, #C14400) !important;
+            margin: 4px 0;
+            padding: 12px 20px;
+            box-sizing: border-box;
         }
 
         .rank-number {
@@ -582,6 +603,7 @@
 
             .leaderboard-list {
                 top: calc(40% + 100px);
+                bottom: -100px;
                 padding: 12px;
             }
 
@@ -614,6 +636,7 @@
 
             .leaderboard-list {
                 top: calc(40% + 110px);
+                bottom: -100px;
             }
         }
 
@@ -628,6 +651,7 @@
 
             .leaderboard-list {
                 top: calc(40% + 120px);
+                bottom: -100px;
             }
         }
 
@@ -656,6 +680,7 @@
 
             .leaderboard-list {
                 top: calc(40% + 80px);
+                bottom: -100px;
             }
         }
 
@@ -670,6 +695,7 @@
 
             .leaderboard-list {
                 top: calc(40% + 140px);
+                bottom: -100px;
             }
         }
     </style>
@@ -1101,12 +1127,21 @@
                 setTimeout(() => {
                     list.classList.add('fade-in');
                     
-                    // Scroll to current user after content is rendered
+                    // Scroll to current user after content is rendered (only scroll within container, not the page)
                     if (currentUserIndex >= 0 && currentUserIndex >= 3) {
                         const currentUserRow = listContainer.querySelector(`[data-user-id="${currentUserId}"]`);
-                        if (currentUserRow) {
-                            // Scroll the current user into view, centered if possible
-                            currentUserRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        if (currentUserRow && listContainer) {
+                            // Calculate scroll position relative to container
+                            const containerRect = listContainer.getBoundingClientRect();
+                            const rowRect = currentUserRow.getBoundingClientRect();
+                            const scrollTop = listContainer.scrollTop;
+                            const targetScroll = scrollTop + (rowRect.top - containerRect.top) - (containerRect.height / 2) + (rowRect.height / 2);
+                            
+                            // Smooth scroll within the container only
+                            listContainer.scrollTo({
+                                top: Math.max(0, targetScroll),
+                                behavior: 'smooth'
+                            });
                         }
                     }
                 }, 50);
@@ -1130,6 +1165,19 @@
         document.addEventListener('DOMContentLoaded', () => {
             new OrientationManager();
             new LeaderboardManager();
+            
+            // Ensure back button is clickable with both click and touch events
+            const backButton = document.querySelector('.back-button');
+            if (backButton) {
+                const handleBack = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.href = 'menu.html';
+                };
+                
+                backButton.addEventListener('click', handleBack);
+                backButton.addEventListener('touchend', handleBack);
+            }
         });
     </script>
 </body>
