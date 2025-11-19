@@ -122,6 +122,32 @@ function getBadgeDataForAnimal(animalName) {
 }
 
 window.onload = async () => {
+    // Initialize starburst backgrounds in overlays
+    function initStarburstOverlay(containerId) {
+        const container = document.getElementById(containerId);
+        if (container) {
+            const overlay = container.querySelector('.starburst-background-overlay');
+            if (overlay && !overlay.querySelector('img')) {
+                const img = document.createElement('img');
+                img.src = '../assets/Startburst.svg';
+                img.alt = 'Starburst background';
+                overlay.appendChild(img);
+            }
+        }
+    }
+    
+    // Initialize when overlays are shown
+    const observer = new MutationObserver(() => {
+        initStarburstOverlay('badgeSplash');
+        initStarburstOverlay('badgeCollection');
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    
+    // Initial check
+    initStarburstOverlay('badgeSplash');
+    initStarburstOverlay('badgeCollection');
+    
     const button = document.querySelector('button[data-action="camera-btn"]');
     if (button) {
         button.innerText = '';

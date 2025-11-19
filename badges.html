@@ -187,11 +187,40 @@
             width: 100%;
             height: 100%;
             background-color: #FCF6EF;
-            background-image: url('./assets/Background-spread.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
             z-index: 10000;
+            overflow: hidden;
+        }
+
+        .starburst-background-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 150vw;
+            height: 150vh;
+            min-width: 1200px;
+            min-height: 1200px;
+            pointer-events: none;
+            z-index: 0;
+            transform: translate(-50%, -50%);
+            transform-origin: 50% 41.13%;
+            animation: rotateStarburst 60s linear infinite;
+            opacity: 1;
+        }
+
+        .starburst-background-overlay img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        @keyframes rotateStarburst {
+            from {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
         }
 
         .badge-detail-popup .back-button {
@@ -208,6 +237,7 @@
             justify-content: center;
             cursor: pointer;
             transition: background-color 0.2s ease;
+            z-index: 20;
         }
 
         .badge-detail-popup .back-button:hover {
@@ -232,6 +262,7 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
+            z-index: 20;
         }
 
         .badge-detail-main {
@@ -242,6 +273,8 @@
             padding-top: 125px;
             padding-left: 20px;
             padding-right: 20px;
+            position: relative;
+            z-index: 10;
         }
 
         .badge-detail-icon {
@@ -635,6 +668,7 @@
 
     <!-- Badge Detail Popup -->
     <div id="badgeDetailPopup" class="badge-detail-popup hidden">
+        <div class="starburst-background-overlay"></div>
         <button class="back-button" onclick="closeBadgeDetail()">
             <img src="./assets/Arrow.png" alt="Back">
         </button>
@@ -706,6 +740,30 @@
             new OrientationManager();
             initializeBadgeCollection();
             addBadgeClickListeners();
+            
+            // Initialize starburst background in badge detail popup
+            function initStarburstOverlay() {
+                const popup = document.getElementById('badgeDetailPopup');
+                if (popup) {
+                    const overlay = popup.querySelector('.starburst-background-overlay');
+                    if (overlay && !overlay.querySelector('img')) {
+                        const img = document.createElement('img');
+                        img.src = './assets/Startburst.svg';
+                        img.alt = 'Starburst background';
+                        overlay.appendChild(img);
+                    }
+                }
+            }
+            
+            // Initialize when popup is shown
+            const observer = new MutationObserver(() => {
+                initStarburstOverlay();
+            });
+            
+            observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+            
+            // Initial check
+            initStarburstOverlay();
         });
 
         // Badge Collection System

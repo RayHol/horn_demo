@@ -402,20 +402,39 @@ button[data-action="camera-btn"]:disabled {
   align-items: center;
   justify-content: center;
   z-index: 10000;
+  overflow: hidden;
 }
 
-.badge-splash::before {
-  content: '';
+.starburst-background-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 50%;
+  left: 50%;
+  width: 150vw;
+  height: 150vh;
+  min-width: 1200px;
+  min-height: 1200px;
+  pointer-events: none;
+  z-index: 0;
+  transform: translate(-50%, -50%);
+  transform-origin: 50% 41.13%;
+  animation: rotateStarburst 60s linear infinite;
+  opacity: 1;
+}
+
+.starburst-background-overlay img {
   width: 100%;
   height: 100%;
-  background: url('../assets/Background.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: -1;
+  object-fit: contain;
+  display: block;
+}
+
+@keyframes rotateStarburst {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
 
 .splash-content {
@@ -424,6 +443,8 @@ button[data-action="camera-btn"]:disabled {
   align-items: center;
   justify-content: center;
   text-align: center;
+  position: relative;
+  z-index: 10;
 }
 
 .splash-badge-icon {
@@ -478,20 +499,7 @@ button[data-action="camera-btn"]:disabled {
   align-items: center;
   justify-content: center;
   z-index: 9999;
-}
-
-.badge-collection::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: url('../assets/Background.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: -1;
+  overflow: hidden;
 }
 
 .badge-detail-content {
@@ -503,6 +511,7 @@ button[data-action="camera-btn"]:disabled {
   padding: 2rem;
   max-width: 500px;
   position: relative;
+  z-index: 10;
   min-height: 100vh;
 }
 
