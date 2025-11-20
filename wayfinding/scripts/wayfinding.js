@@ -39,6 +39,7 @@
     const mapImage = document.getElementById('mapImage');
     const userLocationDot = document.getElementById('userLocationDot');
     const userLocationAccuracyCircle = document.getElementById('userLocationAccuracyCircle');
+    const userLocationHeading = document.getElementById('userLocationHeading');
     const animalHotspots = document.getElementById('animalHotspots');
     const proximityNotification = document.getElementById('proximityNotification');
     const openCameraBtn = document.getElementById('openCameraBtn');
@@ -59,6 +60,7 @@
     let animals = [];
     let audio = null;
     let currentUserLocation = null;
+    let currentHeading = null; // Device heading in degrees (0-360, where 0 is North)
     let currentAnimal = null;
     let proximityState = null; // 'in-range', 'nearby', or null
     let audioPrimed = false; // Track if audio has been primed with user interaction
@@ -547,11 +549,22 @@
                             userLocationAccuracyCircle.style.height = size + 'px';
                         }
                     }
+                    
+                    // Update heading triangle position to match dot position (it's now a sibling, not a child)
+                    if (userLocationHeading && dotX !== undefined && dotY !== undefined) {
+                        userLocationHeading.style.left = dotX + 'px';
+                        userLocationHeading.style.top = dotY + 'px';
+                    }
                 }
                 self.updateTransform();
                 
                 // Update hotspot positions smoothly every frame for fixed appearance
                 updateHotspotPositions();
+                
+                // Update heading indicator rotation if available
+                if (currentHeading !== null && currentHeading !== undefined && userLocationHeading) {
+                    updateHeadingIndicator(currentHeading);
+                }
                 
                 requestAnimationFrame(animate);
             };
@@ -904,6 +917,12 @@
                 userLocationAccuracyCircle.style.width = size + 'px';
                 userLocationAccuracyCircle.style.height = size + 'px';
             }
+        }
+        
+        // Update heading triangle position to match dot position (it's now a sibling, not a child)
+        if (userLocationHeading && dotX !== undefined && dotY !== undefined) {
+            userLocationHeading.style.left = dotX + 'px';
+            userLocationHeading.style.top = dotY + 'px';
         }
         
         // Check if user is outside map bounds
@@ -1263,6 +1282,72 @@
         }
     }
 
+    // Update heading indicator rotation
+    function updateHeadingIndicator(heading) {
+        if (!userLocationHeading || heading === null || heading === undefined) {
+            if (userLocationHeading) {
+                userLocationHeading.style.display = 'none';
+            }
+            return;
+        }
+        
+        // Ensure heading is visible (position is set in animation loop)
+        if (userLocationHeading.style.display !== 'block') {
+            userLocationHeading.style.display = 'block';
+        }
+        
+        // Rotate triangle to point in the direction of heading
+        // Heading is in degrees (0-360, where 0 is North)
+        // CSS rotate rotates clockwise, and 0 degrees points up (North)
+        // The triangle is positioned outside the dot border with spacing (19px from center)
+        // Use scale(1) and translateZ(0) to prevent scaling and ensure GPU acceleration
+        // Position is set separately in animation loop, so we only update rotation here
+        const currentLeft = userLocationHeading.style.left;
+        const currentTop = userLocationHeading.style.top;
+        if (currentLeft && currentTop) {
+            // Only update transform if position is set
+            userLocationHeading.style.transform = `translate(-50%, -50%) translateY(-19px) rotate(${heading}deg) scale(1) translateZ(0)`;
+        }
+    }
+    
+    // Handle device orientation for compass heading
+    function handleDeviceOrientation(event) {
+        if (event.alpha !== null && event.alpha !== undefined) {
+            // alpha is the compass heading (0-360 degrees)
+            // 0 = North, 90 = East, 180 = South, 270 = West
+            currentHeading = event.alpha;
+            updateHeadingIndicator(currentHeading);
+        }
+    }
+    
+    // Start compass/heading tracking
+    function startHeadingTracking() {
+        // Check if DeviceOrientationEvent is supported
+        if (typeof DeviceOrientationEvent !== 'undefined' && 
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS 13+ requires permission
+            DeviceOrientationEvent.requestPermission()
+                .then(response => {
+                    if (response === 'granted') {
+                        window.addEventListener('deviceorientation', handleDeviceOrientation);
+                    }
+                })
+                .catch(err => {
+                    console.log('Device orientation permission denied:', err);
+                });
+        } else if ('DeviceOrientationEvent' in window) {
+            // Older browsers or Android
+            window.addEventListener('deviceorientation', handleDeviceOrientation);
+        } else {
+            console.log('Device orientation not supported');
+        }
+    }
+    
+    // Stop compass/heading tracking
+    function stopHeadingTracking() {
+        window.removeEventListener('deviceorientation', handleDeviceOrientation);
+    }
+    
     // GPS position handler
     // Reduced emitIntervalMs for more frequent updates and smoother movement
     // Enhanced with stationary detection to reduce jitter when still
@@ -1308,6 +1393,8 @@
             clearInterval(fakeLocationInterval);
             fakeLocationInterval = null;
         }
+        // Stop heading tracking
+        stopHeadingTracking();
     }
 
     // Start GPS tracking
@@ -1323,6 +1410,9 @@
         // Use real geolocation API
         const opts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
         watchId = navigator.geolocation.watchPosition(onPosition, onError, opts);
+        
+        // Start heading/compass tracking
+        startHeadingTracking();
     }
 
     // Toggle between production and testing environments (called by long-press on help button)
