@@ -2,10 +2,25 @@
 // This configuration can be calibrated later when the actual map location is known
 
 const MapConfig = {
-    // GPS bounds of the map area
-    // Switch between testing and production bounds by commenting/uncommenting the appropriate section:
+    // GPS bounds for both environments
+    productionBounds: {
+        north: 51.444250593987384,   // Top latitude -  ONSITE COORDINATES
+        south: 51.44037067801714,   // Bottom latitude -  ONSITE COORDINATES
+        east: -0.05874017548710331,    // Right longitude -  ONSITE COORDINATES
+        west: -0.064847      // Left longitude -  ONSITE COORDINATES
+    },
     
-    // Production/Onsite bounds 
+    testingBounds: {
+        north: 55.7494,   // Top latitude
+        south: 55.7468,   // Bottom latitude
+        east: -4.6419,    // Right longitude
+        west: -4.6455      // Left longitude
+    },
+    
+    // Current environment ('production' or 'testing')
+    currentEnvironment: 'production',
+    
+    // Current GPS bounds (points to either productionBounds or testingBounds)
     gpsBounds: {
         north: 51.444250593987384,   // Top latitude -  ONSITE COORDINATES
         south: 51.44037067801714,   // Bottom latitude -  ONSITE COORDINATES
@@ -13,13 +28,28 @@ const MapConfig = {
         west: -0.064847      // Left longitude -  ONSITE COORDINATES
     },
     
-    // Testing/Home bounds 
-    // gpsBounds: {
-    //     north: 55.7494,   // Top latitude
-    //     south: 55.7468,   // Bottom latitude
-    //     east: -4.6419,    // Right longitude
-    //     west: -4.6455      // Left longitude
-    // },
+    /**
+     * Switch between production and testing environments
+     * @param {string} environment - 'production' or 'testing'
+     */
+    setEnvironment(environment) {
+        if (environment === 'testing') {
+            this.currentEnvironment = 'testing';
+            this.gpsBounds = { ...this.testingBounds };
+        } else {
+            this.currentEnvironment = 'production';
+            this.gpsBounds = { ...this.productionBounds };
+        }
+    },
+    
+    /**
+     * Toggle between production and testing environments
+     */
+    toggleEnvironment() {
+        const newEnv = this.currentEnvironment === 'production' ? 'testing' : 'production';
+        this.setEnvironment(newEnv);
+        return this.currentEnvironment;
+    },
     
     // Map image dimensions in pixels (placeholder - should match actual image dimensions)
     // These will be updated automatically when the image loads, or can be set manually

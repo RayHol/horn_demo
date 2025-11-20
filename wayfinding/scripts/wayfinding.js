@@ -2,17 +2,37 @@
 (function() {
     'use strict';
 
-    // Configuration flags (can be toggled via long-press on help button)
-    let USE_FAKE_LOCATION = false; // Set to true for testing with fake coordinates
-    let BYPASS_COORDINATE_SYSTEM = false; // Set to true to allow coordinates outside map bounds to still be mapped (for testing)
+    // Environment state (can be toggled via long-press on help button)
+    let currentEnvironment = 'production'; // 'production' or 'testing'
     const MAP_LOCKED = false; // Set to true to lock map position (future use)
+    const ENVIRONMENT_STORAGE_KEY = 'wayfinding-environment';
     
-    // Fake location coordinates (for testing - should be within GPS bounds)
-    const FAKE_LOCATION = {
-        lat: 55.748105,
-        lng: -4.643886,
-        accuracy: 5
-    };
+    /**
+     * Load saved environment from localStorage
+     * @returns {string} 'production' or 'testing'
+     */
+    function loadSavedEnvironment() {
+        try {
+            const saved = localStorage.getItem(ENVIRONMENT_STORAGE_KEY);
+            if (saved === 'testing' || saved === 'production') {
+                return saved;
+            }
+        } catch (_) {
+            // localStorage not available or error
+        }
+        return 'production'; // Default to production
+    }
+    
+    /**
+     * Save current environment to localStorage
+     */
+    function saveEnvironment() {
+        try {
+            localStorage.setItem(ENVIRONMENT_STORAGE_KEY, currentEnvironment);
+        } catch (_) {
+            // localStorage not available or error
+        }
+    }
 
     // DOM elements
     const mapContainer = document.getElementById('mapContainer');
@@ -161,17 +181,17 @@
         return R * c;
     }
 
-    // Load animals from JSON
-    async function loadAnimals() {
+    // Load animals from JSON based on current environment
+    async function loadAnimals(environment = null) {
+        const env = environment || currentEnvironment;
+        const jsonFile = env === 'testing' ? './data/testing.json' : './data/animals.json';
         try {
-            // Switch between testing and production data by commenting/uncommenting the appropriate line:
-            const res = await fetch('./data/animals.json', { cache: 'no-cache' }); // Production/Onsite
-            // const res = await fetch('./data/testing.json', { cache: 'no-cache' }); // Testing/Home
+            const res = await fetch(jsonFile, { cache: 'no-cache' });
             const cfg = await res.json();
             animals = Array.isArray(cfg.animals) ? cfg.animals : [];
             renderAnimalHotspots();
         } catch (err) {
-            console.error('Failed to load animals.json:', err);
+            console.error(`Failed to load ${jsonFile}:`, err);
         }
     }
 
@@ -188,14 +208,18 @@
         // Only vibrate if user has interacted with the page
         if (!audioPrimed) return;
         
-        if ('vibrate' in navigator) {
-            try {
-                navigator.vibrate([100, 200, 100]);
-            } catch (err) {
-                console.log('Vibration failed:', err);
-            }
+        // Use the haptic feedback script with 'long' pattern
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('long');
         } else {
-            console.log('Vibration not supported');
+            // Fallback to native vibration API if haptic script not loaded
+            if ('vibrate' in navigator) {
+                try {
+                    navigator.vibrate([800]);
+                } catch (err) {
+                    console.log('Vibration failed:', err);
+                }
+            }
         }
     }
     
@@ -1070,6 +1094,10 @@
             openCameraBtn.onclick = null;
             // Set new onclick handler with current animal
             openCameraBtn.onclick = function() {
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
                 window.location.href = `./animalsAR.html?animalId=${encodeURIComponent(animal.id)}`;
             };
         }
@@ -1209,10 +1237,7 @@
 
     function onError(err) {
         console.error('Location error:', err);
-        if (USE_FAKE_LOCATION) {
-            // Fallback to hardcoded fake location if GPS fails in fake mode
-            handleStabilizedLocation({ lat: FAKE_LOCATION.lat, lng: FAKE_LOCATION.lng, acc: FAKE_LOCATION.accuracy });
-        }
+        // Location errors are handled by the browser's geolocation API
     }
 
     // Stop GPS tracking
@@ -1236,52 +1261,50 @@
 
         if (!('geolocation' in navigator)) {
             console.error('Geolocation not supported');
-            if (USE_FAKE_LOCATION) {
-                // Set permission flag even for fake location
-                try {
-                    localStorage.setItem('geopin-location-permission', 'granted');
-                } catch (_) {}
-                handleStabilizedLocation({ lat: FAKE_LOCATION.lat, lng: FAKE_LOCATION.lng, acc: FAKE_LOCATION.accuracy });
-            }
             return;
         }
 
-        // Always use real geolocation API (which will return fake GPS if set in browser)
-        // In fake location mode, we just allow coordinates outside map bounds to be mapped
+        // Use real geolocation API
         const opts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
         watchId = navigator.geolocation.watchPosition(onPosition, onError, opts);
-        
-        if (USE_FAKE_LOCATION) {
-            // Set permission flag for fake location mode
-            try {
-                localStorage.setItem('geopin-location-permission', 'granted');
-            } catch (_) {}
-        }
     }
 
-    // Toggle fake location mode (called by long-press on help button)
-    function toggleFakeLocationMode() {
-        USE_FAKE_LOCATION = !USE_FAKE_LOCATION;
-        BYPASS_COORDINATE_SYSTEM = USE_FAKE_LOCATION; // Enable coordinate bypass when fake location is enabled
+    // Toggle between production and testing environments (called by long-press on help button)
+    function toggleEnvironment() {
+        // Toggle environment
+        currentEnvironment = currentEnvironment === 'production' ? 'testing' : 'production';
         
-        // Restart tracking with new mode
-        startTracking();
+        // Save to localStorage
+        saveEnvironment();
         
-        // Show notification
+        // Show notification briefly before reload
         if (proximityNotification) {
-            const modeText = USE_FAKE_LOCATION ? 'TEST MODE: Fake location enabled - coordinates outside bounds will be mapped' : 'REAL MODE: Using real GPS';
+            const modeText = currentEnvironment === 'testing' 
+                ? 'TESTING MODE: Reloading page...' 
+                : 'PRODUCTION MODE: Reloading page...';
             proximityNotification.textContent = modeText;
             proximityNotification.className = 'proximity-notification show';
-            
-            // Hide notification after 3 seconds
-            setTimeout(() => {
-                if (proximityNotification.textContent === modeText) {
-                    proximityNotification.classList.remove('show');
-                }
-            }, 3000);
         }
         
-        console.log(`Fake location mode: ${USE_FAKE_LOCATION ? 'ON' : 'OFF'}, Coordinate bypass: ${BYPASS_COORDINATE_SYSTEM ? 'ON' : 'OFF'}`);
+        console.log(`Environment switched to: ${currentEnvironment.toUpperCase()}, reloading page...`);
+        
+        // Reload the page to ensure everything loads correctly with the new environment
+        setTimeout(() => {
+            window.location.reload();
+        }, 500); // Small delay to show the notification
+    }
+    
+    /**
+     * Initialize environment from saved state or default to production
+     */
+    function initializeEnvironment() {
+        // Load saved environment
+        currentEnvironment = loadSavedEnvironment();
+        
+        // Update MapConfig with the loaded environment
+        MapConfig.setEnvironment(currentEnvironment);
+        
+        console.log(`Environment initialized to: ${currentEnvironment.toUpperCase()}`);
     }
 
     // Instructions overlay
@@ -1376,13 +1399,16 @@
 
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', () => {
+        // Initialize environment from saved state or default to production
+        initializeEnvironment();
+        
         // Initialize map
         mapInstance = new InteractiveMap();
         
         // Initialize orientation manager
         new OrientationManager();
         
-        // Load animals and render hotspots
+        // Load animals and render hotspots (will use currentEnvironment)
         loadAnimals();
         
         // Setup instructions overlay and long-press detection
@@ -1402,6 +1428,10 @@
             helpButton.addEventListener('click', (e) => {
                 // Only show instructions if it wasn't a long press
                 if (!longPressTriggered) {
+                    // Trigger short haptic feedback
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('single');
+                    }
                     showInstructions();
                 }
                 longPressTriggered = false;
@@ -1413,7 +1443,11 @@
                 longPressTriggered = false;
                 longPressTimer = setTimeout(() => {
                     longPressTriggered = true;
-                    toggleFakeLocationMode();
+                    // Trigger long haptic feedback for long press
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('long');
+                    }
+                    toggleEnvironment();
                 }, LONG_PRESS_DURATION);
             }, { passive: true });
             
@@ -1444,7 +1478,11 @@
                 longPressTriggered = false;
                 longPressTimer = setTimeout(() => {
                     longPressTriggered = true;
-                    toggleFakeLocationMode();
+                    // Trigger long haptic feedback for long press
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('long');
+                    }
+                    toggleEnvironment();
                 }, LONG_PRESS_DURATION);
             });
             
@@ -1467,6 +1505,10 @@
         }
         if (instructionsClose) {
             instructionsClose.addEventListener('click', () => {
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
                 // Prime audio when user clicks "Got It!" button
                 primeAudio();
                 hideInstructions();
@@ -1476,6 +1518,10 @@
         // Setup back button - show leave confirmation overlay
         if (backButton) {
             backButton.addEventListener('click', () => {
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
                 showLeaveConfirmation();
             });
         }
@@ -1483,6 +1529,10 @@
         // Setup leave confirmation overlay buttons
         if (leaveConfirmClose) {
             leaveConfirmClose.addEventListener('click', () => {
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
                 // Close overlay and stay on page
                 hideLeaveConfirmation();
             });
@@ -1490,6 +1540,10 @@
 
         if (leaveConfirmButton) {
             leaveConfirmButton.addEventListener('click', () => {
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
                 // Navigate to menu page
                 window.location.href = '../menu.html';
             });
@@ -1497,10 +1551,81 @@
 
         // Setup recenter button
         if (recenterBtn) {
-            recenterBtn.addEventListener('click', () => {
-                if (mapInstance && currentUserLocation) {
+            let longPressTimer = null;
+            let isLongPress = false;
+            const longPressDuration = 500; // 500ms for long press
+
+            // Normal click handler
+            recenterBtn.addEventListener('click', (e) => {
+                // Only recenter if it wasn't a long press
+                if (!isLongPress && mapInstance && currentUserLocation) {
+                    // Trigger short haptic feedback
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('single');
+                    }
                     // Reset manual movement flag so auto-recenter can work again
                     mapInstance.recenterToUserLocation(currentUserLocation, true);
+                }
+                isLongPress = false; // Reset flag
+            });
+
+            // Long press detection
+            recenterBtn.addEventListener('touchstart', (e) => {
+                isLongPress = false;
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    // Trigger long haptic feedback for long press
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('long');
+                    }
+                    // Show haptic debug toggle on long press
+                    if (typeof window.showHapticDebug === 'function') {
+                        window.showHapticDebug();
+                    }
+                }, longPressDuration);
+            }, { passive: true });
+
+            recenterBtn.addEventListener('touchend', () => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }, { passive: true });
+
+            recenterBtn.addEventListener('touchcancel', () => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }, { passive: true });
+
+            // Also support mouse events for desktop testing
+            recenterBtn.addEventListener('mousedown', (e) => {
+                isLongPress = false;
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    // Trigger long haptic feedback for long press
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('long');
+                    }
+                    // Show haptic debug toggle on long press
+                    if (typeof window.showHapticDebug === 'function') {
+                        window.showHapticDebug();
+                    }
+                }, longPressDuration);
+            });
+
+            recenterBtn.addEventListener('mouseup', () => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            });
+
+            recenterBtn.addEventListener('mouseleave', () => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
                 }
             });
         }
@@ -1508,6 +1633,10 @@
         // Setup boundary warning close button
         if (boundaryWarningClose) {
             boundaryWarningClose.addEventListener('click', () => {
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
                 hideBoundaryWarning();
             });
         }
