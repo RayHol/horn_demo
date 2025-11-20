@@ -137,10 +137,17 @@ body {
     position: absolute;
     width: 24px;
     height: 24px;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) translateZ(0);
     z-index: 90;
     pointer-events: auto;
     cursor: pointer;
+    /* iOS-specific fixes for flickering */
+    will-change: transform, left, top;
+    -webkit-transform: translate(-50%, -50%) translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    /* Ensure visibility is controlled */
+    display: block;
 }
 
 .animal-pin {

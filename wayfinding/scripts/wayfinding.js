@@ -962,6 +962,7 @@
             if (!currentAnimalIds.has(animalId)) {
                 element.remove();
                 hotspotElements.delete(animalId);
+                hotspotPositions.delete(animalId); // Clean up position cache
             }
         });
         
@@ -974,6 +975,11 @@
                 hotspot = document.createElement('div');
                 hotspot.className = 'animal-hotspot';
                 hotspot.dataset.animalId = animal.id;
+                
+                // Initialize with display block and hardware acceleration hints for iOS
+                hotspot.style.display = 'block';
+                hotspot.style.transform = 'translate(-50%, -50%) translateZ(0)';
+                hotspot.style.willChange = 'transform, left, top';
                 
                 const pin = document.createElement('div');
                 pin.className = 'animal-pin';
@@ -992,9 +998,17 @@
         });
     }
     
+    // Store last known positions to avoid unnecessary updates (iOS optimization)
+    const hotspotPositions = new Map(); // Map<animalId, {x, y, visible}>
+    
     // Update hotspot positions smoothly (called every frame)
     function updateHotspotPositions() {
         if (!mapInstance || !animalHotspots) return;
+        
+        // Get container bounds for visibility checking
+        const containerRect = mapContainer ? mapContainer.getBoundingClientRect() : null;
+        const containerWidth = containerRect ? containerRect.width : window.innerWidth;
+        const containerHeight = containerRect ? containerRect.height : window.innerHeight;
         
         hotspotElements.forEach((hotspot, animalId) => {
             const animal = animals.find(a => a.id === animalId);
@@ -1004,11 +1018,43 @@
                 // Animal hotspots always use real positioning
                 const coords = gpsToScreenCoordinates(animal.location.lat, animal.location.lng, false);
                 if (coords && isFinite(coords.x) && isFinite(coords.y)) {
-                    hotspot.style.left = coords.x + 'px';
-                    hotspot.style.top = coords.y + 'px';
+                    // Round to integers to avoid fractional pixel issues on iOS
+                    const x = Math.round(coords.x);
+                    const y = Math.round(coords.y);
+                    
+                    // Check if hotspot is within viewport bounds (with some margin for transform offset)
+                    const margin = 50; // Account for transform translate(-50%, -50%)
+                    const isVisible = x >= -margin && x <= containerWidth + margin &&
+                                     y >= -margin && y <= containerHeight + margin;
+                    
+                    // Get last known position
+                    const lastPos = hotspotPositions.get(animalId);
+                    
+                    // Only update if position changed or visibility changed (iOS optimization)
+                    if (!lastPos || lastPos.x !== x || lastPos.y !== y || lastPos.visible !== isVisible) {
+                        // Update position
+                        hotspot.style.left = x + 'px';
+                        hotspot.style.top = y + 'px';
+                        hotspot.style.display = isVisible ? 'block' : 'none';
+                        
+                        // Store current position
+                        hotspotPositions.set(animalId, { x, y, visible: isVisible });
+                    }
+                } else {
+                    // Invalid coordinates - hide hotspot
+                    const lastPos = hotspotPositions.get(animalId);
+                    if (!lastPos || lastPos.visible !== false) {
+                        hotspot.style.display = 'none';
+                        hotspotPositions.set(animalId, { x: 0, y: 0, visible: false });
+                    }
                 }
             } catch (e) {
                 // Silently handle coordinate conversion errors
+                const lastPos = hotspotPositions.get(animalId);
+                if (!lastPos || lastPos.visible !== false) {
+                    hotspot.style.display = 'none';
+                    hotspotPositions.set(animalId, { x: 0, y: 0, visible: false });
+                }
             }
         });
     }
