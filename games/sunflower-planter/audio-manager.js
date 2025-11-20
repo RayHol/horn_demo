@@ -89,7 +89,13 @@ class AudioManager {
           const audio = new Audio(soundPath);
           audio.preload = 'auto';
           audio.volume = this.volume;
+          audio._originalVolume = this.volume; // Store original volume for global audio manager
           audio.crossOrigin = 'anonymous'; // Handle CORS issues
+          
+          // Register with global audio manager so it respects the audio toggle
+          if (typeof window.registerAudio === 'function') {
+            window.registerAudio(audio);
+          }
           
           // Ensure audio is loaded
           audio.addEventListener('canplaythrough', () => {
@@ -148,6 +154,12 @@ class AudioManager {
    * @param {boolean} loop - Whether to loop the sound (default: false)
    */
   async playSound(category, volume = null, loop = false) {
+    // Check if audio is enabled before playing
+    const audioEnabled = (typeof window.isAudioEnabled === 'function') ? window.isAudioEnabled() : true;
+    if (!audioEnabled) {
+      return; // Don't play if audio is disabled
+    }
+    
     if (!this.initialized) {
       console.warn('Audio Manager not initialized');
       return;
@@ -168,8 +180,15 @@ class AudioManager {
       
       // Create a new audio instance to avoid conflicts with overlapping sounds
       const audio = new Audio(originalAudio.src);
-      audio.volume = volume !== null ? Math.max(0, Math.min(1, volume)) : this.volume;
+      const baseVolume = volume !== null ? Math.max(0, Math.min(1, volume)) : this.volume;
+      audio._originalVolume = baseVolume; // Store original volume
+      audio.volume = baseVolume;
       audio.loop = loop;
+      
+      // Register dynamically created audio with global audio manager
+      if (typeof window.registerAudio === 'function') {
+        window.registerAudio(audio);
+      }
       
       // Store reference to looping audio for stopping later
       if (loop) {
