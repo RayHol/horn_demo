@@ -200,6 +200,11 @@
         if (!audio) {
             audio = new Audio('./Geo-pin-app/assets/bell.mp3');
             audio.volume = 0.5;
+            audio._originalVolume = 0.5; // Store original volume for global audio manager
+            // Register with global audio manager so it respects the audio toggle
+            if (typeof window.registerAudio === 'function') {
+                window.registerAudio(audio);
+            }
         }
         return audio;
     }
@@ -1134,17 +1139,22 @@
             return; // Skip this trigger if not primed yet
         }
         
-        // Play sound
-        try {
-            const audioObj = ensureAudio();
-            if (audioObj) {
-                audioObj.currentTime = 0; // Reset to start
-                audioObj.play().catch(err => {
-                    console.log('Audio play failed:', err);
-                });
+        // Check if audio is enabled before playing
+        const audioEnabled = (typeof window.isAudioEnabled === 'function') ? window.isAudioEnabled() : true;
+        
+        // Play sound (only if audio is enabled)
+        if (audioEnabled) {
+            try {
+                const audioObj = ensureAudio();
+                if (audioObj) {
+                    audioObj.currentTime = 0; // Reset to start
+                    audioObj.play().catch(err => {
+                        console.log('Audio play failed:', err);
+                    });
+                }
+            } catch (err) {
+                console.log('Audio error:', err);
             }
-        } catch (err) {
-            console.log('Audio error:', err);
         }
         
         // Vibrate

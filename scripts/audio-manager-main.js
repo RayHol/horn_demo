@@ -1241,6 +1241,32 @@
         return true;
     };
 
+    window.enableMusic = function() {
+        if (hapticSystem) {
+            hapticSystem.enableMusic();
+        }
+    };
+
+    window.disableMusic = function() {
+        if (hapticSystem) {
+            hapticSystem.disableMusic();
+        }
+    };
+
+    window.toggleMusic = function() {
+        if (hapticSystem) {
+            return hapticSystem.toggleMusic();
+        }
+        return false;
+    };
+
+    window.isMusicEnabled = function() {
+        if (hapticSystem) {
+            return hapticSystem.isMusicEnabled();
+        }
+        return true;
+    };
+
     // Function to register any audio element for global mute/unmute control
     window.registerAudio = function(audioElement) {
         if (window.globalAudioManager && audioElement) {
