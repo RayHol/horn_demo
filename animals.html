@@ -675,6 +675,7 @@
         </div>
     </div>
 
+    <script src="scripts/haptic-feedback.js"></script>
     <script>
         // Orientation Detection
         class OrientationManager {
@@ -1011,6 +1012,10 @@
         }
 
         function playGame() {
+            // Trigger haptic feedback
+            if (typeof triggerHaptic === 'function') {
+                triggerHaptic('single');
+            }
             const playGameButton = document.getElementById('animalPlayGameButton');
             const gamePath = playGameButton.getAttribute('data-game-path');
             if (gamePath) {
@@ -1019,6 +1024,10 @@
         }
 
         function closeAnimalDetail() {
+            // Trigger haptic feedback
+            if (typeof triggerHaptic === 'function') {
+                triggerHaptic('single');
+            }
             document.getElementById('animalDetailPopup').classList.add('hidden');
         }
 
@@ -1034,6 +1043,10 @@
                         const collectedAnimal = animalItem.querySelector('.collected-animal');
                         // Only show detail if the animal is collected
                         if (collectedAnimal && collectedAnimal.style.display !== 'none') {
+                            // Trigger haptic feedback
+                            if (typeof triggerHaptic === 'function') {
+                                triggerHaptic('single');
+                            }
                             const animalId = animalItem.getAttribute('data-animal');
                             if (animalId) {
                                 showAnimalDetail(animalId);
@@ -1050,6 +1063,28 @@
                     animal.style.cursor = 'pointer';
                 }
             });
+        }
+        
+        // Add haptic feedback to buttons with onclick
+        function addHapticToButtons() {
+            document.querySelectorAll('button[onclick]').forEach(button => {
+                const originalOnclick = button.getAttribute('onclick');
+                if (originalOnclick && !originalOnclick.includes('triggerHaptic')) {
+                    button.onclick = function(e) {
+                        if (typeof triggerHaptic === 'function') {
+                            triggerHaptic('single');
+                        }
+                        eval(originalOnclick);
+                    };
+                }
+            });
+        }
+        
+        // Call on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', addHapticToButtons);
+        } else {
+            addHapticToButtons();
         }
     </script>
 </body>

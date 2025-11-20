@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="menu.css">
     <script src="starburst-background.js"></script>
+    <script src="scripts/haptic-feedback.js"></script>
     <style>
         :root {
             --Texts-textMain: #3A2E27;
@@ -829,8 +830,18 @@
                 this.renderLeaderboard();
                 
                 // Set up event listeners
-                document.getElementById('todayButton').addEventListener('click', () => this.switchPeriod('today'));
-                document.getElementById('monthlyButton').addEventListener('click', () => this.switchPeriod('monthly'));
+                document.getElementById('todayButton').addEventListener('click', () => {
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('single');
+                    }
+                    this.switchPeriod('today');
+                });
+                document.getElementById('monthlyButton').addEventListener('click', () => {
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('single');
+                    }
+                    this.switchPeriod('monthly');
+                });
             }
 
             loadCurrentUser() {
@@ -1175,9 +1186,29 @@
                     window.location.href = 'menu.html';
                 };
                 
-                backButton.addEventListener('click', handleBack);
-                backButton.addEventListener('touchend', handleBack);
+                const handleBackWithHaptic = (e) => {
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('single');
+                    }
+                    handleBack(e);
+                };
+                
+                backButton.addEventListener('click', handleBackWithHaptic);
+                backButton.addEventListener('touchend', handleBackWithHaptic);
             }
+            
+            // Add haptic feedback to buttons with onclick
+            document.querySelectorAll('button[onclick]').forEach(button => {
+                const originalOnclick = button.getAttribute('onclick');
+                if (originalOnclick && !originalOnclick.includes('triggerHaptic')) {
+                    button.onclick = function(e) {
+                        if (typeof triggerHaptic === 'function') {
+                            triggerHaptic('single');
+                        }
+                        eval(originalOnclick);
+                    };
+                }
+            });
         });
     </script>
 </body>

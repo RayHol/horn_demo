@@ -242,6 +242,7 @@
         </div>
     </div>
 
+    <script src="scripts/haptic-feedback.js"></script>
     <script>
         let currentRandomNumber = null;
 
@@ -300,10 +301,17 @@
         document.getElementById('firstNameSelect').addEventListener('change', updateNicknamePreview);
         document.getElementById('secondNameSelect').addEventListener('change', updateNicknamePreview);
         document.getElementById('confirmButton').addEventListener('click', function() {
+            // Trigger haptic feedback
+            if (typeof triggerHaptic === 'function') {
+                triggerHaptic('single');
+            }
             const nickname = updateNicknamePreview();
             if (nickname) {
                 saveUserData(nickname);
-                window.location.href = 'menu.html';
+                // Small delay to let audio play before navigation
+                setTimeout(() => {
+                    window.location.href = 'menu.html';
+                }, 100);
             }
         });
 
@@ -370,6 +378,40 @@
         document.addEventListener('DOMContentLoaded', () => {
             new OrientationManager();
             checkExistingUser();
+            
+            // Add haptic feedback to buttons with onclick handlers
+            function addHapticToButtons() {
+                document.querySelectorAll('button[onclick]').forEach((button) => {
+                    const originalOnclick = button.getAttribute('onclick');
+                    if (originalOnclick && !originalOnclick.includes('triggerHaptic')) {
+                        // Remove onclick attribute and use addEventListener instead for better control
+                        button.removeAttribute('onclick');
+                        
+                        button.addEventListener('click', function(e) {
+                            // Trigger haptic feedback and sound immediately
+                            if (typeof triggerHaptic === 'function') {
+                                triggerHaptic('single');
+                            }
+                            
+                            // For navigation buttons, add small delay to ensure audio plays
+                            if (originalOnclick.includes('window.location.href')) {
+                                // Small delay to let audio start before navigation
+                                setTimeout(() => {
+                                    eval(originalOnclick);
+                                }, 100);
+                            } else {
+                                // For other buttons, execute immediately
+                                eval(originalOnclick);
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // Wait a bit to ensure haptic system is initialized
+            setTimeout(() => {
+                addHapticToButtons();
+            }, 100);
         });
     </script>
 </body>

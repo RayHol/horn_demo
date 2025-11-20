@@ -760,6 +760,9 @@
         }
     </script>
 
+    <!-- Haptic Feedback Script -->
+    <script src="scripts/haptic-feedback.js"></script>
+    
     <!-- Adobe Animate/CreateJS Animation Scripts -->
     <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
     <script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
@@ -984,6 +987,11 @@
       function handleStartClick(url) {
         // Prevent multiple clicks
         if (isReversing) return;
+        
+        // Trigger short haptic feedback
+        if (typeof triggerHaptic === 'function') {
+          triggerHaptic('single');
+        }
         
         // Disable buttons
         var startButton = document.getElementById('startButton');
