@@ -11,10 +11,12 @@
 </head>
 <body>
     <button class="back-button" id="backButton" aria-label="Back to menu">
-        <img src="./assets/ui/close_button.png" alt="Back">
+        <img src="./assets/ui/Arrow.svg" alt="Back">
     </button>
     
-    <button class="help-button" id="helpButton" aria-label="Help">?</button>
+    <button class="help-button" id="helpButton" aria-label="Help">
+        <img src="./assets/ui/Help.svg" alt="Help">
+    </button>
     
     <!-- Orientation Warning Overlay -->
     <div id="orientationOverlay" class="orientation-overlay hidden">
@@ -77,12 +79,18 @@
         </div>
     </div>
 
-    <!-- Recenter Map Button -->
+    <!-- Proximity Info Panel (shows when within 20-25m range) -->
+    <div id="proximityNotification" class="proximity-notification hidden"></div>
+
+    <!-- Zoom and Recenter Buttons -->
+    <button id="zoomInBtn" class="zoom-btn" aria-label="Zoom in">
+        <img src="./assets/ui/Plus.svg" alt="Zoom in">
+    </button>
+    <button id="zoomOutBtn" class="zoom-btn" aria-label="Zoom out">
+        <img src="./assets/ui/Minus.svg" alt="Zoom out">
+    </button>
     <button id="recenterBtn" class="recenter-btn" aria-label="Recenter map to your location">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" fill="none"/>
-            <path d="M12 1v6m0 8v6M1 12h6m8 0h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+        <img src="./assets/ui/Target.svg" alt="Recenter">
     </button>
 
     <!-- Map Container -->

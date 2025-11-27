@@ -49,6 +49,8 @@
     const animalNearbyMessage = document.getElementById('animalNearbyMessage');
     const animalNearbyOpenCamera = document.getElementById('animalNearbyOpenCamera');
     const recenterBtn = document.getElementById('recenterBtn');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
     const helpButton = document.getElementById('helpButton');
     const backButton = document.getElementById('backButton');
     const instructionsOverlay = document.getElementById('instructionsOverlay');
@@ -417,6 +419,26 @@
                 const scaleDiff = newScale - this.targetScale;
                 this.targetTranslateX -= (mouseX - centerX) * scaleDiff;
                 this.targetTranslateY -= (mouseY - centerY) * scaleDiff;
+                
+                this.targetScale = newScale;
+            }
+        }
+        
+        // Programmatic zoom method for button controls
+        zoom(delta) {
+            const newScale = Math.max(this.minScale, Math.min(this.maxScale, this.targetScale + delta));
+            
+            if (newScale !== this.targetScale) {
+                // Zooming doesn't disable auto-recenter - only panning does
+                
+                const rect = this.mapContainer.getBoundingClientRect();
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                // Use center of map for zoom
+                const scaleDiff = newScale - this.targetScale;
+                this.targetTranslateX -= (rect.width / 2 - centerX) * scaleDiff;
+                this.targetTranslateY -= (rect.height / 2 - centerY) * scaleDiff;
                 
                 this.targetScale = newScale;
             }
@@ -1735,10 +1757,10 @@
             animalNearbyPopup.classList.add('show');
         }
         
-        // Keep old notification for backwards compatibility (hidden)
+        // Hide proximity notification when in range (popup shows instead)
         if (proximityNotification) {
-            proximityNotification.textContent = `An animal is nearby: ${animal.name}. Open the camera to scan the area.`;
-            proximityNotification.className = 'proximity-notification'; // Don't show
+            proximityNotification.classList.remove('show');
+            proximityNotification.classList.add('hidden');
         }
         
         // Keep old button for backwards compatibility (hidden)
@@ -1763,8 +1785,9 @@
         if (proximityState === 'in-range' && currentAnimal) {
             showInRangeNotifications(currentAnimal, true);
         } else if (proximityState === 'nearby' && currentAnimal) {
-            // If we're in nearby range, show that notification
-            showNearbyNotifications(currentAnimal);
+            // If we're in nearby range, recalculate distance and show that notification
+            const distance = haversineMeters(currentUserLocation, currentAnimal.location);
+            showNearbyNotifications(currentAnimal, distance);
         } else {
             // Otherwise re-check proximity to trigger notifications
             checkProximity(currentUserLocation);
@@ -1818,29 +1841,21 @@
             hideAnimalNearbyPopup();
         }
         
-        // Keep old notification for backwards compatibility (hidden)
-        if (proximityNotification) {
-            proximityNotification.textContent = `You are near ${animal.name}. Move closer to unlock it.`;
-            proximityNotification.className = 'proximity-notification'; // Don't show
-        }
-        
-        // Keep old button for backwards compatibility (hidden)
-        if (openCameraBtn) {
-            openCameraBtn.classList.remove('show');
-            openCameraBtn.disabled = true;
-        }
+        // Show proximity notification at top of screen
+        showNearbyNotifications(animal, distance);
     }
     
-    function showNearbyNotifications(animal) {
+    function showNearbyNotifications(animal, distance) {
         // Hide animal nearby popup when not in range
         if (animalNearbyPopup) {
             hideAnimalNearbyPopup();
         }
         
-        // Keep old notification for backwards compatibility (hidden)
-        if (proximityNotification) {
-            proximityNotification.textContent = `You are near ${animal.name}. Move closer to unlock it.`;
-            proximityNotification.className = 'proximity-notification'; // Don't show
+        // Show proximity notification at top of screen
+        if (proximityNotification && animal) {
+            proximityNotification.textContent = `You are near a ${animal.name}. Move closer to scan it!`;
+            proximityNotification.classList.remove('hidden');
+            proximityNotification.className = 'proximity-notification nearby show';
         }
         
         // Keep old button for backwards compatibility (hidden)
@@ -1859,9 +1874,10 @@
             hideAnimalNearbyPopup();
         }
         
-        // Keep old notification for backwards compatibility (hidden)
+        // Hide proximity notification
         if (proximityNotification) {
             proximityNotification.classList.remove('show');
+            proximityNotification.classList.add('hidden');
         }
         
         // Keep old button for backwards compatibility (hidden)
@@ -2325,6 +2341,29 @@
                 }
                 // Navigate to menu page
                 window.location.href = '../menu.html';
+            });
+        }
+
+        // Setup zoom buttons (after mapInstance is created)
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', () => {
+                if (!mapInstance) return;
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
+                mapInstance.zoom(0.1);
+            });
+        }
+        
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', () => {
+                if (!mapInstance) return;
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
+                mapInstance.zoom(-0.1);
             });
         }
 

@@ -695,32 +695,36 @@ body {
     position: fixed;
     top: 20px;
     left: 20px;
-    background: var(--primary-color);
-    border: none;
-    border-radius: 12px;
-    width: 48px;
-    height: 48px;
     display: flex;
-    align-items: center;
+    width: 53px;
+    height: 48px;
+    padding: 10px 13.333px;
     justify-content: center;
+    align-items: center;
+    gap: 6.667px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    border: 1px solid var(--UI-border, #E7D4A3);
+    background: var(--UI-buttonWhite, #FCEFE1);
+    box-shadow: 0 3px 0 0 #E7D4A3;
     cursor: pointer;
     z-index: 1000;
-    box-shadow: 0px 4px 0px 0px var(--button-shadow);
+    transition: all 0.2s ease;
 }
 
 .back-button:hover {
     transform: translateY(2px);
-    box-shadow: 0px 2px 0px 0px var(--button-shadow);
+    box-shadow: 0 2px 0 0 #E7D4A3;
 }
 
 .back-button:active {
-    transform: translateY(4px);
+    transform: translateY(3px);
     box-shadow: none;
 }
 
 .back-button img {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
 }
 
 /* Help button */
@@ -728,20 +732,21 @@ body {
     position: fixed;
     top: 20px;
     right: 20px;
-    background: var(--primary-color);
-    border: none;
-    border-radius: 12px;
-    width: 48px;
-    height: 48px;
     display: flex;
-    align-items: center;
+    width: 53px;
+    height: 48px;
+    padding: 10px 13.333px;
     justify-content: center;
+    align-items: center;
+    gap: 6.667px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    border: 1px solid var(--UI-border, #E7D4A3);
+    background: var(--UI-buttonWhite, #FCEFE1);
+    box-shadow: 0 3px 0 0 #E7D4A3;
     cursor: pointer;
     z-index: 1000;
-    box-shadow: 0px 4px 0px 0px var(--button-shadow);
-    font-size: 24px;
-    color: white;
-    font-weight: bold;
+    transition: all 0.2s ease;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -752,12 +757,17 @@ body {
 
 .help-button:hover {
     transform: translateY(2px);
-    box-shadow: 0px 2px 0px 0px var(--button-shadow);
+    box-shadow: 0 2px 0 0 #E7D4A3;
 }
 
 .help-button:active {
-    transform: translateY(4px);
+    transform: translateY(3px);
     box-shadow: none;
+}
+
+.help-button img {
+    width: 26px;
+    height: 26px;
 }
 
 /* Instructions overlay */
@@ -921,24 +931,75 @@ body {
     cursor: not-allowed;
 }
 
+/* Zoom Buttons */
+.zoom-btn {
+    position: fixed;
+    right: 24px;
+    display: flex;
+    width: 45px;
+    height: 45px;
+    padding: 10px 13.333px;
+    justify-content: center;
+    align-items: center;
+    gap: 6.667px;
+    border-radius: 10px;
+    border: 1px solid var(--UI-border, #E7D4A3);
+    background: var(--UI-buttonWhite, #FCEFE1);
+    box-shadow: 0 3px 0 0 #E7D4A3;
+    cursor: pointer;
+    z-index: 1000;
+    transition: all 0.2s ease;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#zoomInBtn {
+    bottom: 146px; /* 20px (recenter bottom) + 48px (recenter height) + 20px (gap) + 45px (zoom out height) + 16px (gap) */
+}
+
+#zoomOutBtn {
+    bottom: 88px; /* 20px (recenter bottom) + 48px (recenter height) + 20px (gap) */
+}
+
+.zoom-btn:hover {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 0 #E7D4A3;
+}
+
+.zoom-btn:active {
+    transform: translateY(3px);
+    box-shadow: none;
+}
+
+.zoom-btn img {
+    width: 26px;
+    height: 26px;
+}
+
 /* Recenter Map Button */
 .recenter-btn {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background: var(--primary-color);
-    border: none;
-    border-radius: 12px;
-    width: 56px;
-    height: 56px;
     display: flex;
-    align-items: center;
+    width: 53px;
+    height: 48px;
+    padding: 10px 13.333px;
     justify-content: center;
+    align-items: center;
+    gap: 6.667px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    border: 1px solid var(--UI-border, #E7D4A3);
+    background: var(--UI-buttonWhite, #FCEFE1);
+    box-shadow: 0 3px 0 0 #E7D4A3;
     cursor: pointer;
     z-index: 1000;
-    box-shadow: 0px 4px 0px 0px var(--button-shadow);
     transition: all 0.2s ease;
-    color: white;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -949,17 +1010,17 @@ body {
 
 .recenter-btn:hover {
     transform: translateY(2px);
-    box-shadow: 0px 2px 0px 0px var(--button-shadow);
+    box-shadow: 0 2px 0 0 #E7D4A3;
 }
 
 .recenter-btn:active {
-    transform: translateY(4px);
+    transform: translateY(3px);
     box-shadow: none;
 }
 
-.recenter-btn svg {
-    width: 24px;
-    height: 24px;
+.recenter-btn img {
+    width: 26px;
+    height: 26px;
 }
 
 /* Orientation Warning Overlay */
