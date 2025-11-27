@@ -936,8 +936,8 @@
     function checkBoundaryWarning(location) {
         if (!location || !MapConfig) return;
         
-        // Check if location is outside map bounds
-        const withinBounds = MapConfig.isWithinBounds(location.lat, location.lng);
+        // Check if location is outside boundary warning bounds (separate from map alignment bounds)
+        const withinBounds = MapConfig.isWithinBoundaryWarningBounds(location.lat, location.lng);
         
         // Only show warning if user has dismissed instructions (to avoid showing multiple overlays)
         if (!instructionsDismissed) return;
