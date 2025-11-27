@@ -157,6 +157,12 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
+        }
+
+        .badge-detail-popup.show {
+            transform: translateX(0);
         }
 
         .starburst-background-overlay {
@@ -205,7 +211,8 @@
             justify-content: center;
             cursor: pointer;
             transition: background-color 0.2s ease;
-            z-index: 20;
+            z-index: 100; /* Higher z-index to ensure it's clickable above other elements */
+            pointer-events: auto; /* Ensure button can receive clicks */
         }
 
         .badge-detail-popup .back-button:hover {
@@ -253,13 +260,16 @@
         }
 
         .badge-detail-name {
-            font-family: "Amatic SC";
-            font-size: 48px;
-            font-weight: 700;
-            color: #3A2E27;
-            margin: 0 0 1rem 0;
+            color: var(--Texts-textMain, #3A2E27);
             text-align: center;
-            line-height: 100%;
+            -webkit-text-stroke-width: 0.5px;
+            -webkit-text-stroke-color: var(--Texts-textMain, #3A2E27);
+            font-family: "Amatic SC", sans-serif;
+            font-size: 48px;
+            font-style: normal;
+            font-weight: 700;
+            line-height: 100%; /* 48px */
+            margin: 0 0 1rem 0;
         }
 
         .badge-detail-date {
@@ -727,9 +737,9 @@
         }
 
         // Initialize orientation manager when page loads
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             new OrientationManager();
-            initializeAnimalCollection();
+            await initializeAnimalCollection();
             addAnimalClickListeners();
             
             // Initialize starburst background in animal detail popup
@@ -757,8 +767,98 @@
             initStarburstOverlay();
         });
 
+        // Map badge ID to animal name (for looking up in JSON)
+        function getAnimalNameFromBadgeId(badgeId) {
+            const badgeToNameMap = {
+                'peacock': 'Peacock',
+                'walrus-ar': 'Walrus',
+                'koala': 'Koala',
+                'bee-ar': 'Bee',
+                'clownfish-ar': 'Clown Fish',
+                'platypus': 'Platypus',
+                'cephalopod': 'Cephalopod',
+                'stag-beetle': 'Stag Beetle',
+                'snowy-owl': 'Snowy Owl',
+                'orangutan': 'Orangutan',
+                'jellyfish-ar': 'Jellyfish',
+                'robin': 'Robin'
+            };
+            return badgeToNameMap[badgeId] || null;
+        }
+
+        // Map animal name to badge ID (reverse lookup)
+        function getBadgeIdFromAnimalName(animalName) {
+            const nameToBadgeMap = {
+                'Peacock': 'peacock',
+                'Walrus': 'walrus-ar',
+                'Koala': 'koala',
+                'Bee': 'bee-ar',
+                'Clown Fish': 'clownfish-ar',
+                'Platypus': 'platypus',
+                'Cephalopod': 'cephalopod',
+                'Stag Beetle': 'stag-beetle',
+                'Snowy Owl': 'snowy-owl',
+                'Orangutan': 'orangutan',
+                'Jellyfish': 'jellyfish-ar',
+                'Robin': 'robin'
+            };
+            return nameToBadgeMap[animalName] || null;
+        }
+
+        // Load animals from JSON and update icon sources
+        async function loadAnimalIconsFromJSON() {
+            try {
+                const res = await fetch('./wayfinding/data/animals.json', { cache: 'no-cache' });
+                const cfg = await res.json();
+                const animals = Array.isArray(cfg.animals) ? cfg.animals : [];
+                
+                // Create a map of animal name to icon paths
+                const animalIconMap = {};
+                animals.forEach(animal => {
+                    if (animal.name && animal.icon && animal.icon.shadow && animal.icon.found) {
+                        // Convert paths from ../assets/ to ./assets/ (since animals.html is at root)
+                        animalIconMap[animal.name] = {
+                            shadow: animal.icon.shadow.replace('../assets/', './assets/'),
+                            found: animal.icon.found.replace('../assets/', './assets/')
+                        };
+                    }
+                });
+                
+                // Update all animal items with icons from JSON
+                document.querySelectorAll('.animal-item[data-animal]').forEach(animalItem => {
+                    const badgeId = animalItem.getAttribute('data-animal');
+                    const animalName = getAnimalNameFromBadgeId(badgeId);
+                    
+                    if (animalName && animalIconMap[animalName]) {
+                        const placeholder = animalItem.querySelector('.animal-image:not(.collected-animal)');
+                        const collectedAnimal = animalItem.querySelector('.collected-animal');
+                        
+                        // Update placeholder (shadow) icon
+                        if (placeholder) {
+                            placeholder.src = animalIconMap[animalName].shadow;
+                            placeholder.alt = animalName;
+                        }
+                        
+                        // Update collected (found) icon
+                        if (collectedAnimal) {
+                            collectedAnimal.src = animalIconMap[animalName].found;
+                            collectedAnimal.alt = animalName;
+                        }
+                    }
+                });
+                
+                return animalIconMap;
+            } catch (err) {
+                console.error('Failed to load animal icons from JSON:', err);
+                return {};
+            }
+        }
+
         // Animal Collection System
-        function initializeAnimalCollection() {
+        async function initializeAnimalCollection() {
+            // Load icons from JSON first
+            await loadAnimalIconsFromJSON();
+            
             // Check localStorage for collected badges (animals use the same badge IDs)
             const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
             
@@ -842,12 +942,37 @@
         }
 
         // Animal detail popup functionality
-        function showAnimalDetail(animalId) {
+        async function showAnimalDetail(animalId) {
             const popup = document.getElementById('animalDetailPopup');
             const icon = document.getElementById('animalDetailIcon');
             const name = document.getElementById('animalDetailName');
             const date = document.getElementById('animalDetailDate');
             const description = document.getElementById('animalDetailDescription');
+            
+            // Check if animal is found
+            const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+            const isFound = collectedBadges.includes(animalId);
+            
+            // Load animal icons from JSON to get shadow icons
+            let animalIconMap = {};
+            try {
+                const res = await fetch('./wayfinding/data/animals.json', { cache: 'no-cache' });
+                const cfg = await res.json();
+                const animals = Array.isArray(cfg.animals) ? cfg.animals : [];
+                animals.forEach(animal => {
+                    if (animal.name && animal.icon && animal.icon.shadow && animal.icon.found) {
+                        const badgeId = getBadgeIdFromAnimalName(animal.name);
+                        if (badgeId) {
+                            animalIconMap[badgeId] = {
+                                shadow: animal.icon.shadow.replace('../assets/', './assets/'),
+                                found: animal.icon.found.replace('../assets/', './assets/')
+                            };
+                        }
+                    }
+                });
+            } catch (e) {
+                console.warn('Error loading animal icons from JSON:', e);
+            }
             
             // Animal data - matching badge data for consistency
             const animalData = {
@@ -963,51 +1088,85 @@
             };
             
             if (animalData[animalId]) {
-                icon.src = animalData[animalId].icon;
-                name.textContent = animalData[animalId].name;
-                
-                // Get the actual collection date from userData
-                let collectionDate = null;
-                try {
-                    const userData = JSON.parse(localStorage.getItem('userData') || 'null');
-                    if (userData && userData.progress && userData.progress.badgeDates && userData.progress.badgeDates[animalId]) {
-                        collectionDate = new Date(userData.progress.badgeDates[animalId]);
+                // Update icon - use shadow icon if not found, found icon if found
+                if (isFound) {
+                    // Use found icon
+                    if (animalIconMap[animalId] && animalIconMap[animalId].found) {
+                        icon.src = animalIconMap[animalId].found;
+                    } else {
+                        icon.src = animalData[animalId].icon;
                     }
-                } catch (e) {
-                    console.warn('Error retrieving animal date:', e);
-                }
-                
-                // Format and display the date
-                const monthNames = ["January", "February", "March", "April", "May", "June",
-                    "July", "August", "September", "October", "November", "December"];
-                
-                if (collectionDate && !isNaN(collectionDate.getTime())) {
-                    // Use the stored collection date
-                    const month = monthNames[collectionDate.getMonth()];
-                    const day = collectionDate.getDate();
-                    const year = collectionDate.getFullYear();
-                    date.textContent = `Found in ${month} ${day}, ${year}`;
                 } else {
-                    // Fallback to current date if no stored date (for backwards compatibility)
-                    const currentDate = new Date();
-                    const month = monthNames[currentDate.getMonth()];
-                    const day = currentDate.getDate();
-                    const year = currentDate.getFullYear();
-                    date.textContent = `Found in ${month} ${day}, ${year}`;
+                    // Use shadow icon for unfound animals
+                    if (animalIconMap[animalId] && animalIconMap[animalId].shadow) {
+                        icon.src = animalIconMap[animalId].shadow;
+                    } else {
+                        // Fallback if no shadow icon available
+                        icon.src = animalData[animalId].icon || '';
+                    }
                 }
                 
-                description.textContent = animalData[animalId].description;
+                // Update name - show "???" if not found
+                name.textContent = isFound ? animalData[animalId].name : '???';
                 
-                // Show/hide Play Game button based on gamePath
+                // Update date - only show if found
+                if (isFound) {
+                    // Get the actual collection date from userData
+                    let collectionDate = null;
+                    try {
+                        const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+                        if (userData && userData.progress && userData.progress.badgeDates && userData.progress.badgeDates[animalId]) {
+                            collectionDate = new Date(userData.progress.badgeDates[animalId]);
+                        }
+                    } catch (e) {
+                        console.warn('Error retrieving animal date:', e);
+                    }
+                    
+                    // Format and display the date
+                    const monthNames = ["January", "February", "March", "April", "May", "June",
+                        "July", "August", "September", "October", "November", "December"];
+                    
+                    if (collectionDate && !isNaN(collectionDate.getTime())) {
+                        // Use the stored collection date
+                        const month = monthNames[collectionDate.getMonth()];
+                        const day = collectionDate.getDate();
+                        const year = collectionDate.getFullYear();
+                        date.textContent = `Found in ${month} ${day}, ${year}`;
+                    } else {
+                        // Fallback to current date if no stored date (for backwards compatibility)
+                        const currentDate = new Date();
+                        const month = monthNames[currentDate.getMonth()];
+                        const day = currentDate.getDate();
+                        const year = currentDate.getFullYear();
+                        date.textContent = `Found in ${month} ${day}, ${year}`;
+                    }
+                    date.style.display = 'block';
+                } else {
+                    // Hide date if not found
+                    date.style.display = 'none';
+                }
+                
+                // Update description - show different message if not found
+                if (isFound) {
+                    description.textContent = animalData[animalId].description;
+                } else {
+                    description.textContent = "You haven't found this animal yet. Keep exploring to find it!";
+                }
+                
+                // Show/hide Play Game button - only show if found and has game
                 const playGameButton = document.getElementById('animalPlayGameButton');
-                if (animalData[animalId].gamePath && playGameButton) {
+                if (animalData[animalId].gamePath && isFound && playGameButton) {
                     playGameButton.style.display = 'flex';
                     playGameButton.setAttribute('data-game-path', animalData[animalId].gamePath);
                 } else if (playGameButton) {
                     playGameButton.style.display = 'none';
                 }
                 
+                // Show overlay with slide-in animation
                 popup.classList.remove('hidden');
+                // Force reflow to ensure transition works
+                popup.offsetHeight;
+                popup.classList.add('show');
             }
         }
 
@@ -1028,40 +1187,44 @@
             if (typeof triggerHaptic === 'function') {
                 triggerHaptic('single');
             }
-            document.getElementById('animalDetailPopup').classList.add('hidden');
+            const popup = document.getElementById('animalDetailPopup');
+            if (popup) {
+                // Remove show class to trigger slide-out animation
+                popup.classList.remove('show');
+                
+                // Wait for animation to complete before hiding
+                setTimeout(() => {
+                    if (popup.classList.contains('show')) return; // If shown again, don't hide
+                    popup.classList.add('hidden');
+                }, 300); // Match CSS transition duration
+            }
         }
 
-        // Add click event listeners to collected animals
+        // Add click event listeners to all animals (found and not found)
         function addAnimalClickListeners() {
             // Use event delegation to handle clicks on all animal items
             const animalGrid = document.querySelector('.animal-grid');
             if (animalGrid) {
                 animalGrid.addEventListener('click', function(e) {
-                    // Check if clicked element is a collected animal or its parent
+                    // Check if clicked element is an animal item
                     const animalItem = e.target.closest('.animal-item');
                     if (animalItem) {
-                        const collectedAnimal = animalItem.querySelector('.collected-animal');
-                        // Only show detail if the animal is collected
-                        if (collectedAnimal && collectedAnimal.style.display !== 'none') {
-                            // Trigger haptic feedback
-                            if (typeof triggerHaptic === 'function') {
-                                triggerHaptic('single');
-                            }
-                            const animalId = animalItem.getAttribute('data-animal');
-                            if (animalId) {
-                                showAnimalDetail(animalId);
-                            }
+                        // Trigger haptic feedback
+                        if (typeof triggerHaptic === 'function') {
+                            triggerHaptic('single');
+                        }
+                        const animalId = animalItem.getAttribute('data-animal');
+                        if (animalId) {
+                            showAnimalDetail(animalId);
                         }
                     }
                 });
             }
             
-            // Add cursor pointer to collected animals
-            const collectedAnimals = document.querySelectorAll('.collected-animal');
-            collectedAnimals.forEach(animal => {
-                if (animal.style.display !== 'none') {
-                    animal.style.cursor = 'pointer';
-                }
+            // Add cursor pointer to all animal items
+            const animalItems = document.querySelectorAll('.animal-item');
+            animalItems.forEach(item => {
+                item.style.cursor = 'pointer';
             });
         }
         

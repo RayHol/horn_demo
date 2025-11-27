@@ -19,6 +19,12 @@
 :root {
     --primary-color: #BD3B00;
     --button-shadow: #962F00;
+    --UI-border: #E7D4A3;
+    --UI-backgroundWhite: #FCF6EF;
+    --UI-primary: #C14400;
+    --UI-buttonWhite: #FCEFE1;
+    --Texts-textMain: #3A2E27;
+    --Texts-textWhite: #FCEFE1;
 }
 
 * {
@@ -115,7 +121,7 @@ body {
     border: 3px solid white;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    z-index: 100;
+    z-index: 250; /* Higher than animal hotspots (200) to ensure it's visible above them */
     pointer-events: none;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     animation: pulse 2s ease-in-out infinite;
@@ -147,7 +153,7 @@ body {
     transform: translate(-50%, -50%) translateY(-19px) rotate(0deg) scale(1) translateZ(0);
     /* Transform origin is at the center point (where dot center is) */
     transform-origin: 50% calc(50% + 19px);
-    z-index: 102; /* Higher than dot (100) and accuracy circle (99) */
+    z-index: 252; /* Higher than dot (250) and accuracy circle (99) */
     pointer-events: none;
     /* Smooth rotation */
     transition: transform 0.1s ease-out;
@@ -170,12 +176,14 @@ body {
 /* Animal hotspot pins */
 .animal-hotspot {
     position: absolute;
-    width: 24px;
-    height: 24px;
+    width: 40px;
+    height: 40px;
     transform: translate(-50%, -50%) translateZ(0);
-    z-index: 90;
+    z-index: 200; /* Higher z-index to ensure hotspots are above map and clickable */
     pointer-events: auto;
     cursor: pointer;
+    touch-action: manipulation; /* Improve touch responsiveness */
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
     /* iOS-specific fixes for flickering */
     will-change: transform, left, top;
     -webkit-transform: translate(-50%, -50%) translateZ(0);
@@ -185,6 +193,20 @@ body {
     display: block;
 }
 
+/* Animal icon (img element) */
+.animal-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    pointer-events: none; /* Allow clicks to pass through to parent */
+    /* iOS-specific fixes for flickering */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+/* Fallback pin (when icon not available) */
 .animal-pin {
     width: 100%;
     height: 100%;
@@ -194,6 +216,7 @@ body {
     transform: rotate(-45deg);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     position: relative;
+    pointer-events: none; /* Allow clicks to pass through to parent */
 }
 
 .animal-pin::after {
@@ -228,6 +251,443 @@ body {
 .animal-hotspot:hover .animal-pin-label,
 .animal-hotspot.active .animal-pin-label {
     opacity: 1;
+}
+
+/* Animal Detail Popup (slides in from bottom) */
+.animal-detail-popup {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 3000; /* Higher z-index to ensure it's in front of other elements */
+    transform: translateY(100%);
+    transition: transform 0.3s ease-out;
+    pointer-events: none;
+}
+
+.animal-detail-popup.show {
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.animal-detail-popup.hidden {
+    display: none;
+}
+
+.animal-detail-content {
+    background: var(--UI-backgroundWhite, #FCF6EF);
+    border: 2px solid var(--UI-border, #E7D4A3);
+    border-bottom: none;
+    border-radius: 24px 24px 0 0;
+    padding: 24px;
+    padding-top: 16px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    max-width: 100%;
+    position: relative;
+}
+
+.animal-detail-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    padding: 4.5715px;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+    background: var(--UI-primary, #C14400);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2.857px 0 0 #962F00;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.animal-detail-close:active {
+    transform: translateY(2.857px);
+    box-shadow: none;
+}
+
+.animal-detail-close img {
+    width: 22.857px;
+    height: 22.857px;
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
+.animal-detail-title {
+    color: var(--Texts-textMain, #3A2E27);
+    text-align: center;
+    font-family: 'Amatic SC', cursive;
+    font-size: 32px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 120%; /* 38.4px */
+    -webkit-text-stroke-width: 0.5px;
+    -webkit-text-stroke-color: var(--Texts-textMain, #3A2E27);
+    margin: 0;
+    margin-bottom: 12px;
+    padding-right: 50px; /* Space for close button */
+}
+
+.animal-detail-message {
+    color: var(--Texts-textMain, #3A2E27);
+    text-align: center;
+    font-family: 'BentonSans Regular', 'BentonSans Book', sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 140%; /* 22.4px */
+    margin: 0;
+    margin-bottom: 24px;
+}
+
+.animal-detail-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.animal-detail-btn {
+    display: flex;
+    height: 56px;
+    min-width: 104px;
+    padding: 12px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex: 1 0 0;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+/* Single button (like Open camera) - fixed width */
+.animal-detail-buttons:has(.animal-detail-btn:only-child) .animal-detail-btn,
+.animal-detail-buttons .animal-detail-btn:only-child {
+    width: 196px;
+    flex-shrink: 0;
+    flex: 0 0 auto;
+}
+
+.animal-detail-btn .btn-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.directions-btn {
+    background: var(--UI-primary, #C14400);
+    box-shadow: 0 4px 0 0 #962F00;
+}
+
+.directions-btn span {
+    color: var(--Texts-textWhite, #FCEFE1);
+    text-align: center;
+    font-family: 'BentonSans Comp Black', sans-serif;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 120%; /* 28.8px */
+}
+
+.directions-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 0 #962F00;
+}
+
+.details-btn {
+    border: 1px solid var(--UI-border, #E7D4A3);
+    background: var(--UI-buttonWhite, #FCEFE1);
+    box-shadow: 0 4px 0 0 #E7D4A3;
+}
+
+.details-btn span {
+    color: var(--UI-primary, #C14400);
+    text-align: center;
+    font-family: 'BentonSans Comp Black', sans-serif;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 120%; /* 28.8px */
+}
+
+.details-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 0 #E7D4A3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .animal-detail-content {
+        padding: 20px;
+        padding-top: 16px;
+    }
+    
+    .animal-detail-title {
+        font-size: 28px;
+        line-height: 120%;
+    }
+    
+    .animal-detail-message {
+        font-size: 14px;
+        line-height: 140%;
+    }
+    
+    .animal-detail-buttons {
+        gap: 8px;
+    }
+    
+    .animal-detail-btn {
+        height: 52px;
+        padding: 10px 14px;
+        min-width: 90px;
+    }
+    
+    .animal-detail-btn span {
+        font-size: 20px;
+    }
+    
+    .animal-detail-btn .btn-icon {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .animal-detail-close {
+        width: 28px;
+        height: 28px;
+        padding: 7px 10px;
+    }
+}
+
+/* Animal Details Overlay (full screen, like animals page) */
+.badge-detail-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #FCF6EF;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-out;
+}
+
+.badge-detail-popup.show {
+    transform: translateX(0);
+}
+
+.badge-detail-popup.hidden {
+    display: none;
+}
+
+.starburst-background-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 150vw;
+    height: 150vh;
+    min-width: 1200px;
+    min-height: 1200px;
+    pointer-events: none;
+    z-index: 0;
+    transform: translate(-50%, -50%);
+    transform-origin: 50% 41.13%;
+    animation: rotateStarburst 60s linear infinite;
+    opacity: 1;
+}
+
+.starburst-background-overlay img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+@keyframes rotateStarburst {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+.badge-detail-popup .back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: #D64D1B;
+    border: none;
+    border-radius: 8px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    z-index: 100; /* Higher z-index to ensure it's clickable above other elements */
+    pointer-events: auto; /* Ensure button can receive clicks */
+}
+
+.badge-detail-popup .back-button:hover {
+    background-color: #B83D15;
+}
+
+.badge-detail-popup .back-button:active {
+    transform: translateY(2px);
+}
+
+.badge-detail-popup .back-button img {
+    width: 24px;
+    height: 24px;
+    filter: invert(1);
+}
+
+.badge-detail-popup .title {
+    font-family: "Amatic SC", sans-serif;
+    font-size: 27px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--Texts-textMain, #3A2E27);
+    margin-top: 20px;
+    width: 100%;
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+}
+
+.badge-detail-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-top: 125px;
+    padding-left: 20px;
+    padding-right: 20px;
+    position: relative;
+    z-index: 10;
+}
+
+.badge-detail-icon {
+    width: 275px;
+    height: 275px;
+    object-fit: contain;
+    margin-bottom: 2rem;
+}
+
+.badge-detail-name {
+    color: var(--Texts-textMain, #3A2E27);
+    text-align: center;
+    -webkit-text-stroke-width: 0.5px;
+    -webkit-text-stroke-color: var(--Texts-textMain, #3A2E27);
+    font-family: "Amatic SC", sans-serif;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 100%; /* 48px */
+    margin: 0 0 1rem 0;
+}
+
+.badge-detail-date {
+    font-family: "BentonSans Book", sans-serif;
+    font-size: 16px;
+    color: #3A2E27;
+    margin: 0 0 1.5rem 0;
+    text-align: center;
+    line-height: 140%;
+}
+
+.badge-detail-description {
+    color: var(--Texts-textMain, #3A2E27);
+    text-align: center;
+    font-family: "BentonSans Book", sans-serif;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 140%;
+    margin: 0 0 2rem 0;
+}
+
+.badge-detail-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 1rem;
+}
+
+.badge-detail-popup .secondaryButton {
+    display: flex;
+    width: 220px;
+    min-width: 104px;
+    padding: 12px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    border-radius: 12px;
+    background: var(--UI-buttonWhite, #FCEFE1);
+    border: 2px solid var(--UI-primary, #C14400);
+    box-shadow: 0 3px 0 0 var(--UI-border, #E7D4A3);
+    color: var(--Texts-textMain, #3A2E27);
+    text-align: center;
+    font-family: "BentonSans Comp Black", sans-serif;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 120%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.badge-detail-popup .secondaryButton:hover {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 0 var(--UI-border, #E7D4A3);
+}
+
+.badge-detail-popup .secondaryButton:active {
+    transform: translateY(3px);
+    box-shadow: none;
+}
+
+.badge-detail-popup .secondaryButton.hidden {
+    display: none;
+}
+
+/* Responsive adjustments for badge detail popup */
+@media (max-width: 480px) {
+    .badge-detail-icon {
+        width: 206px;
+        height: 206px;
+    }
+    
+    .badge-detail-name {
+        font-size: 36px;
+    }
+    
+    .badge-detail-description {
+        font-size: 16px;
+    }
 }
 
 /* Back button */

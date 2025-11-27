@@ -41,8 +41,13 @@
     const userLocationAccuracyCircle = document.getElementById('userLocationAccuracyCircle');
     const userLocationHeading = document.getElementById('userLocationHeading');
     const animalHotspots = document.getElementById('animalHotspots');
-    const proximityNotification = document.getElementById('proximityNotification');
-    const openCameraBtn = document.getElementById('openCameraBtn');
+    const proximityNotification = document.getElementById('proximityNotification'); // Keep for backwards compatibility
+    const openCameraBtn = document.getElementById('openCameraBtn'); // Keep for backwards compatibility
+    const animalNearbyPopup = document.getElementById('animalNearbyPopup');
+    const animalNearbyClose = document.getElementById('animalNearbyClose');
+    const animalNearbyTitle = document.getElementById('animalNearbyTitle');
+    const animalNearbyMessage = document.getElementById('animalNearbyMessage');
+    const animalNearbyOpenCamera = document.getElementById('animalNearbyOpenCamera');
     const recenterBtn = document.getElementById('recenterBtn');
     const helpButton = document.getElementById('helpButton');
     const backButton = document.getElementById('backButton');
@@ -53,6 +58,23 @@
     const leaveConfirmButton = document.getElementById('leaveConfirmButton');
     const boundaryWarningOverlay = document.getElementById('boundaryWarningOverlay');
     const boundaryWarningClose = document.getElementById('boundaryWarningClose');
+    const animalDetailPopup = document.getElementById('animalDetailPopup');
+    const animalDetailClose = document.getElementById('animalDetailClose');
+    const animalDetailTitle = document.getElementById('animalDetailTitle');
+    const animalDetailMessage = document.getElementById('animalDetailMessage');
+    const animalDetailDirections = document.getElementById('animalDetailDirections');
+    const animalDetailDetails = document.getElementById('animalDetailDetails');
+    const directionsPopup = document.getElementById('directionsPopup');
+    const directionsClose = document.getElementById('directionsClose');
+    const directionsTitle = document.getElementById('directionsTitle');
+    const directionsMessage = document.getElementById('directionsMessage');
+    const animalDetailsOverlay = document.getElementById('animalDetailsOverlay');
+    const animalDetailsBackButton = document.getElementById('animalDetailsBackButton');
+    const animalDetailsIcon = document.getElementById('animalDetailsIcon');
+    const animalDetailsName = document.getElementById('animalDetailsName');
+    const animalDetailsDate = document.getElementById('animalDetailsDate');
+    const animalDetailsDescription = document.getElementById('animalDetailsDescription');
+    const animalDetailsPlayGameButton = document.getElementById('animalDetailsPlayGameButton');
 
     // State
     let watchId = null;
@@ -194,6 +216,40 @@
             renderAnimalHotspots();
         } catch (err) {
             console.error(`Failed to load ${jsonFile}:`, err);
+        }
+    }
+
+    // Get badge ID for an animal (matching getBadgeDataForAnimal from script.js)
+    function getBadgeIdForAnimal(animalName) {
+        const badgeMap = {
+            'Peacock': 'peacock',
+            'Walrus': 'walrus-ar',
+            'Koala': 'koala',
+            'Bee': 'bee-ar',
+            'Clown Fish': 'clownfish-ar',
+            'Platypus': 'platypus',
+            'Cephalopod': 'cephalopod',
+            'Stag Beetle': 'stag-beetle',
+            'Snowy Owl': 'snowy-owl',
+            'Orangutan': 'orangutan',
+            'Jellyfish': 'jellyfish-ar',
+            'Robin': 'robin'
+        };
+        
+        return badgeMap[animalName] || animalName.toLowerCase().replace(/\s+/g, '-');
+    }
+
+    // Check if an animal has been found (collected)
+    function isAnimalFound(animal) {
+        if (!animal || !animal.name) return false;
+        
+        try {
+            const badgeId = getBadgeIdForAnimal(animal.name);
+            const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+            return collectedBadges.includes(badgeId);
+        } catch (e) {
+            console.warn('Error checking if animal is found:', e);
+            return false;
         }
     }
 
@@ -367,6 +423,13 @@
         }
         
         handleTouchStart(e) {
+            // Check if touch is on an animal hotspot - if so, don't handle map dragging
+            const target = e.target;
+            if (target && (target.closest('.animal-hotspot') || target.classList.contains('animal-icon'))) {
+                // Touch is on a hotspot, let the hotspot handle it
+                return;
+            }
+            
             if (e.touches.length === 1) {
                 this.isDragging = true;
                 this.lastTouchX = e.touches[0].clientX;
@@ -389,6 +452,13 @@
         }
         
         handleTouchMove(e) {
+            // Check if touch is on an animal hotspot - if so, don't handle map dragging
+            const target = e.target;
+            if (target && (target.closest('.animal-hotspot') || target.classList.contains('animal-icon'))) {
+                // Touch is on a hotspot, let the hotspot handle it
+                return;
+            }
+            
             if (e.touches.length === 1 && this.isDragging) {
                 const deltaX = e.touches[0].clientX - this.lastTouchX;
                 const deltaY = e.touches[0].clientY - this.lastTouchY;
@@ -1000,18 +1070,111 @@
                 hotspot.style.transform = 'translate(-50%, -50%) translateZ(0)';
                 hotspot.style.willChange = 'transform, left, top';
                 
-                const pin = document.createElement('div');
-                pin.className = 'animal-pin';
+                // Create icon element (img) or fallback to pin
+                let iconElement;
+                if (animal.icon && animal.icon.shadow && animal.icon.found) {
+                    // Use animal icon
+                    iconElement = document.createElement('img');
+                    iconElement.className = 'animal-icon';
+                    iconElement.alt = animal.name;
+                    // Set initial icon based on found status
+                    const isFound = isAnimalFound(animal);
+                    iconElement.src = isFound ? animal.icon.found : animal.icon.shadow;
+                    // Handle icon load errors with fallback
+                    iconElement.onerror = function() {
+                        console.warn(`Failed to load icon for ${animal.name} (${iconElement.src}), using fallback pin`);
+                        // Replace with fallback pin
+                        const fallbackPin = document.createElement('div');
+                        fallbackPin.className = 'animal-pin';
+                        if (iconElement.parentNode) {
+                            iconElement.parentNode.replaceChild(fallbackPin, iconElement);
+                        }
+                    };
+                } else {
+                    // Fallback to default pin if no icon configuration
+                    console.warn(`No icon configuration for ${animal.name}, using fallback pin`);
+                    iconElement = document.createElement('div');
+                    iconElement.className = 'animal-pin';
+                }
                 
                 const label = document.createElement('div');
                 label.className = 'animal-pin-label';
                 label.textContent = animal.name;
                 
-                hotspot.appendChild(pin);
+                hotspot.appendChild(iconElement);
                 hotspot.appendChild(label);
                 animalHotspots.appendChild(hotspot);
                 
+                // Add click and touch handlers to show animal detail popup
+                // Use both click and touchend for better mobile support
+                let touchStartTime = 0;
+                let touchStartPos = { x: 0, y: 0 };
+                
+                const handleHotspotTap = (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    
+                    // Only show popup if it was a tap (not a drag)
+                    const touchDuration = Date.now() - touchStartTime;
+                    const touchDistance = Math.sqrt(
+                        Math.pow(e.changedTouches?.[0]?.clientX - touchStartPos.x || 0, 2) +
+                        Math.pow(e.changedTouches?.[0]?.clientY - touchStartPos.y || 0, 2)
+                    );
+                    
+                    // If touch was quick (< 300ms) and didn't move much (< 10px), treat as tap
+                    if (!e.changedTouches || (touchDuration < 300 && touchDistance < 10)) {
+                        showAnimalDetailPopup(animal);
+                    }
+                };
+                
+                hotspot.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    showAnimalDetailPopup(animal);
+                });
+                
+                hotspot.addEventListener('touchstart', (e) => {
+                    touchStartTime = Date.now();
+                    if (e.touches[0]) {
+                        touchStartPos.x = e.touches[0].clientX;
+                        touchStartPos.y = e.touches[0].clientY;
+                    }
+                    e.stopPropagation(); // Prevent map from handling this touch
+                }, { passive: true });
+                
+                hotspot.addEventListener('touchend', handleHotspotTap, { passive: false });
+                
                 hotspotElements.set(animal.id, hotspot);
+            } else {
+                // Update existing hotspot - replace pin with icon if needed, or update icon
+                if (animal.icon && animal.icon.shadow && animal.icon.found) {
+                    let iconElement = hotspot.querySelector('.animal-icon');
+                    const pinElement = hotspot.querySelector('.animal-pin');
+                    
+                    // If we have a pin but no icon, replace pin with icon
+                    if (pinElement && !iconElement) {
+                        iconElement = document.createElement('img');
+                        iconElement.className = 'animal-icon';
+                        iconElement.alt = animal.name;
+                        const isFound = isAnimalFound(animal);
+                        iconElement.src = isFound ? animal.icon.found : animal.icon.shadow;
+                        // Handle icon load errors with fallback
+                        iconElement.onerror = function() {
+                            console.warn(`Failed to load icon for ${animal.name} (${iconElement.src}), keeping fallback pin`);
+                            // Don't replace, just log the error
+                        };
+                        pinElement.replaceWith(iconElement);
+                    } else if (iconElement && iconElement.tagName === 'IMG') {
+                        // Update existing icon if found status changed
+                        const isFound = isAnimalFound(animal);
+                        const newSrc = isFound ? animal.icon.found : animal.icon.shadow;
+                        // Get current src without full URL (just the path)
+                        const currentSrc = iconElement.getAttribute('src') || '';
+                        if (currentSrc !== newSrc) {
+                            iconElement.src = newSrc;
+                        }
+                    }
+                }
             }
             // Position will be updated in updateHotspotPositions()
         });
@@ -1020,6 +1183,395 @@
     // Store last known positions to avoid unnecessary updates (iOS optimization)
     const hotspotPositions = new Map(); // Map<animalId, {x, y, visible}>
     
+    // Update hotspot icons when collection status changes
+    function updateHotspotIcons() {
+        animals.forEach(animal => {
+            const hotspot = hotspotElements.get(animal.id);
+            if (hotspot && animal.icon && animal.icon.shadow && animal.icon.found) {
+                const iconElement = hotspot.querySelector('.animal-icon');
+                if (iconElement && iconElement.tagName === 'IMG') {
+                    const isFound = isAnimalFound(animal);
+                    const newSrc = isFound ? animal.icon.found : animal.icon.shadow;
+                    const currentSrc = iconElement.getAttribute('src') || '';
+                    if (currentSrc !== newSrc) {
+                        iconElement.src = newSrc;
+                    }
+                }
+            }
+        });
+    }
+
+    // Show animal detail popup
+    function showAnimalDetailPopup(animal) {
+        if (!animal || !animalDetailPopup) return;
+        
+        const isFound = isAnimalFound(animal);
+        
+        // Update title
+        if (animalDetailTitle) {
+            animalDetailTitle.textContent = isFound ? animal.name : '???';
+        }
+        
+        // Update message
+        if (animalDetailMessage) {
+            animalDetailMessage.textContent = isFound 
+                ? "You've already discovered this animal! Want to visit it again?"
+                : "What could this be?";
+        }
+        
+        // Store current animal for button handlers
+        if (animalDetailDirections) {
+            animalDetailDirections.dataset.animalId = animal.id;
+        }
+        if (animalDetailDetails) {
+            animalDetailDetails.dataset.animalId = animal.id;
+        }
+        
+        // Show popup with slide-in animation
+        animalDetailPopup.classList.remove('hidden');
+        // Force reflow to ensure transition works
+        animalDetailPopup.offsetHeight;
+        animalDetailPopup.classList.add('show');
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Hide animal detail popup
+    function hideAnimalDetailPopup() {
+        if (!animalDetailPopup) return;
+        
+        animalDetailPopup.classList.remove('show');
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+            if (animalDetailPopup.classList.contains('show')) return; // If shown again, don't hide
+            animalDetailPopup.classList.add('hidden');
+        }, 300); // Match CSS transition duration
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Handle Directions button click
+    function handleDirectionsClick(animalId) {
+        if (!animalId) return;
+        
+        const animal = animals.find(a => a.id === animalId);
+        if (!animal || !animal.location) return;
+        
+        // Calculate distance from user's current location to animal
+        let distanceMeters = 0;
+        if (currentUserLocation && currentUserLocation.lat && currentUserLocation.lng) {
+            distanceMeters = haversineMeters(
+                { lat: currentUserLocation.lat, lng: currentUserLocation.lng },
+                { lat: animal.location.lat, lng: animal.location.lng }
+            );
+        }
+        
+        // Format distance (show in meters if < 1000m, otherwise show in km)
+        let distanceText;
+        if (distanceMeters < 1000) {
+            distanceText = `${Math.round(distanceMeters)}M AWAY`;
+        } else {
+            const distanceKm = (distanceMeters / 1000).toFixed(1);
+            distanceText = `${distanceKm}KM AWAY`;
+        }
+        
+        // Update directions popup content
+        if (directionsTitle) {
+            directionsTitle.textContent = distanceText;
+        }
+        
+        if (directionsMessage) {
+            directionsMessage.textContent = "Your route is ready. Head to the marked area to scan this animal.";
+        }
+        
+        // Close detail popup first
+        hideAnimalDetailPopup();
+        
+        // Wait for detail popup to close, then show directions popup
+        setTimeout(() => {
+            showDirectionsPopup();
+        }, 300); // Match CSS transition duration
+    }
+
+    // Show directions popup
+    function showDirectionsPopup() {
+        if (!directionsPopup) return;
+        
+        directionsPopup.classList.remove('hidden');
+        // Force reflow to ensure transition works
+        directionsPopup.offsetHeight;
+        directionsPopup.classList.add('show');
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Hide directions popup
+    function hideDirectionsPopup() {
+        if (!directionsPopup) return;
+        
+        directionsPopup.classList.remove('show');
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+            if (directionsPopup.classList.contains('show')) return; // If shown again, don't hide
+            directionsPopup.classList.add('hidden');
+        }, 300); // Match CSS transition duration
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Handle Details button click
+    function handleDetailsClick(animalId) {
+        if (!animalId) return;
+        
+        const animal = animals.find(a => a.id === animalId);
+        if (!animal) return;
+        
+        // Close the detail popup first
+        hideAnimalDetailPopup();
+        
+        // Show the animal details overlay
+        showAnimalDetailsOverlay(animal);
+    }
+
+    // Show animal details overlay
+    function showAnimalDetailsOverlay(animal) {
+        if (!animal || !animalDetailsOverlay) return;
+        
+        // Get badge ID for the animal
+        const badgeId = getBadgeIdForAnimal(animal.name);
+        
+        // Check if animal is found
+        const isFound = isAnimalFound(animal);
+        
+        // Animal data - matching animals.html structure
+        const animalData = {
+            'peacock': {
+                icon: '../assets/animals/found/peacock.svg',
+                name: 'Peacock',
+                description: 'You found the magnificent peacock! A true explorer of the Horniman grounds.',
+                gamePath: '../games/proud-photographer/index.html'
+            },
+            'walrus-ar': {
+                icon: '../assets/animals/found/walrus.svg',
+                name: 'Walrus',
+                description: 'You discovered the walrus! Great tracking skills on your adventure.',
+                gamePath: '../games/walrus-feeder/index.html'
+            },
+            'koala': {
+                icon: '../assets/animals/found/koala.svg',
+                name: 'Koala',
+                description: 'You found the koala! Your keen eye spotted this hidden treasure.'
+            },
+            'bee-ar': {
+                icon: '../assets/animals/found/bee.svg',
+                name: 'Bee',
+                description: 'You found the bee! A tiny but important discovery on your journey.',
+                gamePath: '../games/sunflower-planter/index.html'
+            },
+            'clownfish-ar': {
+                icon: '../assets/animals/found/clownfish.svg',
+                name: 'Clownfish',
+                description: 'You found the clownfish! A colorful addition to your collection.',
+                gamePath: '../games/anemone-cleaning/index.html'
+            },
+            'platypus': {
+                icon: '../assets/animals/found/platypus.svg',
+                name: 'Platypus',
+                description: 'You found the platypus! One of nature\'s most unique creatures.'
+            },
+            'cephalopod': {
+                icon: '../assets/animals/found/Shelled cephalopod.svg',
+                name: 'Cephalopod',
+                description: 'You found the cephalopod! A fascinating marine discovery.'
+            },
+            'stag-beetle': {
+                icon: '../assets/animals/found/stag beetle.svg',
+                name: 'Stag Beetle',
+                description: 'You found the stag beetle! A small but impressive find.'
+            },
+            'snowy-owl': {
+                icon: '../assets/animals/found/snowy owl.svg',
+                name: 'Snowy Owl',
+                description: 'You found the snowy owl! A wise and majestic discovery.'
+            },
+            'orangutan': {
+                icon: '../assets/animals/found/orangutan.svg',
+                name: 'Orangutan',
+                description: 'You found the orangutan! A great ape discovery on your adventure.'
+            },
+            'jellyfish-ar': {
+                icon: '../assets/animals/found/jellyfish.svg',
+                name: 'Jellyfish',
+                description: 'You found the jellyfish! A graceful and mesmerizing discovery.'
+            },
+            'robin': {
+                icon: '../assets/animals/found/robin.svg',
+                name: 'Robin',
+                description: 'You found the robin! A cheerful bird to add to your collection.'
+            }
+        };
+        
+        const data = animalData[badgeId];
+        if (!data) {
+            console.warn(`No data found for animal with badge ID: ${badgeId}`);
+            return;
+        }
+        
+        // Update icon - use shadow icon if not found, found icon if found
+        if (animalDetailsIcon) {
+            if (isFound) {
+                // Use found icon
+                if (animal.icon && animal.icon.found) {
+                    animalDetailsIcon.src = animal.icon.found.replace('../assets/', '../assets/');
+                } else if (data.icon) {
+                    animalDetailsIcon.src = data.icon;
+                }
+            } else {
+                // Use shadow icon for unfound animals
+                if (animal.icon && animal.icon.shadow) {
+                    animalDetailsIcon.src = animal.icon.shadow.replace('../assets/', '../assets/');
+                } else {
+                    // Fallback if no shadow icon available
+                    animalDetailsIcon.src = data.icon || '';
+                }
+            }
+        }
+        
+        // Update name - show "???" if not found
+        if (animalDetailsName) {
+            animalDetailsName.textContent = isFound ? data.name : '???';
+        }
+        
+        // Update date - only show if found
+        if (animalDetailsDate) {
+            if (isFound) {
+                let collectionDate = null;
+                try {
+                    const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+                    if (userData && userData.progress && userData.progress.badgeDates && userData.progress.badgeDates[badgeId]) {
+                        collectionDate = new Date(userData.progress.badgeDates[badgeId]);
+                    }
+                } catch (e) {
+                    console.warn('Error retrieving animal date:', e);
+                }
+                
+                const monthNames = ["January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"];
+                
+                if (collectionDate && !isNaN(collectionDate.getTime())) {
+                    const month = monthNames[collectionDate.getMonth()];
+                    const day = collectionDate.getDate();
+                    const year = collectionDate.getFullYear();
+                    animalDetailsDate.textContent = `Found in ${month} ${day}, ${year}`;
+                } else {
+                    // Fallback to current date if no stored date
+                    const currentDate = new Date();
+                    const month = monthNames[currentDate.getMonth()];
+                    const day = currentDate.getDate();
+                    const year = currentDate.getFullYear();
+                    animalDetailsDate.textContent = `Found in ${month} ${day}, ${year}`;
+                }
+                animalDetailsDate.style.display = 'block';
+            } else {
+                // Hide date if not found
+                animalDetailsDate.style.display = 'none';
+            }
+        }
+        
+        // Update description - show different message if not found
+        if (animalDetailsDescription) {
+            if (isFound) {
+                animalDetailsDescription.textContent = data.description;
+            } else {
+                animalDetailsDescription.textContent = "You haven't found this animal yet. Keep exploring to find it!";
+            }
+        }
+        
+        // Show/hide Play Game button - only show if found and has game
+        if (animalDetailsPlayGameButton) {
+            if (data.gamePath && isFound) {
+                animalDetailsPlayGameButton.classList.remove('hidden');
+                animalDetailsPlayGameButton.setAttribute('data-game-path', data.gamePath);
+            } else {
+                animalDetailsPlayGameButton.classList.add('hidden');
+            }
+        }
+        
+        // Initialize starburst background if needed
+        initStarburstOverlay();
+        
+        // Show overlay with slide-in animation
+        animalDetailsOverlay.classList.remove('hidden');
+        // Force reflow to ensure transition works
+        animalDetailsOverlay.offsetHeight;
+        animalDetailsOverlay.classList.add('show');
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Hide animal details overlay
+    function hideAnimalDetailsOverlay() {
+        if (!animalDetailsOverlay) return;
+        
+        // Remove show class to trigger slide-out animation
+        animalDetailsOverlay.classList.remove('show');
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+            if (animalDetailsOverlay.classList.contains('show')) return; // If shown again, don't hide
+            animalDetailsOverlay.classList.add('hidden');
+        }, 300); // Match CSS transition duration
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Initialize starburst background overlay
+    function initStarburstOverlay() {
+        if (!animalDetailsOverlay) return;
+        
+        const overlay = animalDetailsOverlay.querySelector('.starburst-background-overlay');
+        if (overlay && !overlay.querySelector('img')) {
+            const img = document.createElement('img');
+            img.src = '../assets/Startburst.svg';
+            img.alt = 'Starburst background';
+            overlay.appendChild(img);
+        }
+    }
+
+    // Handle Play Game button click
+    function handlePlayGame() {
+        if (!animalDetailsPlayGameButton) return;
+        
+        const gamePath = animalDetailsPlayGameButton.getAttribute('data-game-path');
+        if (gamePath) {
+            // Trigger haptic feedback
+            if (typeof triggerHaptic === 'function') {
+                triggerHaptic('single');
+            }
+            window.location.href = gamePath;
+        }
+    }
+
     // Update hotspot positions smoothly (called every frame)
     function updateHotspotPositions() {
         if (!mapInstance || !animalHotspots) return;
@@ -1150,26 +1702,49 @@
     
     // Separate function to show the actual notifications (called when instructions are dismissed)
     function showInRangeNotifications(animal, isFirstTime) {
-        // Show notification
-        if (proximityNotification) {
-            proximityNotification.textContent = `An animal is nearby: ${animal.name}. Open the camera to scan the area.`;
-            proximityNotification.className = 'proximity-notification show';
+        // Show new animal nearby popup
+        if (animalNearbyPopup && animal && animal.name) {
+            // Update title with animal name
+            if (animalNearbyTitle) {
+                animalNearbyTitle.textContent = `A ${animal.name.toUpperCase()} IS NEARBY!`;
+            }
+            
+            // Update message
+            if (animalNearbyMessage) {
+                animalNearbyMessage.textContent = "Open the camera to scan the area.";
+            }
+            
+            // Set up open camera button
+            if (animalNearbyOpenCamera) {
+                // Remove any existing onclick handler first
+                animalNearbyOpenCamera.onclick = null;
+                // Set new onclick handler with current animal
+                animalNearbyOpenCamera.onclick = function() {
+                    // Trigger short haptic feedback
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('single');
+                    }
+                    window.location.href = `./animalsAR.html?animalId=${encodeURIComponent(animal.id)}`;
+                };
+            }
+            
+            // Show popup with slide-in animation
+            animalNearbyPopup.classList.remove('hidden');
+            // Force reflow to ensure transition works
+            animalNearbyPopup.offsetHeight;
+            animalNearbyPopup.classList.add('show');
         }
         
-        // Show and enable camera button
+        // Keep old notification for backwards compatibility (hidden)
+        if (proximityNotification) {
+            proximityNotification.textContent = `An animal is nearby: ${animal.name}. Open the camera to scan the area.`;
+            proximityNotification.className = 'proximity-notification'; // Don't show
+        }
+        
+        // Keep old button for backwards compatibility (hidden)
         if (openCameraBtn) {
-            openCameraBtn.classList.add('show');
-            openCameraBtn.disabled = false;
-            // Remove any existing onclick handler first
-            openCameraBtn.onclick = null;
-            // Set new onclick handler with current animal
-            openCameraBtn.onclick = function() {
-                // Trigger short haptic feedback
-                if (typeof triggerHaptic === 'function') {
-                    triggerHaptic('single');
-                }
-                window.location.href = `./animalsAR.html?animalId=${encodeURIComponent(animal.id)}`;
-            };
+            openCameraBtn.classList.remove('show');
+            openCameraBtn.disabled = true;
         }
         
         // Trigger sound and vibration when notification appears
@@ -1238,13 +1813,18 @@
             return; // Don't show anything until user dismisses instructions
         }
         
-        // Show softer notification
-        if (proximityNotification) {
-            proximityNotification.textContent = `You are near ${animal.name}. Move closer to unlock it.`;
-            proximityNotification.className = 'proximity-notification show nearby';
+        // Hide animal nearby popup when not in range
+        if (animalNearbyPopup) {
+            hideAnimalNearbyPopup();
         }
         
-        // Hide camera button
+        // Keep old notification for backwards compatibility (hidden)
+        if (proximityNotification) {
+            proximityNotification.textContent = `You are near ${animal.name}. Move closer to unlock it.`;
+            proximityNotification.className = 'proximity-notification'; // Don't show
+        }
+        
+        // Keep old button for backwards compatibility (hidden)
         if (openCameraBtn) {
             openCameraBtn.classList.remove('show');
             openCameraBtn.disabled = true;
@@ -1252,13 +1832,18 @@
     }
     
     function showNearbyNotifications(animal) {
-        // Show softer notification
-        if (proximityNotification) {
-            proximityNotification.textContent = `You are near ${animal.name}. Move closer to unlock it.`;
-            proximityNotification.className = 'proximity-notification show nearby';
+        // Hide animal nearby popup when not in range
+        if (animalNearbyPopup) {
+            hideAnimalNearbyPopup();
         }
         
-        // Hide camera button
+        // Keep old notification for backwards compatibility (hidden)
+        if (proximityNotification) {
+            proximityNotification.textContent = `You are near ${animal.name}. Move closer to unlock it.`;
+            proximityNotification.className = 'proximity-notification'; // Don't show
+        }
+        
+        // Keep old button for backwards compatibility (hidden)
         if (openCameraBtn) {
             openCameraBtn.classList.remove('show');
             openCameraBtn.disabled = true;
@@ -1269,16 +1854,54 @@
         proximityState = null;
         currentAnimal = null;
         
-        // Hide notification
+        // Hide animal nearby popup
+        if (animalNearbyPopup) {
+            hideAnimalNearbyPopup();
+        }
+        
+        // Keep old notification for backwards compatibility (hidden)
         if (proximityNotification) {
             proximityNotification.classList.remove('show');
         }
         
-        // Hide camera button and clear onclick
+        // Keep old button for backwards compatibility (hidden)
         if (openCameraBtn) {
             openCameraBtn.classList.remove('show');
             openCameraBtn.disabled = true;
             openCameraBtn.onclick = null;
+        }
+    }
+
+    // Show animal nearby popup
+    function showAnimalNearbyPopup() {
+        if (!animalNearbyPopup) return;
+        
+        animalNearbyPopup.classList.remove('hidden');
+        // Force reflow to ensure transition works
+        animalNearbyPopup.offsetHeight;
+        animalNearbyPopup.classList.add('show');
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Hide animal nearby popup
+    function hideAnimalNearbyPopup() {
+        if (!animalNearbyPopup) return;
+        
+        animalNearbyPopup.classList.remove('show');
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+            if (animalNearbyPopup.classList.contains('show')) return; // If shown again, don't hide
+            animalNearbyPopup.classList.add('hidden');
+        }, 300); // Match CSS transition duration
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
         }
     }
 
@@ -1548,6 +2171,16 @@
         // Initialize environment from saved state or default to production
         initializeEnvironment();
         
+        // Sync user data to Customer.io on page load (ensures latest badge status is synced)
+        try {
+            const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+            if (userData && userData.userId && typeof syncUserToCustomerIO === 'function') {
+                syncUserToCustomerIO(userData);
+            }
+        } catch (e) {
+            console.warn('Error syncing to Customer.io on page load:', e);
+        }
+        
         // Initialize map
         mapInstance = new InteractiveMap();
         
@@ -1786,6 +2419,86 @@
                 hideBoundaryWarning();
             });
         }
+
+        // Setup animal detail popup close button
+        if (animalDetailClose) {
+            animalDetailClose.addEventListener('click', () => {
+                hideAnimalDetailPopup();
+            });
+        }
+
+        // Setup animal detail popup buttons
+        if (animalDetailDirections) {
+            animalDetailDirections.addEventListener('click', () => {
+                const animalId = animalDetailDirections.dataset.animalId;
+                handleDirectionsClick(animalId);
+            });
+        }
+
+        if (animalDetailDetails) {
+            animalDetailDetails.addEventListener('click', () => {
+                const animalId = animalDetailDetails.dataset.animalId;
+                handleDetailsClick(animalId);
+            });
+        }
+
+        // Close popup when clicking outside (on the overlay background)
+        if (animalDetailPopup) {
+            animalDetailPopup.addEventListener('click', (e) => {
+                // Only close if clicking the popup background, not the content
+                if (e.target === animalDetailPopup) {
+                    hideAnimalDetailPopup();
+                }
+            });
+        }
+
+        // Setup directions popup close button
+        if (directionsClose) {
+            directionsClose.addEventListener('click', () => {
+                hideDirectionsPopup();
+            });
+        }
+
+        // Close directions popup when clicking outside (on the overlay background)
+        if (directionsPopup) {
+            directionsPopup.addEventListener('click', (e) => {
+                // Only close if clicking the popup background, not the content
+                if (e.target === directionsPopup) {
+                    hideDirectionsPopup();
+                }
+            });
+        }
+
+        // Setup animal details overlay back button
+        if (animalDetailsBackButton) {
+            animalDetailsBackButton.addEventListener('click', () => {
+                hideAnimalDetailsOverlay();
+            });
+        }
+
+        // Setup animal details play game button
+        if (animalDetailsPlayGameButton) {
+            animalDetailsPlayGameButton.addEventListener('click', () => {
+                handlePlayGame();
+            });
+        }
+
+        // Setup animal nearby popup close button
+        if (animalNearbyClose) {
+            animalNearbyClose.addEventListener('click', () => {
+                hideAnimalNearbyPopup();
+            });
+        }
+
+        // Close animal nearby popup when clicking outside (on the overlay background)
+        if (animalNearbyPopup) {
+            animalNearbyPopup.addEventListener('click', (e) => {
+                // Only close if clicking the popup background, not the content
+                if (e.target === animalNearbyPopup) {
+                    hideAnimalNearbyPopup();
+                }
+            });
+        }
         
         // Check if instructions should be shown
         checkInstructionsShown();
@@ -1821,6 +2534,25 @@
             }
             renderAnimalHotspots();
         });
+        
+        // Listen for storage changes to update icons when animals are collected
+        // This allows icons to update when badges are collected in other pages
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'collectedBadges') {
+                updateHotspotIcons();
+            }
+        });
+        
+        // Also listen for custom storage events (for same-tab updates)
+        // Some browsers don't fire storage events for same-tab changes
+        window.addEventListener('badgeCollected', () => {
+            updateHotspotIcons();
+        });
+        
+        // Periodically check for icon updates (fallback for browsers that don't support storage events)
+        setInterval(() => {
+            updateHotspotIcons();
+        }, 2000); // Check every 2 seconds
     });
 })();
 
