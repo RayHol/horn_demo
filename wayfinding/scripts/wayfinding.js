@@ -440,7 +440,7 @@
     // Audio and haptics
     function ensureAudio() {
         if (!audio) {
-            audio = new Audio('./Geo-pin-app/assets/bell.mp3');
+            audio = new Audio('../assets/audio/bell.mp3');
             audio.volume = 0.5;
             audio._originalVolume = 0.5; // Store original volume for global audio manager
             // Register with global audio manager so it respects the audio toggle
@@ -1390,6 +1390,10 @@
                     // Set initial icon based on found status
                     const isFound = isAnimalFound(animal);
                     iconElement.src = isFound ? animal.icon.found : animal.icon.shadow;
+                    // Add class to hotspot for found animals
+                    if (isFound) {
+                        hotspot.classList.add('found');
+                    }
                     // Handle icon load errors with fallback
                     iconElement.onerror = function() {
                         console.warn(`Failed to load icon for ${animal.name} (${iconElement.src}), using fallback pin`);
@@ -1483,6 +1487,12 @@
                         if (currentSrc !== newSrc) {
                             iconElement.src = newSrc;
                         }
+                        // Update found class on hotspot
+                        if (isFound) {
+                            hotspot.classList.add('found');
+                        } else {
+                            hotspot.classList.remove('found');
+                        }
                     }
                 }
             }
@@ -1506,6 +1516,12 @@
                     if (currentSrc !== newSrc) {
                         iconElement.src = newSrc;
                     }
+                    // Update found class on hotspot
+                    if (isFound) {
+                        hotspot.classList.add('found');
+                    } else {
+                        hotspot.classList.remove('found');
+                    }
                 }
             }
         });
@@ -1519,14 +1535,18 @@
         
         // Update title
         if (animalDetailTitle) {
-            animalDetailTitle.textContent = isFound ? animal.name : '???';
+            if (isFound) {
+                animalDetailTitle.textContent = animal.name;
+            } else {
+                animalDetailTitle.textContent = 'Undiscovered animal';
+            }
         }
         
         // Update message
         if (animalDetailMessage) {
             animalDetailMessage.textContent = isFound 
                 ? "You've already discovered this animal! Want to visit it again?"
-                : "What could this be?";
+                : "You haven't found this animal yet. Get directions to find it";
         }
         
         // Store current animal for button handlers
@@ -1535,6 +1555,17 @@
         }
         if (animalDetailDetails) {
             animalDetailDetails.dataset.animalId = animal.id;
+        }
+        
+        // Show/hide buttons based on whether animal is found
+        if (animalDetailDetails) {
+            if (isFound) {
+                animalDetailDetails.style.display = 'flex';
+                animalDetailDirections.classList.remove('single-button');
+            } else {
+                animalDetailDetails.style.display = 'none';
+                animalDetailDirections.classList.add('single-button');
+            }
         }
         
         // Show popup with slide-in animation
@@ -1763,7 +1794,13 @@
         
         // Update name - show "???" if not found
         if (animalDetailsName) {
-            animalDetailsName.textContent = isFound ? data.name : '???';
+            if (isFound) {
+                // Use name from JSON (animal.name) if available, otherwise fallback to data.name
+                animalDetailsName.textContent = animal.name || data.name || '';
+            } else {
+                // Use regular weight (400) for question marks - Amatic-Regular.ttf has the question mark
+                animalDetailsName.innerHTML = '<span style="font-weight: 400;">???</span>';
+            }
         }
         
         // Update date - only show if found
@@ -1802,10 +1839,12 @@
             }
         }
         
-        // Update description - show different message if not found
+        // Update description - use description from JSON if available, otherwise fallback to data.description
         if (animalDetailsDescription) {
             if (isFound) {
-                animalDetailsDescription.textContent = data.description;
+                // Use description from JSON (animal.description) if available, otherwise fallback to data.description
+                const description = animal.description || data.description || '';
+                animalDetailsDescription.textContent = description;
             } else {
                 animalDetailsDescription.textContent = "You haven't found this animal yet. Keep exploring to find it!";
             }
