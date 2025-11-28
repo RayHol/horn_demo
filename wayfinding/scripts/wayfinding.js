@@ -352,14 +352,25 @@
             // Use higher threshold if user has been stationary for a while
             const timeSinceLastMove = now - lastSignificantMove;
             const isStationary = timeSinceLastMove >= cfg.stationaryTime;
-            const effectiveMinDelta = isStationary ? Math.max(cfg.minDelta, cfg.stationaryThreshold * 0.5) : cfg.minDelta;
+            // When stationary, use a smaller threshold (0.2m) instead of 0.5m to allow more updates
+            const effectiveMinDelta = isStationary ? Math.max(cfg.minDelta, cfg.stationaryThreshold * 0.2) : cfg.minDelta;
             
-            // Only emit if movement exceeds threshold
-            if (moved < effectiveMinDelta) return;
-            if (now - lastEmit < cfg.emitIntervalMs) return;
+            // Check if enough time has passed to force an update (even if movement is small)
+            const timeSinceLastEmit = now - lastEmit;
+            const shouldForceUpdate = timeSinceLastEmit >= cfg.emitIntervalMs;
             
-            lastEmit = now;
-            onEmit && onEmit(state);
+            // Always emit if enough time has passed (force update every second), regardless of movement
+            // This ensures the UI updates even if GPS data is slow or movement is minimal
+            // Also emit if movement exceeds threshold (for immediate response to larger movements)
+            if (shouldForceUpdate) {
+                // Force update - emit current state even if movement is tiny
+                lastEmit = now;
+                onEmit && onEmit(state);
+            } else if (moved >= effectiveMinDelta) {
+                // Movement exceeds threshold - emit immediately
+                lastEmit = now;
+                onEmit && onEmit(state);
+            }
         };
     }
 
@@ -497,7 +508,7 @@
             this.targetScale = this.scale;
             this.targetTranslateX = this.translateX;
             this.targetTranslateY = this.translateY;
-            this.animationSpeed = 0.25; // Increased for smoother, faster response
+            this.animationSpeed = 0.4; // Increased for faster, more responsive updates
             
             // Touch/Drag state
             this.isDragging = false;
@@ -953,7 +964,7 @@
                 return;
             }
             
-            // If keepUserCentered is enabled and user hasn't manually moved, always keep user centered
+            // If keepUserCentered is enabled and user hasn't manually moved, keep user centered with tolerance zone
             if (this.keepUserCentered && !this.userHasManuallyMoved) {
                 // Get current screen position of user location (where it would be without centering)
                 const currentCoords = gpsToScreenCoordinates(userLocation.lat, userLocation.lng, true);
@@ -969,9 +980,30 @@
                 const deltaX = targetX - currentCoords.x;
                 const deltaY = targetY - currentCoords.y;
                 
-                // Use a smaller adjustment factor for smoother, less jerky movement
+                // Define tolerance zone - scales with zoom level
+                // At higher zoom (zoomed in), tolerance is larger (more give)
+                // At lower zoom (zoomed out), tolerance is smaller (less give)
+                // Calculate zoom factor: 0 at min zoom, 1 at max zoom
+                const zoomFactor = (this.targetScale - this.minScale) / (this.maxScale - this.minScale);
+                // Base tolerance at min zoom, larger tolerance at max zoom
+                const baseTolerance = 60; // pixels at minimum zoom
+                const maxTolerance = 150; // pixels at maximum zoom
+                // Interpolate tolerance based on zoom level
+                const toleranceZone = baseTolerance + (maxTolerance - baseTolerance) * zoomFactor;
+                
+                const distanceFromCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                // Only recenter if user is outside the tolerance zone
+                if (distanceFromCenter <= toleranceZone) {
+                    // User is within tolerance zone, don't recenter
+                    this.isAutoRecenterActive = false;
+                    return;
+                }
+                
+                // User is outside tolerance zone, recenter toward center
+                // Use a larger adjustment factor for more responsive following
                 // The animation speed will handle the smooth interpolation
-                const centeringFactor = 0.15; // Reduced from 0.3 for smoother movement
+                const centeringFactor = 0.35; // Increased for faster, more responsive following
                 const newTranslateX = this.targetTranslateX + deltaX * centeringFactor;
                 const newTranslateY = this.targetTranslateY + deltaY * centeringFactor;
                 
@@ -983,11 +1015,11 @@
                 const maxTranslateX = Math.max(0, (scaledWidth - containerRect.width) / 2 + 250);
                 const maxTranslateY = Math.max(0, (scaledHeight - containerRect.height) / 2 + 250);
                 
-                // Use tolerance for auto-recenter
+                // Use tolerance for auto-recenter bounds checking
                 const isNearMaxZoom = this.targetScale >= this.maxScale * 0.95;
-                const baseTolerance = 1.5;
+                const boundsBaseTolerance = 1.5;
                 const zoomTolerance = isNearMaxZoom ? 2.0 : 1.0;
-                const boundsTolerance = baseTolerance * zoomTolerance;
+                const boundsTolerance = boundsBaseTolerance * zoomTolerance;
                 const effectiveMaxTranslateX = maxTranslateX * boundsTolerance;
                 const effectiveMaxTranslateY = maxTranslateY * boundsTolerance;
                 
@@ -2531,12 +2563,12 @@
     // Reduced emitIntervalMs for more frequent updates and smoother movement
     // Enhanced with stationary detection to reduce jitter when still
     const pushStabilized = makeGpsStabilizer({ 
-        minAccuracy: 30, 
-        alpha: 0.45, 
-        minDelta: 0.2, 
-        emitIntervalMs: 80,
+        minAccuracy: 50, // Increased to allow less accurate GPS (more frequent updates)
+        alpha: 0.7, // Increased for faster response to location changes
+        minDelta: 0.01, // Very small threshold - almost any movement triggers update
+        emitIntervalMs: 1000, // Force update at least once per second
         stationaryThreshold: 1.0, // Consider stationary if movement < 1 meter
-        stationaryTime: 3000 // Apply higher threshold after 3 seconds of being still
+        stationaryTime: 10000 // Increased time before applying higher threshold (allows more updates)
     });
 
     function onPosition(pos) {
@@ -2593,8 +2625,10 @@
             return;
         }
 
-        // Use real geolocation API
-        const opts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+        // Use real geolocation API with faster update frequency
+        // maximumAge: 0 means always use fresh GPS data (no cache)
+        // timeout: 5000 means wait up to 5 seconds for GPS fix
+        const opts = { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 };
         watchId = navigator.geolocation.watchPosition(onPosition, onError, opts);
         
         // Start heading/compass tracking
