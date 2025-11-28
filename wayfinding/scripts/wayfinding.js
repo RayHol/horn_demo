@@ -1519,7 +1519,12 @@
         
         // Update title
         if (animalDetailTitle) {
-            animalDetailTitle.textContent = isFound ? animal.name : '???';
+            if (isFound) {
+                animalDetailTitle.textContent = animal.name;
+            } else {
+                // Use regular weight (400) for question marks - Amatic-Regular.ttf has the question mark
+                animalDetailTitle.innerHTML = '<span style="font-weight: 400;">???</span>';
+            }
         }
         
         // Update message
@@ -1763,7 +1768,12 @@
         
         // Update name - show "???" if not found
         if (animalDetailsName) {
-            animalDetailsName.textContent = isFound ? data.name : '???';
+            if (isFound) {
+                animalDetailsName.textContent = data.name;
+            } else {
+                // Use regular weight (400) for question marks - Amatic-Regular.ttf has the question mark
+                animalDetailsName.innerHTML = '<span style="font-weight: 400;">???</span>';
+            }
         }
         
         // Update date - only show if found

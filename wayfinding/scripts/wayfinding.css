@@ -346,7 +346,7 @@ body {
 .animal-detail-title {
     color: var(--Texts-textMain, #3A2E27);
     text-align: center;
-    font-family: 'Amatic SC', cursive;
+    font-family: 'Amatic SC', sans-serif;
     font-size: 32px;
     font-style: normal;
     font-weight: 400;
@@ -355,6 +355,7 @@ body {
     -webkit-text-stroke-color: var(--Texts-textMain, #3A2E27);
     margin: 0;
     margin-bottom: 12px;
+    padding-left: 50px; /* Match right padding to center text */
     padding-right: 50px; /* Space for close button */
 }
 
@@ -1126,30 +1127,42 @@ body {
 
 .boundary-warning-close {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 28px;
-    height: 28px;
-    border: none;
-    border-radius: 50%;
-    background: var(--Texts-textMain);
-    color: white;
-    cursor: pointer;
-    font-size: 18px;
+    top: 16px;
+    right: 16px;
     display: flex;
-    align-items: center;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    padding: 4.5715px;
     justify-content: center;
+    align-items: center;
+    gap: 0;
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+    background: var(--UI-primary, #C14400);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2.857px 0 0 #962F00;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    color: white;
+    font-size: 18px;
     line-height: 1;
     z-index: 10;
     font-weight: bold;
 }
 
 .boundary-warning-close:hover {
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
 .boundary-warning-close:active {
-    opacity: 0.6;
+    transform: translateY(2.857px);
+    box-shadow: none;
 }
 
 .leave-confirm-buttons {
@@ -1161,30 +1174,42 @@ body {
 
 .leave-confirm-close {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 28px;
-    height: 28px;
-    border: none;
-    border-radius: 50%;
-    background: var(--Texts-textMain);
-    color: white;
-    cursor: pointer;
-    font-size: 18px;
+    top: 16px;
+    right: 16px;
     display: flex;
-    align-items: center;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    max-width: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    padding: 4.5715px;
     justify-content: center;
+    align-items: center;
+    gap: 0;
+    aspect-ratio: 1/1;
+    border-radius: 50%;
+    background: var(--UI-primary, #C14400);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2.857px 0 0 #962F00;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    color: white;
+    font-size: 18px;
     line-height: 1;
     z-index: 10;
     font-weight: bold;
 }
 
 .leave-confirm-close:hover {
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
 .leave-confirm-close:active {
-    opacity: 0.6;
+    transform: translateY(2.857px);
+    box-shadow: none;
 }
 
 #leaveConfirmButton {
