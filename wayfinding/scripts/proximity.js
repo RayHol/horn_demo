@@ -95,7 +95,7 @@
 
     function ensureAudio() {
         if (!audio) {
-            audio = new Audio('./Geo-pin-app/assets/bell.mp3');
+            audio = new Audio('../assets/audio/bell.mp3');
             audio.volume = 0.5;
             audio._originalVolume = 0.5; // Store original volume for global audio manager
             // Register with global audio manager so it respects the audio toggle
