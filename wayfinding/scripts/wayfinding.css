@@ -162,9 +162,10 @@ body {
     border-right: 7px solid transparent;
     border-bottom: 14px solid white;
     /* Positioned absolutely, will be positioned via JavaScript to match dot position */
-    /* Use fixed transform that doesn't scale with the dot's pulse animation */
+    /* Use CSS custom property for rotation - set via JavaScript before making visible */
     /* Move further out to accommodate larger triangle (19px from center) */
-    transform: translate(-50%, -50%) translateY(-19px) rotate(0deg) scale(1) translateZ(0);
+    --heading-rotation: 0deg;
+    transform: translate(-50%, -50%) translateY(-19px) rotate(var(--heading-rotation)) scale(1) translateZ(0);
     /* Transform origin is at the center point (where dot center is) */
     transform-origin: 50% calc(50% + 19px);
     z-index: 252; /* Higher than dot (250) and accuracy circle (99) */
@@ -172,7 +173,7 @@ body {
     /* Removed transition to prevent flickering during rapid updates - position/rotation updates are smooth enough without it */
     /* iOS hardware acceleration and flickering fixes */
     will-change: transform, left, top;
-    -webkit-transform: translate(-50%, -50%) translateY(-19px) rotate(0deg) scale(1) translateZ(0);
+    -webkit-transform: translate(-50%, -50%) translateY(-19px) rotate(var(--heading-rotation)) scale(1) translateZ(0);
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     /* Force GPU acceleration */
@@ -185,8 +186,10 @@ body {
     /* Prevent sub-pixel rendering issues */
     image-rendering: crisp-edges;
     -webkit-font-smoothing: antialiased;
-    /* Ensure it's always visible when shown */
+    /* Ensure it's always hidden until we have a valid heading */
     display: none;
+    opacity: 0;
+    visibility: hidden;
 }
 
 /* Animal hotspot pins */

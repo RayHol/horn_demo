@@ -89,6 +89,177 @@
     let proximityState = null; // 'in-range', 'nearby', or null
     let audioPrimed = false; // Track if audio has been primed with user interaction
     let instructionsDismissed = false; // Track if instructions overlay has been dismissed
+    
+    // Message buffer for heading debug (stores messages even when debug UI isn't visible)
+    const headingDebugMessages = [];
+    const MAX_BUFFERED_MESSAGES = 10;
+    
+    // Helper function to initialize heading debug UI (hides haptic info, shows heading section)
+    function initHeadingDebugUI() {
+        try {
+            const debugUI = document.getElementById('haptic-debug-ui');
+            if (!debugUI) return;
+            
+            // Hide all haptic debug info elements
+            const hapticInfoElements = [
+                'haptic-debug-enabled',
+                'haptic-debug-ios',
+                'haptic-debug-credits',
+                'haptic-debug-recent',
+                'haptic-debug-can-trigger',
+                'haptic-debug-method'
+            ];
+            hapticInfoElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = 'none';
+                }
+            });
+            
+            // Create or get heading debug element
+            let headingDebugEl = debugUI.querySelector('#haptic-debug-heading');
+            const isNew = !headingDebugEl;
+            if (!headingDebugEl) {
+                headingDebugEl = document.createElement('div');
+                headingDebugEl.id = 'haptic-debug-heading';
+                headingDebugEl.style.cssText = 'color: #fff; font-size: 11px; line-height: 1.3; margin-top: 4px;';
+                headingDebugEl.innerHTML = '<div style="font-weight: bold; color: #4CAF50; margin-bottom: 4px; font-size: 11px;">Heading Debug:</div>';
+                // Insert after the title row
+                const titleRow = debugUI.querySelector('div:first-child');
+                if (titleRow) {
+                    debugUI.insertBefore(headingDebugEl, titleRow.nextSibling);
+                } else {
+                    debugUI.appendChild(headingDebugEl);
+                }
+            }
+            
+            // Only clear and rebuild if this is a new element or if we have buffered messages to display
+            // Otherwise, preserve existing messages (they'll be updated by logToHapticDebug)
+            if (isNew) {
+                // Clear any placeholder and display buffered messages
+                const existingMessages = headingDebugEl.querySelectorAll('div:not(:first-child)');
+                existingMessages.forEach(msg => msg.remove());
+                
+                // Display buffered messages (keep last 3)
+                const messagesToShow = headingDebugMessages.slice(-3);
+                if (messagesToShow.length === 0) {
+                    // Only show "Initializing..." if there are no messages
+                    const statusMsg = document.createElement('div');
+                    statusMsg.style.cssText = 'color: #ccc; font-size: 10px; margin: 1px 0;';
+                    statusMsg.textContent = 'Initializing...';
+                    headingDebugEl.appendChild(statusMsg);
+                } else {
+                    messagesToShow.forEach(msg => {
+                        const logEntry = document.createElement('div');
+                        logEntry.style.cssText = 'color: #ccc; font-size: 10px; margin: 1px 0;';
+                        logEntry.textContent = msg;
+                        headingDebugEl.appendChild(logEntry);
+                    });
+                }
+            }
+            
+            headingDebugEl.style.display = 'block';
+        } catch (e) {
+            // Silently fail
+        }
+    }
+    
+    // Helper function to log to heading debug UI
+    // Keeps messages short and only shows recent entries
+    function logToHapticDebug(message) {
+        try {
+            console.log(`[Heading Debug] ${message}`);
+            
+            // Always add to buffer (even if debug UI isn't visible)
+            headingDebugMessages.push(message);
+            if (headingDebugMessages.length > MAX_BUFFERED_MESSAGES) {
+                headingDebugMessages.shift(); // Remove oldest
+            }
+            
+            const debugUI = document.getElementById('haptic-debug-ui');
+            if (!debugUI || debugUI.style.display === 'none') {
+                // Debug UI not visible, but message is buffered - will show when UI opens
+                console.log(`[Heading Debug] UI not visible, buffered. Buffer size: ${headingDebugMessages.length}`);
+                return;
+            }
+            
+            // Ensure heading debug UI is initialized
+            initHeadingDebugUI();
+            
+            // Get heading debug element
+            const headingDebugEl = debugUI.querySelector('#haptic-debug-heading');
+            if (!headingDebugEl) return;
+            
+            // Remove "Initializing..." if present
+            const existingMessages = headingDebugEl.querySelectorAll('div:not(:first-child)');
+            existingMessages.forEach(msg => {
+                if (msg.textContent === 'Initializing...') {
+                    msg.remove();
+                }
+            });
+            
+            // Add new message
+            const logEntry = document.createElement('div');
+            logEntry.style.cssText = 'color: #ccc; font-size: 10px; margin: 1px 0;';
+            logEntry.textContent = message;
+            headingDebugEl.appendChild(logEntry);
+            
+            // Keep only last 3 log entries (excluding the title)
+            const entries = headingDebugEl.querySelectorAll('div:not(:first-child)');
+            if (entries.length > 3) {
+                entries[0].remove();
+            }
+        } catch (e) {
+            // Silently fail
+        }
+    }
+    
+    // Hook into haptic debug UI to initialize heading debug when shown
+    (function() {
+        // Override showHapticDebug to initialize heading debug
+        const originalShowHapticDebug = window.showHapticDebug;
+        if (originalShowHapticDebug) {
+            window.showHapticDebug = function() {
+                console.log('[Heading Debug] showHapticDebug() called');
+                originalShowHapticDebug();
+                setTimeout(() => {
+                    console.log(`[Heading Debug] Initializing UI. Buffer has ${headingDebugMessages.length} messages, watchId=${watchId}`);
+                    initHeadingDebugUI();
+                    // If no messages in buffer, log current status
+                    if (headingDebugMessages.length === 0) {
+                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                        const isAndroid = /Android/.test(navigator.userAgent);
+                        const hasOrientation = 'DeviceOrientationEvent' in window;
+                        const hasPermission = typeof DeviceOrientationEvent !== 'undefined' && 
+                                             typeof DeviceOrientationEvent.requestPermission === 'function';
+                        if (watchId === null) {
+                            logToHapticDebug('Tracking not started');
+                        } else if (hasPermission) {
+                            logToHapticDebug('iOS: Check permission');
+                        } else if (hasOrientation) {
+                            logToHapticDebug(isAndroid ? 'Android: Using GPS' : 'Other: Listening');
+                        } else {
+                            logToHapticDebug('No orientation API');
+                        }
+                    } else {
+                        // Messages exist in buffer, they should be displayed by initHeadingDebugUI
+                        console.log(`[Heading Debug] Displaying ${headingDebugMessages.length} buffered messages`);
+                    }
+                }, 50);
+            };
+        }
+        
+        // Also watch for debug UI visibility changes
+        const checkDebugUI = setInterval(() => {
+            const debugUI = document.getElementById('haptic-debug-ui');
+            if (debugUI && debugUI.style.display !== 'none') {
+                initHeadingDebugUI();
+            }
+        }, 500);
+        
+        // Stop checking after 10 seconds
+        setTimeout(() => clearInterval(checkDebugUI), 10000);
+    })();
     let boundaryWarningDismissed = false; // Track if boundary warning has been dismissed
     let isOutsideBounds = false; // Track if user is currently outside map bounds
     
@@ -674,6 +845,7 @@
                     }
                     
                     // Update heading triangle position to match dot position (it's now a sibling, not a child)
+                    // BUT: Only set position, don't show it until we have a valid heading
                     if (userLocationHeading && dotX !== undefined && dotY !== undefined) {
                         // Only update if position changed (avoids unnecessary repaints)
                         const headingX = Math.round(dotX);
@@ -692,8 +864,13 @@
                 updateHotspotPositions();
                 
                 // Update heading indicator rotation if available (after position is set)
+                // This will only show the indicator if we have BOTH position AND heading
                 if (currentHeading !== null && currentHeading !== undefined && userLocationHeading) {
                     updateHeadingIndicator(currentHeading);
+                } else if (userLocationHeading) {
+                    // If we don't have a heading yet, make sure indicator is hidden
+                    // even if position is set
+                    userLocationHeading.style.display = 'none';
                 }
                 
                 requestAnimationFrame(animate);
@@ -1076,6 +1253,7 @@
         }
         
         // Update heading triangle position to match dot position (it's now a sibling, not a child)
+        // BUT: Only set position, don't show it until we have a valid heading
         if (userLocationHeading && dotX !== undefined && dotY !== undefined) {
             // Round positions and only update if changed (avoids unnecessary repaints)
             const headingX = Math.round(dotX);
@@ -1086,6 +1264,12 @@
             if (currentHeadingLeft !== (headingX + 'px') || currentHeadingTop !== (headingY + 'px')) {
                 userLocationHeading.style.left = headingX + 'px';
                 userLocationHeading.style.top = headingY + 'px';
+            }
+            
+            // If we don't have a heading yet, make sure indicator stays hidden
+            // even if position is set
+            if (currentHeading === null || currentHeading === undefined) {
+                userLocationHeading.style.display = 'none';
             }
         }
         
@@ -1996,76 +2180,345 @@
     // Update heading indicator rotation
     // Cache last heading value to avoid unnecessary updates
     let lastHeadingValue = null;
+    let hasReceivedFirstHeading = false; // Track if we've received the first valid heading
+    
     function updateHeadingIndicator(heading) {
-        if (!userLocationHeading || heading === null || heading === undefined) {
-            if (userLocationHeading) {
-                userLocationHeading.style.display = 'none';
-            }
-            lastHeadingValue = null;
+        if (!userLocationHeading) {
             return;
         }
         
+        // If heading is null/undefined, hide the indicator
+        if (heading === null || heading === undefined || isNaN(heading)) {
+            userLocationHeading.style.display = 'none';
+            userLocationHeading.style.opacity = '0';
+            userLocationHeading.style.visibility = 'hidden';
+            lastHeadingValue = null;
+            hasReceivedFirstHeading = false;
+            return;
+        }
+        
+        // Ensure heading is a valid number between 0-360
+        let normalizedHeading = Number(heading);
+        if (isNaN(normalizedHeading)) {
+            userLocationHeading.style.display = 'none';
+            lastHeadingValue = null;
+            hasReceivedFirstHeading = false;
+            return;
+        }
+        
+        // Normalize to 0-360 range
+        normalizedHeading = normalizedHeading % 360;
+        if (normalizedHeading < 0) {
+            normalizedHeading = 360 + normalizedHeading;
+        }
+        
         // Round heading to nearest degree to avoid sub-degree flickering
-        const roundedHeading = Math.round(heading);
+        const roundedHeading = Math.round(normalizedHeading);
+        
+        // Check if position is set (required before showing)
+        const currentLeft = userLocationHeading.style.left;
+        const currentTop = userLocationHeading.style.top;
+        
+        if (!currentLeft || !currentTop) {
+            // Position not set yet, hide until it's ready
+            userLocationHeading.style.display = 'none';
+            return;
+        }
+        
+        // Mark that we've received the first valid heading
+        if (!hasReceivedFirstHeading) {
+            hasReceivedFirstHeading = true;
+            
+            // Log to haptic debug UI if available
+            logToHapticDebug(`First heading: ${roundedHeading}° - Showing triangle`);
+            
+            // CRITICAL FIX: Use CSS custom property to set rotation BEFORE making visible
+            // This ensures the rotation is in the CSS before the element is rendered
+            // Set the CSS custom property first
+            userLocationHeading.style.setProperty('--heading-rotation', `${roundedHeading}deg`);
+            
+            // Also set inline transform as fallback for browsers that don't support CSS variables in transform
+            userLocationHeading.style.transform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
+            userLocationHeading.style.webkitTransform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
+            
+            // Force a reflow to ensure CSS is applied
+            void userLocationHeading.offsetHeight;
+            
+            // NOW make it visible - rotation is already set in CSS, so no flash at 0deg
+            userLocationHeading.style.display = 'block';
+            userLocationHeading.style.opacity = '1';
+            userLocationHeading.style.visibility = 'visible';
+            lastHeadingValue = roundedHeading;
+            
+            // Log to haptic debug UI if available
+            logToHapticDebug(`Triangle visible at ${roundedHeading}°`);
+            return;
+        }
         
         // Only update if heading actually changed (avoids unnecessary repaints)
         if (roundedHeading === lastHeadingValue) {
             return;
         }
         
-        // Ensure heading is visible (position is set in animation loop)
-        if (userLocationHeading.style.display !== 'block') {
-            userLocationHeading.style.display = 'block';
-        }
-        
+        // Update heading for subsequent changes
         // Rotate triangle to point in the direction of heading
         // Heading is in degrees (0-360, where 0 is North)
         // CSS rotate rotates clockwise, and 0 degrees points up (North)
         // The triangle is positioned outside the dot border with spacing (19px from center)
         // Use scale(1) and translateZ(0) to prevent scaling and ensure GPU acceleration
         // Position is set separately in animation loop, so we only update rotation here
-        const currentLeft = userLocationHeading.style.left;
-        const currentTop = userLocationHeading.style.top;
-        if (currentLeft && currentTop) {
-            // Only update transform if position is set
-            // Use rounded heading to avoid sub-degree flickering
-            userLocationHeading.style.transform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
-            // Also update webkit transform for better browser compatibility
-            userLocationHeading.style.webkitTransform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
-            lastHeadingValue = roundedHeading;
-        }
+        // Use rounded heading to avoid sub-degree flickering
+        // Update CSS custom property for rotation
+        userLocationHeading.style.setProperty('--heading-rotation', `${roundedHeading}deg`);
+        // Also set inline transform as fallback
+        userLocationHeading.style.transform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
+        // Also update webkit transform for better browser compatibility
+        userLocationHeading.style.webkitTransform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
+        lastHeadingValue = roundedHeading;
     }
     
     // Handle device orientation for compass heading
     function handleDeviceOrientation(event) {
-        if (event.alpha !== null && event.alpha !== undefined) {
-            // alpha is the compass heading (0-360 degrees)
-            // 0 = North, 90 = East, 180 = South, 270 = West
-            currentHeading = event.alpha;
+        let heading = null;
+        let source = 'none';
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /Android/.test(navigator.userAgent);
+        
+        // Log first event to see what we're getting
+        if (!window._firstOrientationEventLogged) {
+            window._firstOrientationEventLogged = true;
+            const hasWebkit = event.webkitCompassHeading !== null && event.webkitCompassHeading !== undefined && !isNaN(event.webkitCompassHeading);
+            logToHapticDebug(`Event: webkit=${hasWebkit ? Math.round(event.webkitCompassHeading) : 'no'}, alpha=${event.alpha !== null ? Math.round(event.alpha) : 'no'}`);
+        }
+        
+        // CRITICAL: On iOS, webkitCompassHeading is the ACTUAL compass heading
+        // event.alpha on iOS is device orientation, NOT compass heading
+        // Always prioritize webkitCompassHeading if available (iOS Safari)
+        if (event.webkitCompassHeading !== null && event.webkitCompassHeading !== undefined && !isNaN(event.webkitCompassHeading)) {
+            heading = event.webkitCompassHeading;
+            source = 'webkitCompassHeading';
+        } 
+            // On Android, calculate compass heading from device orientation
+            // event.alpha on Android represents rotation around z-axis, but needs proper calculation
+            else if (isAndroid && event.alpha !== null && event.alpha !== undefined && !isNaN(event.alpha)) {
+            // Only use alpha if we don't have a recent GPS heading (GPS is more accurate when moving)
+            // Check if we have a recent GPS heading (within last 3 seconds)
+            const now = Date.now();
+            if (window._lastGPSHeadingTime && (now - window._lastGPSHeadingTime) < 3000) {
+                // GPS heading is recent, don't override it
+                return;
+            }
+            
+            // Calculate compass heading from device orientation
+            // For Android, when device is held in portrait mode and relatively flat:
+            // - alpha: rotation around z-axis (0-360, where 0 is when device points north)
+            // - beta: tilt forward/backward (-180 to 180)
+            // - gamma: tilt left/right (-90 to 90)
+            
+            // If device is relatively flat (beta and gamma close to 0), alpha can be used directly
+            // But we need to normalize it properly
+            let calculatedHeading = event.alpha;
+            
+            // Normalize alpha to 0-360 range
+            if (calculatedHeading < 0) {
+                calculatedHeading = 360 + calculatedHeading;
+            }
+            calculatedHeading = calculatedHeading % 360;
+            
+            // On some Android devices, alpha might need to be inverted or offset
+            // Try to calibrate based on GPS heading if we have a reference
+            // Store multiple calibration samples for better accuracy
+            if (window._androidCalibrationSamples === undefined) {
+                window._androidCalibrationSamples = [];
+            }
+            
+            // Collect calibration samples when GPS heading is available
+            if (window._lastGPSHeadingTime && lastGPSHeading !== null) {
+                const timeSinceGPS = now - window._lastGPSHeadingTime;
+                if (timeSinceGPS < 5000) {
+                    // Calculate offset between GPS and alpha
+                    let offset = lastGPSHeading - calculatedHeading;
+                    // Normalize offset to -180 to 180 range
+                    if (offset > 180) offset -= 360;
+                    if (offset < -180) offset += 360;
+                    
+                    // Store sample (keep last 10 samples)
+                    window._androidCalibrationSamples.push(offset);
+                    if (window._androidCalibrationSamples.length > 10) {
+                        window._androidCalibrationSamples.shift();
+                    }
+                    
+                    // Calculate average offset from samples
+                    const avgOffset = window._androidCalibrationSamples.reduce((a, b) => a + b, 0) / window._androidCalibrationSamples.length;
+                    window._androidCalibrationOffset = avgOffset;
+                    
+                    if (window._androidCalibrationSamples.length === 1) {
+                        logToHapticDebug(`Calibrating...`);
+                    } else if (window._androidCalibrationSamples.length === 10) {
+                        logToHapticDebug(`Calibrated: ${Math.round(avgOffset)}°`);
+                    }
+                }
+            }
+            
+            // Apply calibration offset if available
+            if (window._androidCalibrationOffset !== undefined) {
+                calculatedHeading = (calculatedHeading + window._androidCalibrationOffset) % 360;
+                if (calculatedHeading < 0) calculatedHeading += 360;
+            }
+            
+            heading = calculatedHeading;
+            source = 'alpha (Android)';
+        }
+        // On iOS, if webkitCompassHeading is missing, log once then exit
+        else if (isIOS) {
+            if (!window._iosHeadingWarningLogged) {
+                window._iosHeadingWarningLogged = true;
+                logToHapticDebug('iOS: No webkit');
+            }
+            return; // Exit early on iOS if no webkitCompassHeading
+        }
+        // On other platforms or if no heading data available, exit
+        else {
+            return;
+        }
+        
+        // If we have a valid heading, process it
+        if (heading !== null && heading !== undefined && !isNaN(heading)) {
+            // Normalize to 0-360 range
+            if (heading < 0) {
+                heading = 360 + heading;
+            }
+            heading = heading % 360;
+            
+            // Store the heading
+            currentHeading = heading;
+            
+            // Update heading indicator immediately (always update for smooth rotation)
             updateHeadingIndicator(currentHeading);
+            
+            // Only log heading changes (every 5 degrees or first time) to avoid spam but show more updates
+            const roundedHeading = Math.round(heading);
+            if (!window._lastLoggedHeading || Math.abs(roundedHeading - window._lastLoggedHeading) >= 5) {
+                const sourceText = source === 'webkitCompassHeading' ? 'iOS' : 'Android';
+                logToHapticDebug(`${roundedHeading}° (${sourceText})`);
+                window._lastLoggedHeading = roundedHeading;
+            }
+        }
+        
+        // Log event properties only on first event to help debug
+        if (!window._headingDebugLogged) {
+            window._headingDebugLogged = true;
+            if (isIOS) {
+                logToHapticDebug(`iOS: webkit=${event.webkitCompassHeading}, acc=${event.webkitCompassAccuracy}`);
+            } else if (isAndroid) {
+                logToHapticDebug(`Android: alpha=${Math.round(event.alpha || 0)}, beta=${Math.round(event.beta || 0)}, gamma=${Math.round(event.gamma || 0)}`);
+            }
+        }
+    }
+    
+    // Handle GPS heading from Geolocation API (works on Android when device is moving)
+    let lastGPSHeading = null;
+    function handleGPSHeading(coords) {
+        // Log first GPS position to see if heading is available
+        if (!window._firstGPSHeadingLogged) {
+            window._firstGPSHeadingLogged = true;
+            const hasHeading = coords && coords.heading !== null && coords.heading !== undefined && !isNaN(coords.heading) && coords.heading >= 0;
+            logToHapticDebug(`GPS: heading=${hasHeading ? Math.round(coords.heading) : 'no'}`);
+        }
+        
+        // GPS heading is only available when device is moving
+        // coords.heading is the direction of travel in degrees (0-360, where 0 is North)
+        if (coords && coords.heading !== null && coords.heading !== undefined && !isNaN(coords.heading) && coords.heading >= 0) {
+            let heading = coords.heading;
+            
+            // Normalize to 0-360 range
+            if (heading < 0) {
+                heading = 360 + heading;
+            }
+            heading = heading % 360;
+            
+            // Store the heading
+            currentHeading = heading;
+            
+            // Track when GPS heading was last updated (for Android alpha fallback)
+            window._lastGPSHeadingTime = Date.now();
+            
+            // Update heading indicator (always update for smooth rotation)
+            updateHeadingIndicator(currentHeading);
+            
+            // Only log heading changes (every 5 degrees or first time) to avoid spam but show more updates
+            const roundedHeading = Math.round(heading);
+            if (lastGPSHeading === null || Math.abs(roundedHeading - lastGPSHeading) >= 5) {
+                logToHapticDebug(`${roundedHeading}° (GPS)`);
+                lastGPSHeading = roundedHeading;
+            }
+        } else if (!window._gpsNoHeadingLogged) {
+            window._gpsNoHeadingLogged = true;
+            const isAndroid = /Android/.test(navigator.userAgent);
+            if (isAndroid) {
+                logToHapticDebug('GPS: No heading (using compass)');
+            } else {
+                logToHapticDebug('GPS: No heading (move device)');
+            }
         }
     }
     
     // Start compass/heading tracking
     function startHeadingTracking() {
+        console.log('[Heading] startHeadingTracking() called');
+        
+        // Ensure heading indicator is hidden and reset before starting
+        if (userLocationHeading) {
+            userLocationHeading.style.display = 'none';
+            hasReceivedFirstHeading = false;
+            lastHeadingValue = null;
+        }
+        
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /Android/.test(navigator.userAgent);
+        
+        // Log that we're starting heading tracking
+        const platform = isIOS ? 'iOS' : isAndroid ? 'Android' : 'Other';
+        console.log(`[Heading] Platform: ${platform}`);
+        logToHapticDebug(`Starting... (${platform})`);
+        
         // Check if DeviceOrientationEvent is supported
         if (typeof DeviceOrientationEvent !== 'undefined' && 
             typeof DeviceOrientationEvent.requestPermission === 'function') {
             // iOS 13+ requires permission
+            logToHapticDebug('iOS: Requesting...');
             DeviceOrientationEvent.requestPermission()
                 .then(response => {
                     if (response === 'granted') {
-                        window.addEventListener('deviceorientation', handleDeviceOrientation);
+                        // Add listener - should fire immediately with current orientation
+                        window.addEventListener('deviceorientation', handleDeviceOrientation, { passive: true });
+                        logToHapticDebug('iOS: Granted');
+                    } else {
+                        logToHapticDebug('iOS: Denied');
+                        if (userLocationHeading) {
+                            userLocationHeading.style.display = 'none';
+                        }
                     }
                 })
                 .catch(err => {
-                    console.log('Device orientation permission denied:', err);
+                    logToHapticDebug(`iOS: Error ${err.message || ''}`);
+                    if (userLocationHeading) {
+                        userLocationHeading.style.display = 'none';
+                    }
                 });
         } else if ('DeviceOrientationEvent' in window) {
-            // Older browsers or Android
-            window.addEventListener('deviceorientation', handleDeviceOrientation);
+            // Android/other browsers - add listener (but won't use alpha, will use GPS heading)
+            window.addEventListener('deviceorientation', handleDeviceOrientation, { passive: true });
+            if (isAndroid) {
+                logToHapticDebug('Android: Waiting GPS');
+            } else {
+                logToHapticDebug('Other: Listening...');
+            }
         } else {
-            console.log('Device orientation not supported');
+            logToHapticDebug('No orientation API');
+            if (userLocationHeading) {
+                userLocationHeading.style.display = 'none';
+            }
         }
     }
     
@@ -2091,6 +2544,13 @@
         try {
             localStorage.setItem('geopin-location-permission', 'granted');
         } catch (_) {}
+        
+        // Extract GPS heading if available (works on Android when device is moving)
+        // GPS heading is the direction of travel, which is useful for compass heading
+        // Always call handleGPSHeading to log diagnostic info, even if heading is null
+        if (pos && pos.coords) {
+            handleGPSHeading(pos.coords);
+        }
         
         // Use the actual GPS coordinates (will be fake GPS if set in browser)
         // In fake location mode, we just allow coordinates outside bounds to be mapped
@@ -2273,6 +2733,11 @@
     document.addEventListener('DOMContentLoaded', () => {
         // Initialize environment from saved state or default to production
         initializeEnvironment();
+        
+        // Ensure heading indicator is hidden until we have a valid heading
+        if (userLocationHeading) {
+            userLocationHeading.style.display = 'none';
+        }
         
         // Sync user data to Customer.io on page load (ensures latest badge status is synced)
         try {
