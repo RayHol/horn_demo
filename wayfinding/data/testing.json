@@ -3,6 +3,9 @@
     {
       "id": "peacock-home",
       "name": "Peacock",
+      "scientificName": "Indian Peafowl",
+      "description": "Peacocks aren't great at flying, so they eat insects, small animals and plants that they find on the ground.",
+      "badgeDescription": "Nice job, you found the peacock! Peacocks show off their tail feathers to impress others.",
       "location": { "lat": 55.74804558504446, "lng": -4.643841046780541 },
       "radiusMeters": 10,
       "icon": {
@@ -19,6 +22,9 @@
     {
       "id": "walrus-home",
       "name": "Walrus",
+      "scientificName": "Atlantic walrus",
+      "description": "Walruses spend most of their lives in very cold waters, migrating with floating sea ice to find food.",
+      "badgeDescription": "Nice job, you found the walrus! This blubber lover eats lots of snacks to stay warm in the cold winter.",
       "location": { "lat": 55.748211166207106, "lng": -4.64404008712835 },
       "radiusMeters": 10,
       "icon": {
@@ -35,6 +41,9 @@
     {
       "id": "koala-1",
       "name": "Koala",
+      "scientificName": "Phascolarctos cinereus",
+      "description": "Koalas sleep for about 18 hours each day, and spend the rest of their day eating eucalyptus leaves.",
+      "badgeDescription": "Nice job, you found the koala! Don't expect it to stay awake though - koalas sleep for 18 hours a day!",
       "location": { "lat": 55.74831429933548, "lng": -4.643374342424211 },
       "radiusMeters": 10,
       "icon": {
@@ -51,6 +60,9 @@
     {
       "id": "bee-1",
       "name": "Bee",
+      "scientificName": "Common carder bee",
+      "description": "These fuzzy bees nest in cavities, such as old bird's nests or in moss mats in lawns.",
+      "badgeDescription": "Nice job, you found the bumblebee! These furry fellows go from flower to flower to collect pollen and nectar.",
       "location": { "lat": 55.74768779966066, "lng": -4.644272882420595 },
       "radiusMeters": 10,
       "icon": {
@@ -67,6 +79,9 @@
     {
       "id": "clownfish-1",
       "name": "Clown Fish",
+      "scientificName": "Clown Anemonefish",
+      "description": "Clownfish live in groups, and talk to one another by making popping and clicking noises.",
+      "badgeDescription": "Nice job, you found the clownfish! They swim playfully among anemones to stay safe.",
       "location": { "lat": 55.748767184409104, "lng": -4.642497260051397 },
       "radiusMeters": 10,
       "icon": {
@@ -83,6 +98,9 @@
     {
       "id": "platypus-1",
       "name": "Platypus",
+      "scientificName": "Platypus",
+      "description": "Even though Platypuses are mammals, they lay eggs which is very rare for mammals.",
+      "badgeDescription": "Nice job, you found the platypus! With a bill like a duck and a tail like a beaver, the platypus is a unique looking mammal!",
       "location": { "lat": 55.7474779577579,  "lng": -4.643454808644698 },
       "radiusMeters": 10,
       "icon": {
@@ -99,6 +117,9 @@
     {
       "id": "cephalopod-1",
       "name": "Cephalopod",
+      "scientificName": "Palau Nautilus",
+      "description": "Shelled cephalopods have been around for over 500 million years, making them older than dinosaurs!",
+      "badgeDescription": "Nice job, you found the shelled cephalopod! This cephalopod wears a twisty shell on its back, always ready for an adventure.",
       "location": { "lat": 55.74805615249189,  "lng": -4.642516035514148 },
       "radiusMeters": 10,
       "icon": {
@@ -115,6 +136,9 @@
     {
       "id": "stag_beetle-1",
       "name": "Stag Beetle",
+      "scientificName": "Lucanus cervus",
+      "description": "Stag beetles spend most of their life as a grub underground eating decomposing wood.",
+      "badgeDescription": "Nice job, you found the stag beetle! Male stag beetles use their impressive jaws to fight one another.",
       "location": { "lat": 55.74809087410184, "lng":  -4.64484955732342 },
       "radiusMeters": 10,
       "icon": {
@@ -131,6 +155,9 @@
     {
       "id": "snowy_owl-1",
       "name": "Snowy Owl",
+      "scientificName": "Bubo scandiacus",
+      "description": "Snowy owls have white feathers to blend into the snow of the tundra, protecting them from predators.",
+      "badgeDescription": "Nice job, you found the snowy owl! A silent hunter in the arctic, the snowy owl glides gracefully through the snow.",
       "location": { "lat": 55.74838978054721, "lng": -4.643103439300597 },
       "radiusMeters": 10,
       "icon": {
@@ -147,6 +174,9 @@
     {
       "id": "orangutan-1",
       "name": "Orangutan",
+      "scientificName": "Pan troglodytes",
+      "description": "Orangutans have hands and feet that are equally skillful, and are happy to eat with their feet.",
+      "badgeDescription": "Nice job, you found the orangutan! Swinging from tree to tree with their long arms, orangutans explore the jungle.",
       "location": { "lat": 55.74789613079173,"lng": -4.644616205145255 },
       "radiusMeters": 10,
       "icon": {
@@ -163,6 +193,9 @@
     {
       "id": "Jellyfish-1",
       "name": "Jellyfish",
+      "scientificName": "Moon Jellyfish",
+      "description": "Moon Jellyfish go with the flow on the ocean currents, eating tiny prey which drift into their short tentacles.",
+      "badgeDescription": "Nice job, you found the jellyfish! It goes with the flow, following the movement of the ocean's currents.",
       "location": { "lat": 55.747426629351544,"lng": -4.644616205145255 },
       "radiusMeters": 10,
       "icon": {
@@ -179,6 +212,9 @@
     {
       "id": "robin-1",
       "name": "Robin",
+      "scientificName": "European robin",
+      "description": "Despite their cute appearance, robins are fiercely territorial and do their best to scare off intruders with their loud call.",
+      "badgeDescription": "Nice job, you found the European robin! With its bright red chest and distinct call, robins are easy to spot.",
       "location": { "lat":55.74858301178308, "lng": -4.644069034492832 },
       "radiusMeters": 10,
       "icon": {
@@ -191,7 +227,219 @@
         "rotation": "0 -90 0"
       },
       "ping": { "cooldownMinutes": 3 }
+    },
+    {
+      "id": "velociraptor-1",
+      "name": "Velociraptor",
+      "scientificName": "Velociraptor",
+      "description": "Velociraptors had great vision, sharp claws, and were very fast, making them excellent hunters.",
+      "badgeDescription": "Nice job, you found the velociraptor! These feathered dinosaurs were fast as a flash, making them great hunters.",
+      "location": { "lat": 55.749, "lng": -4.645 },
+      "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/velociraptor.svg",
+        "found": "../assets/animals/found/velocirapton.svg"
+      },
+      "model": {
+        "url": "./assets/model/velociraptor.glb",
+        "scale": "1 1 1",
+        "rotation": "0 180 0"
+      },
+      "ping": { "cooldownMinutes": 3 }
+    },
+    {
+      "id": "fox-1",
+      "name": "Fox",
+      "scientificName": "European red fox",
+      "description": "The red fox often lives near cities, where there are fewer predators and more food available.",
+      "badgeDescription": "Nice job, you found the fox! This clever creature enjoys sneaking through gardens at night.",
+      "location": { "lat": 55.750, "lng": -4.646 },
+      "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/fox.svg",
+        "found": "../assets/animals/found/fox.svg"
+      },
+      "model": {
+        "url": "./assets/model/fox.glb",
+        "scale": "1 1 1",
+        "rotation": "0 180 0"
+      },
+      "ping": { "cooldownMinutes": 3 }
+    },
+    {
+      "id": "puffin-1",
+      "name": "Puffin",
+      "scientificName": "Atlantic Puffin",
+      "description": "Puffins are excellent at flying and swimming, and use their wings as flippers when they're underwater.",
+      "badgeDescription": "Nice job, you found the puffin! These seabirds spend much of their life hunting for fish at sea.",
+      "location": { "lat": 55.751, "lng": -4.647 },
+      "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/puffin.svg",
+        "found": "../assets/animals/found/puffin.svg"
+      },
+      "model": {
+        "url": "./assets/model/puffin.glb",
+        "scale": "1 1 1",
+        "rotation": "0 180 0"
+      },
+      "ping": { "cooldownMinutes": 3 }
+    },
+    {
+      "id": "tiger_cub-1",
+      "name": "Tiger Cub",
+      "scientificName": "Tiger Panthera tigris",
+      "description": "Newborn tiger cubs are born blind, and don't open their eyes for about two weeks!",
+      "badgeDescription": "Nice job, you found the tiger cub! Playful and curious, this little cub is learning the ways of the jungle.",
+      "location": { "lat": 55.752, "lng": -4.648 },
+      "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/tiger_cub.svg",
+        "found": "../assets/animals/found/tiger cub.svg"
+      },
+      "model": {
+        "url": "./assets/model/tiger_cub.glb",
+        "scale": "1 1 1",
+        "rotation": "0 180 0"
+      },
+      "ping": { "cooldownMinutes": 3 }
+    },
+    {
+      "id": "grass_snake-1",
+      "name": "Grass Snake",
+      "scientificName": "Natrix Natrix",
+      "description": "Grass snakes eat frogs and newts, which they swallow whole and often while still alive!",
+      "badgeDescription": "Nice job, you found the grass snake! Experts at slithering and sliding around, grass snakes are also great swimmers.",
+      "location": { "lat": 55.753, "lng": -4.649 },
+      "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/grass snake.svg",
+        "found": "../assets/animals/found/grass snake.svg"
+      },
+      "model": {
+        "url": "./assets/model/grass_snake.glb",
+        "scale": "1 1 1",
+        "rotation": "0 180 0"
+      },
+      "ping": { "cooldownMinutes": 3 }
+    },
+    {
+      "id": "dodo-1",
+      "name": "Dodo",
+      "scientificName": "Raphus cucullatus",
+      "description": "Today dodos are extinct, but they once were a flightless bird that lived in Mauritius, off the coast of Africa.",
+      "badgeDescription": "Nice job, you found the dodo! Large and flightless, this extinct bird is related to pigeons.",
+      "location": { "lat": 55.754, "lng": -4.650 },
+      "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/dodo.svg",
+        "found": "../assets/animals/found/dodo.svg"
+      },
+      "model": {
+        "url": "./assets/model/dodo.glb",
+        "scale": "1 1 1",
+        "rotation": "0 180 0"
+      },
+      "ping": { "cooldownMinutes": 3 }
+    },
+    {
+      "id": "ostrich-1",
+      "name": "Ostrich",
+      "scientificName": "Common ostrich struthio camelus",
+      "description": "Ostriches might not be able to fly, but they can run twice as fast as a human, and have a very strong kick.",
+      "badgeDescription": "Nice job, you found the ostrich! The fastest bird on land, ostriches are always ready to dash across the plains.",
+      "location": { "lat": 55.755, "lng": -4.651 },
+      "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/ostrich.svg",
+        "found": "../assets/animals/found/ostrich.svg"
+      },
+      "model": {
+        "url": "./assets/model/ostrich.glb",
+        "scale": "1 1 1",
+        "rotation": "0 180 0"
+      },
+      "ping": { "cooldownMinutes": 3 }
+    },
+    {
+      "id": "crocodile-1",
+      "name": "Crocodile",
+      "scientificName": "Nile crocodile",
+      "description": "Crocodiles have one of the strongest bites in the animal kingdom, and can eat half their body weight in one meal.",
+      "badgeDescription": "Nice job, you found the Nile Crocodile! Just don't get in the way of its strong bite - one of the strongest bites in the animal kingdom!",
+      "location": { "lat": 55.756, "lng": -4.652 },
+      "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/crocodile.svg",
+        "found": "../assets/animals/found/crocodile.svg"
+      },
+      "model": {
+        "url": "./assets/model/crocodile.glb",
+        "scale": "1 1 1",
+        "rotation": "0 180 0"
+      },
+      "ping": { "cooldownMinutes": 3 }
+    },
+    {
+      "id": "butterfly-1",
+      "name": "Butterfly",
+      "scientificName": "Butterfly",
+      "description": "Butterflies are beautiful insects that go through metamorphosis.",
+      "badgeDescription": "Nice job, you found the butterfly! A beautiful and delicate discovery.",
+      "location": { "lat": 55.757, "lng": -4.653 },
+      "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/butterfly.svg",
+        "found": "../assets/animals/found/butterfly.svg"
+      },
+      "model": {
+        "url": "./assets/model/butterfly.glb",
+        "scale": "1 1 1",
+        "rotation": "0 180 0"
+      },
+      "ping": { "cooldownMinutes": 3 }
+    }
+  ],
+  "gameBadges": [
+    {
+      "id": "sunflower",
+      "name": "Garden Grower",
+      "description": "A true green finger! You planted a beautiful garden for the bees.",
+      "icon": "../assets/badges/icons/bee-badge.svg",
+      "gamePath": "../games/sunflower-planter/index.html"
+    },
+    {
+      "id": "walrus",
+      "name": "Fancy Feeder",
+      "description": "Top marks for tossing molluscs! You're the Walrus' favourite feeder.",
+      "icon": "../assets/badges/icons/walrusFeeding-badge.svg",
+      "gamePath": "../games/walrus-feeder/index.html"
+    },
+    {
+      "id": "anemone",
+      "name": "Careful Cleaner",
+      "description": "Great work, you've left the anemones sparkling and created a healthy home for the clownfish.",
+      "icon": "../assets/badges/icons/clownfish-game-badge.svg",
+      "gamePath": "../games/anemone-cleaning/index.html"
+    },
+    {
+      "id": "photographer",
+      "name": "Peacock Paparazzi",
+      "description": "Perfect timing! You took a photo of the peacock's proudest moment.",
+      "icon": "../assets/badges/icons/peacock-game-badge.svg",
+      "gamePath": "../games/proud-photographer/index.html"
+    },
+    {
+      "id": "streak",
+      "name": "Streak Master",
+      "description": "Earn this badge by playing three days in a row!",
+      "icon": "../assets/badges/Badge.png"
+    },
+    {
+      "id": "jellyfish-juggler",
+      "name": "Jellyfish Juggler",
+      "description": "Nice shot! You spotted the Moon Jellyfish in the crowd and took a fabulous photo!",
+      "icon": "../assets/badges/icons/jellyfish-badge.svg"
     }
   ]
 }
-

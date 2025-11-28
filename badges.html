@@ -880,12 +880,80 @@
         }
 
         // Badge detail popup functionality
-        function showBadgeDetail(badgeId) {
+        async function showBadgeDetail(badgeId) {
             const popup = document.getElementById('badgeDetailPopup');
             const icon = document.getElementById('badgeDetailIcon');
             const name = document.getElementById('badgeDetailName');
             const date = document.getElementById('badgeDetailDate');
             const description = document.getElementById('badgeDetailDescription');
+            
+            // Load badge descriptions from JSON
+            let badgeDescriptionMap = {};
+            let gameBadgeDataMap = {};
+            try {
+                // Get environment from localStorage (set by wayfinding page)
+                let environment = 'production';
+                try {
+                    const saved = localStorage.getItem('wayfinding-environment');
+                    if (saved === 'testing' || saved === 'production') {
+                        environment = saved;
+                    }
+                } catch (_) {
+                    // localStorage not available, use default
+                }
+                
+                const jsonFile = environment === 'testing' ? './wayfinding/data/testing.json' : './wayfinding/data/animals.json';
+                const res = await fetch(jsonFile, { cache: 'no-cache' });
+                const cfg = await res.json();
+                const animals = Array.isArray(cfg.animals) ? cfg.animals : [];
+                const gameBadges = Array.isArray(cfg.gameBadges) ? cfg.gameBadges : [];
+                
+                // Map animal name to badge ID
+                const nameToBadgeIdMap = {
+                    'Peacock': 'peacock',
+                    'Walrus': 'walrus-ar',
+                    'Koala': 'koala',
+                    'Bee': 'bee-ar',
+                    'Clown Fish': 'clownfish-ar',
+                    'Platypus': 'platypus',
+                    'Cephalopod': 'cephalopod',
+                    'Stag Beetle': 'stag-beetle',
+                    'Snowy Owl': 'snowy-owl',
+                    'Orangutan': 'orangutan',
+                    'Jellyfish': 'jellyfish-ar',
+                    'Robin': 'robin',
+                    'Velociraptor': 'velociraptor',
+                    'Fox': 'fox',
+                    'Puffin': 'puffin',
+                    'Tiger Cub': 'tiger-cub',
+                    'Grass Snake': 'grass-snake',
+                    'Dodo': 'dodo',
+                    'Ostrich': 'ostrich',
+                    'Crocodile': 'crocodile',
+                    'Butterfly': 'butterfly'
+                };
+                
+                // Load animal badge descriptions
+                animals.forEach(animal => {
+                    if (animal.name && animal.badgeDescription && nameToBadgeIdMap[animal.name]) {
+                        badgeDescriptionMap[nameToBadgeIdMap[animal.name]] = animal.badgeDescription;
+                    }
+                });
+                
+                // Load game badge data
+                gameBadges.forEach(gameBadge => {
+                    if (gameBadge.id) {
+                        gameBadgeDataMap[gameBadge.id] = {
+                            name: gameBadge.name,
+                            description: gameBadge.description,
+                            icon: gameBadge.icon,
+                            gamePath: gameBadge.gamePath
+                        };
+                    }
+                });
+            } catch (e) {
+                console.warn('Error loading badge descriptions from JSON:', e);
+            }
             
             // Badge data
             const badgeData = {
@@ -982,8 +1050,17 @@
             };
             
             if (badgeData[badgeId]) {
-                icon.src = badgeData[badgeId].icon;
-                name.textContent = badgeData[badgeId].name;
+                // Use game badge data from JSON if available, otherwise use badgeData
+                const gameBadgeFromJson = gameBadgeDataMap[badgeId];
+                if (gameBadgeFromJson) {
+                    // Convert relative paths from JSON (../assets/) to paths relative to badges.html (./assets/)
+                    const iconPath = gameBadgeFromJson.icon ? gameBadgeFromJson.icon.replace('../assets/', './assets/') : badgeData[badgeId].icon;
+                    icon.src = iconPath;
+                    name.textContent = gameBadgeFromJson.name || badgeData[badgeId].name;
+                } else {
+                    icon.src = badgeData[badgeId].icon;
+                    name.textContent = badgeData[badgeId].name;
+                }
                 
                 // Get the actual collection date from userData
                 let collectionDate = null;
@@ -1015,13 +1092,29 @@
                     date.textContent = `Collected in ${month} ${day}, ${year}`;
                 }
                 
-                description.textContent = badgeData[badgeId].description;
+                // Use description from JSON if available (game badges or animal badges), otherwise fallback to badgeData.description
+                const animalBadgeDescription = badgeDescriptionMap[badgeId];
                 
-                // Show/hide Play Game button based on gamePath
+                if (gameBadgeFromJson && gameBadgeFromJson.description) {
+                    description.textContent = gameBadgeFromJson.description;
+                } else if (animalBadgeDescription) {
+                    description.textContent = animalBadgeDescription;
+                } else {
+                    description.textContent = badgeData[badgeId].description || '';
+                }
+                
+                // Show/hide Play Game button based on gamePath (from JSON or badgeData)
                 const playGameButton = document.getElementById('badgePlayGameButton');
-                if (badgeData[badgeId].gamePath && playGameButton) {
+                let gamePath = (gameBadgeFromJson && gameBadgeFromJson.gamePath) || badgeData[badgeId].gamePath;
+                
+                // Convert relative paths from JSON (../games/) to paths relative to badges.html (./games/)
+                if (gamePath && gamePath.startsWith('../')) {
+                    gamePath = gamePath.replace('../', './');
+                }
+                
+                if (gamePath && playGameButton) {
                     playGameButton.style.display = 'flex';
-                    playGameButton.setAttribute('data-game-path', badgeData[badgeId].gamePath);
+                    playGameButton.setAttribute('data-game-path', gamePath);
                 } else if (playGameButton) {
                     playGameButton.style.display = 'none';
                 }

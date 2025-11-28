@@ -943,8 +943,34 @@ function addBadge(badgeId) {
         if (!collectedBadges.includes(badgeId)) {
             collectedBadges.push(badgeId);
             localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
+            
+            // Also sync with userData.progress.badges if userData exists
+            try {
+                const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+                if (userData) {
+                    if (!userData.progress) {
+                        userData.progress = { gamesCompleted: [], badges: [], highScores: {} };
+                    }
+                    if (!userData.progress.badges) {
+                        userData.progress.badges = [];
+                    }
+                    if (!userData.progress.badgeDates) {
+                        userData.progress.badgeDates = {};
+                    }
+                    if (!userData.progress.badges.includes(badgeId)) {
+                        userData.progress.badges.push(badgeId);
+                        userData.progress.badgeDates[badgeId] = new Date().toISOString();
+                        localStorage.setItem('userData', JSON.stringify(userData));
+                    }
+                }
+            } catch (e2) {
+                console.warn('Error syncing badge to userData:', e2);
+            }
         }
     } catch (e) {
         console.warn('Error adding badge to localStorage:', e);
     }
 }
+
+// Make addBadge globally accessible for games
+window.addBadge = addBadge;
