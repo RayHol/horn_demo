@@ -584,7 +584,19 @@
         
         startAnimationLoop() {
             const self = this;
+            // Cache container rect to avoid repeated getBoundingClientRect calls
+            let cachedContainerRect = null;
+            let lastContainerRectUpdate = 0;
+            const CONTAINER_RECT_CACHE_MS = 16; // Update cache roughly once per frame at 60fps
+            
+            // Cache last dot position to avoid unnecessary style updates
+            let lastDotX = null;
+            let lastDotY = null;
+            
             const animate = () => {
+                // Update transform FIRST so position calculations use the latest transform values
+                self.updateTransform();
+                
                 // Always update user location dot position in animation loop for smooth updates
                 // Only update if we have the necessary elements
                 if (userLocationDot && currentUserLocation && self.mapContainer && self.mapImage) {
@@ -593,28 +605,37 @@
                     
                     let dotX, dotY;
                     
+                    // Update cached container rect periodically to avoid layout thrashing
+                    const now = performance.now();
+                    if (!cachedContainerRect || (now - lastContainerRectUpdate) > CONTAINER_RECT_CACHE_MS) {
+                        cachedContainerRect = self.mapContainer.getBoundingClientRect();
+                        lastContainerRectUpdate = now;
+                    }
+                    
                     if (self.keepUserCentered && !self.userHasManuallyMoved && !self.cannotCenterAtBoundary) {
                         // Auto-centering mode: update jitter and position at center
                         updateUserLocationJitter();
-                        const containerRect = self.mapContainer.getBoundingClientRect();
-                        const centerX = containerRect.width / 2;
-                        const centerY = containerRect.height / 2;
+                        const centerX = cachedContainerRect.width / 2;
+                        const centerY = cachedContainerRect.height / 2;
                         dotX = centerX + userLocationJitter.x;
                         dotY = centerY + userLocationJitter.y;
-                        userLocationDot.style.left = dotX + 'px';
-                        userLocationDot.style.top = dotY + 'px';
+                        // Round to nearest pixel to avoid sub-pixel rendering issues
+                        dotX = Math.round(dotX);
+                        dotY = Math.round(dotY);
                     } else {
                         // Manual mode: show actual GPS location on map
                         // Only try if mapInstance is available (for coordinate conversion)
                         if (mapInstance) {
                             try {
-                                const coords = gpsToScreenCoordinates(currentUserLocation.lat, currentUserLocation.lng, true);
+                                // Pass cached container rect to avoid repeated getBoundingClientRect calls
+                                const coords = gpsToScreenCoordinates(currentUserLocation.lat, currentUserLocation.lng, true, cachedContainerRect);
                                 // Ensure coordinates are valid numbers
                                 if (coords && isFinite(coords.x) && isFinite(coords.y)) {
                                     dotX = coords.x;
                                     dotY = coords.y;
-                                    userLocationDot.style.left = dotX + 'px';
-                                    userLocationDot.style.top = dotY + 'px';
+                                    // Round to nearest pixel to avoid sub-pixel rendering issues
+                                    dotX = Math.round(dotX);
+                                    dotY = Math.round(dotY);
                                 }
                             } catch (e) {
                                 // If coordinate conversion fails, don't update position
@@ -623,10 +644,19 @@
                         }
                     }
                     
+                    // Only update style if position actually changed (avoids unnecessary repaints)
+                    if (dotX !== undefined && dotY !== undefined && (dotX !== lastDotX || dotY !== lastDotY)) {
+                        userLocationDot.style.left = dotX + 'px';
+                        userLocationDot.style.top = dotY + 'px';
+                        lastDotX = dotX;
+                        lastDotY = dotY;
+                    }
+                    
                     // Update accuracy circle position and size in animation loop
                     if (userLocationAccuracyCircle && dotX !== undefined && dotY !== undefined && currentUserLocation) {
-                        userLocationAccuracyCircle.style.left = dotX + 'px';
-                        userLocationAccuracyCircle.style.top = dotY + 'px';
+                        // Round positions for accuracy circle too
+                        userLocationAccuracyCircle.style.left = Math.round(dotX) + 'px';
+                        userLocationAccuracyCircle.style.top = Math.round(dotY) + 'px';
                         userLocationAccuracyCircle.style.display = 'block';
                         
                         // Convert GPS accuracy (meters) to screen pixels (diameter)
@@ -637,23 +667,31 @@
                             // Ensure minimum size for visibility
                             const minSize = 40; // Minimum 40px diameter
                             const size = Math.max(minSize, diameterPixels);
-                            userLocationAccuracyCircle.style.width = size + 'px';
-                            userLocationAccuracyCircle.style.height = size + 'px';
+                            // Round size to avoid sub-pixel rendering
+                            userLocationAccuracyCircle.style.width = Math.round(size) + 'px';
+                            userLocationAccuracyCircle.style.height = Math.round(size) + 'px';
                         }
                     }
                     
                     // Update heading triangle position to match dot position (it's now a sibling, not a child)
                     if (userLocationHeading && dotX !== undefined && dotY !== undefined) {
-                        userLocationHeading.style.left = dotX + 'px';
-                        userLocationHeading.style.top = dotY + 'px';
+                        // Only update if position changed (avoids unnecessary repaints)
+                        const headingX = Math.round(dotX);
+                        const headingY = Math.round(dotY);
+                        const currentHeadingLeft = userLocationHeading.style.left;
+                        const currentHeadingTop = userLocationHeading.style.top;
+                        
+                        if (currentHeadingLeft !== (headingX + 'px') || currentHeadingTop !== (headingY + 'px')) {
+                            userLocationHeading.style.left = headingX + 'px';
+                            userLocationHeading.style.top = headingY + 'px';
+                        }
                     }
                 }
-                self.updateTransform();
                 
                 // Update hotspot positions smoothly every frame for fixed appearance
                 updateHotspotPositions();
                 
-                // Update heading indicator rotation if available
+                // Update heading indicator rotation if available (after position is set)
                 if (currentHeading !== null && currentHeading !== undefined && userLocationHeading) {
                     updateHeadingIndicator(currentHeading);
                 }
@@ -664,24 +702,42 @@
         }
 
         // Get current map transform for coordinate conversion
-        getMapTransform() {
-            const containerRect = this.mapContainer.getBoundingClientRect();
-            const imageRect = this.mapImage.getBoundingClientRect();
+        // Uses cached values to avoid repeated getBoundingClientRect calls
+        getMapTransform(cachedContainerRect = null) {
+            // Use cached container rect if provided, otherwise get it fresh
+            const containerRect = cachedContainerRect || this.mapContainer.getBoundingClientRect();
             const imageCenterX = containerRect.width / 2;
             const imageCenterY = containerRect.height / 2;
             
-            // Use natural image dimensions if available, otherwise use displayed dimensions
-            const naturalWidth = this.mapImage.naturalWidth || imageRect.width;
-            const naturalHeight = this.mapImage.naturalHeight || imageRect.height;
+            // Use natural image dimensions - these are stable and don't change
+            const naturalWidth = this.mapImage.naturalWidth || 0;
+            const naturalHeight = this.mapImage.naturalHeight || 0;
+            
+            // Use the interpolated scale value directly (this.scale) which matches what's being rendered
+            // This is more stable than calculating from getBoundingClientRect which can fluctuate
+            // The scale is updated in updateTransform() which is called before position calculations
+            const scaleToUse = this.scale;
+            
+            // If natural dimensions aren't available, we need to calculate from displayed size
+            // But this should rarely happen if the image has loaded properly
+            let imageWidth = naturalWidth;
+            let imageHeight = naturalHeight;
+            if (!imageWidth || !imageHeight) {
+                // Fallback: calculate from displayed size and scale
+                // This is less accurate but better than nothing
+                const imageRect = this.mapImage.getBoundingClientRect();
+                imageWidth = imageWidth || (imageRect.width / scaleToUse);
+                imageHeight = imageHeight || (imageRect.height / scaleToUse);
+            }
             
             return {
                 centerX: imageCenterX + this.translateX,
                 centerY: imageCenterY + this.translateY,
-                scale: this.scale,
-                imageWidth: naturalWidth,
-                imageHeight: naturalHeight,
-                displayedWidth: imageRect.width,
-                displayedHeight: imageRect.height
+                scale: scaleToUse,
+                imageWidth: imageWidth,
+                imageHeight: imageHeight,
+                displayedWidth: imageWidth * scaleToUse,
+                displayedHeight: imageHeight * scaleToUse
             };
         }
 
@@ -845,7 +901,8 @@
 
     // Convert GPS to screen coordinates
     // @param {boolean} forUserLocation - If true, uses bypass mode for user location when enabled
-    function gpsToScreenCoordinates(lat, lng, forUserLocation = false) {
+    // @param {DOMRect} cachedContainerRect - Optional cached container rect to avoid repeated getBoundingClientRect calls
+    function gpsToScreenCoordinates(lat, lng, forUserLocation = false, cachedContainerRect = null) {
         if (!mapInstance) return { x: 0, y: 0 };
         
         // Convert GPS to map pixel coordinates (using map image pixel dimensions)
@@ -853,8 +910,8 @@
         // normalized coordinates that may be negative or > 1, which is fine
         const mapPixels = MapConfig.gpsToMapPixels(lat, lng);
         
-        // Get map transform
-        const transform = mapInstance.getMapTransform();
+        // Get map transform (pass cached container rect to avoid repeated getBoundingClientRect calls)
+        const transform = mapInstance.getMapTransform(cachedContainerRect);
         
         // Convert map pixels to screen coordinates
         // The image is centered at (centerX, centerY) and scaled by `scale`
@@ -976,6 +1033,9 @@
                 if (coords && isFinite(coords.x) && isFinite(coords.y)) {
                     dotX = coords.x;
                     dotY = coords.y;
+                    // Round to nearest pixel to avoid sub-pixel rendering issues
+                    dotX = Math.round(dotX);
+                    dotY = Math.round(dotY);
                     userLocationDot.style.left = dotX + 'px';
                     userLocationDot.style.top = dotY + 'px';
                 }
@@ -988,14 +1048,18 @@
             const centerY = containerRect.height / 2;
             dotX = centerX + userLocationJitter.x;
             dotY = centerY + userLocationJitter.y;
+            // Round to nearest pixel to avoid sub-pixel rendering issues
+            dotX = Math.round(dotX);
+            dotY = Math.round(dotY);
             userLocationDot.style.left = dotX + 'px';
             userLocationDot.style.top = dotY + 'px';
         }
         
         // Update accuracy circle position and size
         if (userLocationAccuracyCircle && dotX !== undefined && dotY !== undefined) {
-            userLocationAccuracyCircle.style.left = dotX + 'px';
-            userLocationAccuracyCircle.style.top = dotY + 'px';
+            // Round positions for accuracy circle too
+            userLocationAccuracyCircle.style.left = Math.round(dotX) + 'px';
+            userLocationAccuracyCircle.style.top = Math.round(dotY) + 'px';
             userLocationAccuracyCircle.style.display = 'block';
             
             // Convert GPS accuracy (meters) to screen pixels (diameter)
@@ -1013,8 +1077,16 @@
         
         // Update heading triangle position to match dot position (it's now a sibling, not a child)
         if (userLocationHeading && dotX !== undefined && dotY !== undefined) {
-            userLocationHeading.style.left = dotX + 'px';
-            userLocationHeading.style.top = dotY + 'px';
+            // Round positions and only update if changed (avoids unnecessary repaints)
+            const headingX = Math.round(dotX);
+            const headingY = Math.round(dotY);
+            const currentHeadingLeft = userLocationHeading.style.left;
+            const currentHeadingTop = userLocationHeading.style.top;
+            
+            if (currentHeadingLeft !== (headingX + 'px') || currentHeadingTop !== (headingY + 'px')) {
+                userLocationHeading.style.left = headingX + 'px';
+                userLocationHeading.style.top = headingY + 'px';
+            }
         }
         
         // Check if user is outside map bounds
@@ -1922,11 +1994,22 @@
     }
 
     // Update heading indicator rotation
+    // Cache last heading value to avoid unnecessary updates
+    let lastHeadingValue = null;
     function updateHeadingIndicator(heading) {
         if (!userLocationHeading || heading === null || heading === undefined) {
             if (userLocationHeading) {
                 userLocationHeading.style.display = 'none';
             }
+            lastHeadingValue = null;
+            return;
+        }
+        
+        // Round heading to nearest degree to avoid sub-degree flickering
+        const roundedHeading = Math.round(heading);
+        
+        // Only update if heading actually changed (avoids unnecessary repaints)
+        if (roundedHeading === lastHeadingValue) {
             return;
         }
         
@@ -1945,7 +2028,11 @@
         const currentTop = userLocationHeading.style.top;
         if (currentLeft && currentTop) {
             // Only update transform if position is set
-            userLocationHeading.style.transform = `translate(-50%, -50%) translateY(-19px) rotate(${heading}deg) scale(1) translateZ(0)`;
+            // Use rounded heading to avoid sub-degree flickering
+            userLocationHeading.style.transform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
+            // Also update webkit transform for better browser compatibility
+            userLocationHeading.style.webkitTransform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
+            lastHeadingValue = roundedHeading;
         }
     }
     

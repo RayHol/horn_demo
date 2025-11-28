@@ -809,7 +809,7 @@
         anim_container.style.height = window.innerHeight + 'px';
         
         // Use scaleType 1 (Math.min) to maintain aspect ratio - original setting
-        AdobeAn.makeResponsive(true,'both',true,1,[canvas,anim_container,dom_overlay_container]);
+        AdobeAn.makeResponsive(true,'both',true,2,[canvas,anim_container,dom_overlay_container]);
         
         // Re-apply container size after makeResponsive (it may override it)
         setTimeout(function() {

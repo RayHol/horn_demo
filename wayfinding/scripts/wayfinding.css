@@ -96,11 +96,16 @@ body {
     border-radius: 50%;
     border: 2px solid rgba(0, 102, 255, 0.4);
     background-color: rgba(0, 102, 255, 0.15);
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) translateZ(0);
     z-index: 99;
     pointer-events: none;
     animation: accuracyPulse 2s ease-in-out infinite;
     transition: width 0.3s ease-out, height 0.3s ease-out;
+    /* Hardware acceleration and flickering fixes */
+    will-change: transform, left, top, width, height;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translate(-50%, -50%) translateZ(0);
 }
 
 @keyframes accuracyPulse {
@@ -120,20 +125,29 @@ body {
     background-color: #0066FF;
     border: 3px solid white;
     border-radius: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) translateZ(0);
     z-index: 250; /* Higher than animal hotspots (200) to ensure it's visible above them */
     pointer-events: none;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     animation: pulse 2s ease-in-out infinite;
+    /* Hardware acceleration and flickering fixes */
+    will-change: transform, left, top;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translate(-50%, -50%) translateZ(0);
+    transform-style: preserve-3d;
+    /* Prevent sub-pixel rendering issues */
+    image-rendering: crisp-edges;
+    -webkit-font-smoothing: antialiased;
 }
 
 @keyframes pulse {
     0%, 100% {
-        transform: translate(-50%, -50%) scale(1);
+        transform: translate(-50%, -50%) translateZ(0) scale(1);
         opacity: 1;
     }
     50% {
-        transform: translate(-50%, -50%) scale(1.2);
+        transform: translate(-50%, -50%) translateZ(0) scale(1.2);
         opacity: 0.8;
     }
 }
@@ -155,8 +169,7 @@ body {
     transform-origin: 50% calc(50% + 19px);
     z-index: 252; /* Higher than dot (250) and accuracy circle (99) */
     pointer-events: none;
-    /* Smooth rotation */
-    transition: transform 0.1s ease-out;
+    /* Removed transition to prevent flickering during rapid updates - position/rotation updates are smooth enough without it */
     /* iOS hardware acceleration and flickering fixes */
     will-change: transform, left, top;
     -webkit-transform: translate(-50%, -50%) translateY(-19px) rotate(0deg) scale(1) translateZ(0);
@@ -169,6 +182,9 @@ body {
     /* Prevent flickering on iOS */
     -webkit-perspective: 1000;
     perspective: 1000;
+    /* Prevent sub-pixel rendering issues */
+    image-rendering: crisp-edges;
+    -webkit-font-smoothing: antialiased;
     /* Ensure it's always visible when shown */
     display: none;
 }
