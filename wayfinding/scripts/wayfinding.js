@@ -1522,8 +1522,7 @@
             if (isFound) {
                 animalDetailTitle.textContent = animal.name;
             } else {
-                // Use regular weight (400) for question marks - Amatic-Regular.ttf has the question mark
-                animalDetailTitle.innerHTML = '<span style="font-weight: 400;">???</span>';
+                animalDetailTitle.textContent = 'Undiscovered animal';
             }
         }
         
@@ -1531,7 +1530,7 @@
         if (animalDetailMessage) {
             animalDetailMessage.textContent = isFound 
                 ? "You've already discovered this animal! Want to visit it again?"
-                : "What could this be?";
+                : "You haven't found this animal yet. Get directions to find it";
         }
         
         // Store current animal for button handlers
@@ -1540,6 +1539,17 @@
         }
         if (animalDetailDetails) {
             animalDetailDetails.dataset.animalId = animal.id;
+        }
+        
+        // Show/hide buttons based on whether animal is found
+        if (animalDetailDetails) {
+            if (isFound) {
+                animalDetailDetails.style.display = 'flex';
+                animalDetailDirections.classList.remove('single-button');
+            } else {
+                animalDetailDetails.style.display = 'none';
+                animalDetailDirections.classList.add('single-button');
+            }
         }
         
         // Show popup with slide-in animation
