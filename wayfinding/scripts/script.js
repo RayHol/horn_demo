@@ -9,9 +9,21 @@ function getQueryParam(name) {
 
 async function loadAnimalConfig() {
     try {
-        // Switch between testing and production data by commenting/uncommenting the appropriate line:
-        const res = await fetch('./data/animals.json', { cache: 'no-cache' }); // Production/Onsite
-        // const res = await fetch('./data/testing.json', { cache: 'no-cache' }); // Testing/Home
+        // Get environment from localStorage (set by wayfinding page)
+        // Uses same key as wayfinding.js: 'wayfinding-environment'
+        let environment = 'production'; // Default to production
+        try {
+            const saved = localStorage.getItem('wayfinding-environment');
+            if (saved === 'testing' || saved === 'production') {
+                environment = saved;
+            }
+        } catch (_) {
+            // localStorage not available, use default
+        }
+        
+        // Load appropriate JSON file based on environment
+        const jsonFile = environment === 'testing' ? './data/testing.json' : './data/animals.json';
+        const res = await fetch(jsonFile, { cache: 'no-cache' });
         const cfg = await res.json();
         const id = getQueryParam('animalId');
         const list = Array.isArray(cfg.animals) ? cfg.animals : [];
@@ -122,6 +134,32 @@ function getBadgeDataForAnimal(animalName) {
 }
 
 window.onload = async () => {
+    // Initialize starburst backgrounds in overlays
+    function initStarburstOverlay(containerId) {
+        const container = document.getElementById(containerId);
+        if (container) {
+            const overlay = container.querySelector('.starburst-background-overlay');
+            if (overlay && !overlay.querySelector('img')) {
+                const img = document.createElement('img');
+                img.src = '../assets/Startburst.svg';
+                img.alt = 'Starburst background';
+                overlay.appendChild(img);
+            }
+        }
+    }
+    
+    // Initialize when overlays are shown
+    const observer = new MutationObserver(() => {
+        initStarburstOverlay('badgeSplash');
+        initStarburstOverlay('badgeCollection');
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    
+    // Initial check
+    initStarburstOverlay('badgeSplash');
+    initStarburstOverlay('badgeCollection');
+    
     const button = document.querySelector('button[data-action="camera-btn"]');
     if (button) {
         button.innerText = '';

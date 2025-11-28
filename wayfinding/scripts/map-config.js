@@ -2,30 +2,70 @@
 // This configuration can be calibrated later when the actual map location is known
 
 const MapConfig = {
-    // GPS bounds of the map area
-    // Switch between testing and production bounds by commenting/uncommenting the appropriate section:
-    
-    // Production/Onsite bounds 
-    gpsBounds: {
-        north: 51.444250593987384,   // Top latitude -  ONSITE COORDINATES
-        south: 51.44037067801714,   // Bottom latitude -  ONSITE COORDINATES
-        east: -0.05874017548710331,    // Right longitude -  ONSITE COORDINATES
-        west: -0.064847      // Left longitude -  ONSITE COORDINATES
+    // GPS bounds for both environments
+    productionBounds: {
+        north: 51.444171827359355,   // Top latitude -  ONSITE COORDINATES
+        south: 51.44035,   // Bottom latitude -  ONSITE COORDINATES
+        east: -0.05601640222409181,    // Right longitude -  ONSITE COORDINATES 51.44197906964702, -0.05601640222409181
+        west: -0.06662      // Left longitude -  ONSITE COORDINATES 51.442750272598005, -0.0668128769428489
     },
     
-    // Testing/Home bounds 
-    // gpsBounds: {
-    //     north: 55.7494,   // Top latitude
-    //     south: 55.7468,   // Bottom latitude
-    //     east: -4.6419,    // Right longitude
-    //     west: -4.6455      // Left longitude
-    // },
+    testingBounds: {
+        north: 55.7494,   // Top latitude
+        south: 55.7468,   // Bottom latitude
+        east: -4.6419,    // Right longitude
+        west: -4.6455      // Left longitude
+    },
+    
+    // Boundary warning bounds (separate from map alignment bounds)
+    // These define when the "leaving area" notification should trigger
+    // You can adjust these independently without affecting map coordinate transformation
+    boundaryWarningBounds: {
+        north: 51.44378,   // Top latitude
+        south: 51.44064,   // Bottom latitude
+        east: -0.05920,    // Right longitude
+        west: -0.06472      // Left longitude
+    },
+    
+    // Current environment ('production' or 'testing')
+    currentEnvironment: 'production',
+    
+    // Current GPS bounds (points to either productionBounds or testingBounds)
+    gpsBounds: {
+        north: 51.44378301697312,   // Top latitude -  ONSITE COORDINATES 51.44378301697312, -0.0625815160713918
+        south: 51.44100,   // Bottom latitude -  ONSITE COORDINATES 51.440646381227026, -0.06193945269448523
+        east: -0.05920,  // Right longitude -  ONSITE COORDINATES 51.44188858750465, -0.059108537065197454
+        west: -0.06472450676987851     // Left longitude -  ONSITE COORDINATES  51.44121811217111, -0.06472450676987851
+    },
+    
+    /**
+     * Switch between production and testing environments
+     * @param {string} environment - 'production' or 'testing'
+     */
+    setEnvironment(environment) {
+        if (environment === 'testing') {
+            this.currentEnvironment = 'testing';
+            this.gpsBounds = { ...this.testingBounds };
+        } else {
+            this.currentEnvironment = 'production';
+            this.gpsBounds = { ...this.productionBounds };
+        }
+    },
+    
+    /**
+     * Toggle between production and testing environments
+     */
+    toggleEnvironment() {
+        const newEnv = this.currentEnvironment === 'production' ? 'testing' : 'production';
+        this.setEnvironment(newEnv);
+        return this.currentEnvironment;
+    },
     
     // Map image dimensions in pixels (placeholder - should match actual image dimensions)
     // These will be updated automatically when the image loads, or can be set manually
     mapImageDimensions: {
-        width: 2793,      // Width of the map image in pixels (placeholder)
-        height: 1955      // Height of the map image in pixels (placeholder)
+        width: 4000,      // Width of the map image in pixels (placeholder)
+        height: 2250      // Height of the map image in pixels (placeholder)
     },
     
     /**
@@ -92,6 +132,19 @@ const MapConfig = {
      */
     isWithinBounds(lat, lng) {
         const bounds = this.gpsBounds;
+        return lat >= bounds.south && lat <= bounds.north &&
+               lng >= bounds.west && lng <= bounds.east;
+    },
+    
+    /**
+     * Check if GPS coordinates are within the boundary warning bounds
+     * (separate from map alignment bounds)
+     * @param {number} lat - Latitude
+     * @param {number} lng - Longitude
+     * @returns {boolean} True if within boundary warning bounds
+     */
+    isWithinBoundaryWarningBounds(lat, lng) {
+        const bounds = this.boundaryWarningBounds;
         return lat >= bounds.south && lat <= bounds.north &&
                lng >= bounds.west && lng <= bounds.east;
     }

@@ -97,6 +97,11 @@
         if (!audio) {
             audio = new Audio('./Geo-pin-app/assets/bell.mp3');
             audio.volume = 0.5;
+            audio._originalVolume = 0.5; // Store original volume for global audio manager
+            // Register with global audio manager so it respects the audio toggle
+            if (typeof window.registerAudio === 'function') {
+                window.registerAudio(audio);
+            }
         }
         return audio;
     }
@@ -117,8 +122,13 @@
     }
 
     function ping(animal) {
-        // sound
-        try { ensureAudio().play().catch(function () {}); } catch (_) {}
+        // Check if audio is enabled before playing
+        const audioEnabled = (typeof window.isAudioEnabled === 'function') ? window.isAudioEnabled() : true;
+        
+        // sound (only if audio is enabled)
+        if (audioEnabled) {
+            try { ensureAudio().play().catch(function () {}); } catch (_) {}
+        }
         // vibrate
         vibrate();
         // modal

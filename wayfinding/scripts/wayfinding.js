@@ -2,27 +2,55 @@
 (function() {
     'use strict';
 
-    // Configuration flags (can be toggled via long-press on help button)
-    let USE_FAKE_LOCATION = false; // Set to true for testing with fake coordinates
-    let BYPASS_COORDINATE_SYSTEM = false; // Set to true to allow coordinates outside map bounds to still be mapped (for testing)
+    // Environment state (can be toggled via long-press on help button)
+    let currentEnvironment = 'production'; // 'production' or 'testing'
     const MAP_LOCKED = false; // Set to true to lock map position (future use)
+    const ENVIRONMENT_STORAGE_KEY = 'wayfinding-environment';
     
-    // Fake location coordinates (for testing - should be within GPS bounds)
-    const FAKE_LOCATION = {
-        lat: 55.748105,
-        lng: -4.643886,
-        accuracy: 5
-    };
+    /**
+     * Load saved environment from localStorage
+     * @returns {string} 'production' or 'testing'
+     */
+    function loadSavedEnvironment() {
+        try {
+            const saved = localStorage.getItem(ENVIRONMENT_STORAGE_KEY);
+            if (saved === 'testing' || saved === 'production') {
+                return saved;
+            }
+        } catch (_) {
+            // localStorage not available or error
+        }
+        return 'production'; // Default to production
+    }
+    
+    /**
+     * Save current environment to localStorage
+     */
+    function saveEnvironment() {
+        try {
+            localStorage.setItem(ENVIRONMENT_STORAGE_KEY, currentEnvironment);
+        } catch (_) {
+            // localStorage not available or error
+        }
+    }
 
     // DOM elements
     const mapContainer = document.getElementById('mapContainer');
     const mapImage = document.getElementById('mapImage');
     const userLocationDot = document.getElementById('userLocationDot');
     const userLocationAccuracyCircle = document.getElementById('userLocationAccuracyCircle');
+    const userLocationHeading = document.getElementById('userLocationHeading');
     const animalHotspots = document.getElementById('animalHotspots');
-    const proximityNotification = document.getElementById('proximityNotification');
-    const openCameraBtn = document.getElementById('openCameraBtn');
+    const proximityNotification = document.getElementById('proximityNotification'); // Keep for backwards compatibility
+    const openCameraBtn = document.getElementById('openCameraBtn'); // Keep for backwards compatibility
+    const animalNearbyPopup = document.getElementById('animalNearbyPopup');
+    const animalNearbyClose = document.getElementById('animalNearbyClose');
+    const animalNearbyTitle = document.getElementById('animalNearbyTitle');
+    const animalNearbyMessage = document.getElementById('animalNearbyMessage');
+    const animalNearbyOpenCamera = document.getElementById('animalNearbyOpenCamera');
     const recenterBtn = document.getElementById('recenterBtn');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
     const helpButton = document.getElementById('helpButton');
     const backButton = document.getElementById('backButton');
     const instructionsOverlay = document.getElementById('instructionsOverlay');
@@ -32,6 +60,23 @@
     const leaveConfirmButton = document.getElementById('leaveConfirmButton');
     const boundaryWarningOverlay = document.getElementById('boundaryWarningOverlay');
     const boundaryWarningClose = document.getElementById('boundaryWarningClose');
+    const animalDetailPopup = document.getElementById('animalDetailPopup');
+    const animalDetailClose = document.getElementById('animalDetailClose');
+    const animalDetailTitle = document.getElementById('animalDetailTitle');
+    const animalDetailMessage = document.getElementById('animalDetailMessage');
+    const animalDetailDirections = document.getElementById('animalDetailDirections');
+    const animalDetailDetails = document.getElementById('animalDetailDetails');
+    const directionsPopup = document.getElementById('directionsPopup');
+    const directionsClose = document.getElementById('directionsClose');
+    const directionsTitle = document.getElementById('directionsTitle');
+    const directionsMessage = document.getElementById('directionsMessage');
+    const animalDetailsOverlay = document.getElementById('animalDetailsOverlay');
+    const animalDetailsBackButton = document.getElementById('animalDetailsBackButton');
+    const animalDetailsIcon = document.getElementById('animalDetailsIcon');
+    const animalDetailsName = document.getElementById('animalDetailsName');
+    const animalDetailsDate = document.getElementById('animalDetailsDate');
+    const animalDetailsDescription = document.getElementById('animalDetailsDescription');
+    const animalDetailsPlayGameButton = document.getElementById('animalDetailsPlayGameButton');
 
     // State
     let watchId = null;
@@ -39,10 +84,182 @@
     let animals = [];
     let audio = null;
     let currentUserLocation = null;
+    let currentHeading = null; // Device heading in degrees (0-360, where 0 is North)
     let currentAnimal = null;
     let proximityState = null; // 'in-range', 'nearby', or null
     let audioPrimed = false; // Track if audio has been primed with user interaction
     let instructionsDismissed = false; // Track if instructions overlay has been dismissed
+    
+    // Message buffer for heading debug (stores messages even when debug UI isn't visible)
+    const headingDebugMessages = [];
+    const MAX_BUFFERED_MESSAGES = 10;
+    
+    // Helper function to initialize heading debug UI (hides haptic info, shows heading section)
+    function initHeadingDebugUI() {
+        try {
+            const debugUI = document.getElementById('haptic-debug-ui');
+            if (!debugUI) return;
+            
+            // Hide all haptic debug info elements
+            const hapticInfoElements = [
+                'haptic-debug-enabled',
+                'haptic-debug-ios',
+                'haptic-debug-credits',
+                'haptic-debug-recent',
+                'haptic-debug-can-trigger',
+                'haptic-debug-method'
+            ];
+            hapticInfoElements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = 'none';
+                }
+            });
+            
+            // Create or get heading debug element
+            let headingDebugEl = debugUI.querySelector('#haptic-debug-heading');
+            const isNew = !headingDebugEl;
+            if (!headingDebugEl) {
+                headingDebugEl = document.createElement('div');
+                headingDebugEl.id = 'haptic-debug-heading';
+                headingDebugEl.style.cssText = 'color: #fff; font-size: 11px; line-height: 1.3; margin-top: 4px;';
+                headingDebugEl.innerHTML = '<div style="font-weight: bold; color: #4CAF50; margin-bottom: 4px; font-size: 11px;">Heading Debug:</div>';
+                // Insert after the title row
+                const titleRow = debugUI.querySelector('div:first-child');
+                if (titleRow) {
+                    debugUI.insertBefore(headingDebugEl, titleRow.nextSibling);
+                } else {
+                    debugUI.appendChild(headingDebugEl);
+                }
+            }
+            
+            // Only clear and rebuild if this is a new element or if we have buffered messages to display
+            // Otherwise, preserve existing messages (they'll be updated by logToHapticDebug)
+            if (isNew) {
+                // Clear any placeholder and display buffered messages
+                const existingMessages = headingDebugEl.querySelectorAll('div:not(:first-child)');
+                existingMessages.forEach(msg => msg.remove());
+                
+                // Display buffered messages (keep last 3)
+                const messagesToShow = headingDebugMessages.slice(-3);
+                if (messagesToShow.length === 0) {
+                    // Only show "Initializing..." if there are no messages
+                    const statusMsg = document.createElement('div');
+                    statusMsg.style.cssText = 'color: #ccc; font-size: 10px; margin: 1px 0;';
+                    statusMsg.textContent = 'Initializing...';
+                    headingDebugEl.appendChild(statusMsg);
+                } else {
+                    messagesToShow.forEach(msg => {
+                        const logEntry = document.createElement('div');
+                        logEntry.style.cssText = 'color: #ccc; font-size: 10px; margin: 1px 0;';
+                        logEntry.textContent = msg;
+                        headingDebugEl.appendChild(logEntry);
+                    });
+                }
+            }
+            
+            headingDebugEl.style.display = 'block';
+        } catch (e) {
+            // Silently fail
+        }
+    }
+    
+    // Helper function to log to heading debug UI
+    // Keeps messages short and only shows recent entries
+    function logToHapticDebug(message) {
+        try {
+            console.log(`[Heading Debug] ${message}`);
+            
+            // Always add to buffer (even if debug UI isn't visible)
+            headingDebugMessages.push(message);
+            if (headingDebugMessages.length > MAX_BUFFERED_MESSAGES) {
+                headingDebugMessages.shift(); // Remove oldest
+            }
+            
+            const debugUI = document.getElementById('haptic-debug-ui');
+            if (!debugUI || debugUI.style.display === 'none') {
+                // Debug UI not visible, but message is buffered - will show when UI opens
+                console.log(`[Heading Debug] UI not visible, buffered. Buffer size: ${headingDebugMessages.length}`);
+                return;
+            }
+            
+            // Ensure heading debug UI is initialized
+            initHeadingDebugUI();
+            
+            // Get heading debug element
+            const headingDebugEl = debugUI.querySelector('#haptic-debug-heading');
+            if (!headingDebugEl) return;
+            
+            // Remove "Initializing..." if present
+            const existingMessages = headingDebugEl.querySelectorAll('div:not(:first-child)');
+            existingMessages.forEach(msg => {
+                if (msg.textContent === 'Initializing...') {
+                    msg.remove();
+                }
+            });
+            
+            // Add new message
+            const logEntry = document.createElement('div');
+            logEntry.style.cssText = 'color: #ccc; font-size: 10px; margin: 1px 0;';
+            logEntry.textContent = message;
+            headingDebugEl.appendChild(logEntry);
+            
+            // Keep only last 3 log entries (excluding the title)
+            const entries = headingDebugEl.querySelectorAll('div:not(:first-child)');
+            if (entries.length > 3) {
+                entries[0].remove();
+            }
+        } catch (e) {
+            // Silently fail
+        }
+    }
+    
+    // Hook into haptic debug UI to initialize heading debug when shown
+    (function() {
+        // Override showHapticDebug to initialize heading debug
+        const originalShowHapticDebug = window.showHapticDebug;
+        if (originalShowHapticDebug) {
+            window.showHapticDebug = function() {
+                console.log('[Heading Debug] showHapticDebug() called');
+                originalShowHapticDebug();
+                setTimeout(() => {
+                    console.log(`[Heading Debug] Initializing UI. Buffer has ${headingDebugMessages.length} messages, watchId=${watchId}`);
+                    initHeadingDebugUI();
+                    // If no messages in buffer, log current status
+                    if (headingDebugMessages.length === 0) {
+                        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                        const isAndroid = /Android/.test(navigator.userAgent);
+                        const hasOrientation = 'DeviceOrientationEvent' in window;
+                        const hasPermission = typeof DeviceOrientationEvent !== 'undefined' && 
+                                             typeof DeviceOrientationEvent.requestPermission === 'function';
+                        if (watchId === null) {
+                            logToHapticDebug('Tracking not started');
+                        } else if (hasPermission) {
+                            logToHapticDebug('iOS: Check permission');
+                        } else if (hasOrientation) {
+                            logToHapticDebug(isAndroid ? 'Android: Using GPS' : 'Other: Listening');
+                        } else {
+                            logToHapticDebug('No orientation API');
+                        }
+                    } else {
+                        // Messages exist in buffer, they should be displayed by initHeadingDebugUI
+                        console.log(`[Heading Debug] Displaying ${headingDebugMessages.length} buffered messages`);
+                    }
+                }, 50);
+            };
+        }
+        
+        // Also watch for debug UI visibility changes
+        const checkDebugUI = setInterval(() => {
+            const debugUI = document.getElementById('haptic-debug-ui');
+            if (debugUI && debugUI.style.display !== 'none') {
+                initHeadingDebugUI();
+            }
+        }, 500);
+        
+        // Stop checking after 10 seconds
+        setTimeout(() => clearInterval(checkDebugUI), 10000);
+    })();
     let boundaryWarningDismissed = false; // Track if boundary warning has been dismissed
     let isOutsideBounds = false; // Track if user is currently outside map bounds
     
@@ -135,14 +352,25 @@
             // Use higher threshold if user has been stationary for a while
             const timeSinceLastMove = now - lastSignificantMove;
             const isStationary = timeSinceLastMove >= cfg.stationaryTime;
-            const effectiveMinDelta = isStationary ? Math.max(cfg.minDelta, cfg.stationaryThreshold * 0.5) : cfg.minDelta;
+            // When stationary, use a smaller threshold (0.2m) instead of 0.5m to allow more updates
+            const effectiveMinDelta = isStationary ? Math.max(cfg.minDelta, cfg.stationaryThreshold * 0.2) : cfg.minDelta;
             
-            // Only emit if movement exceeds threshold
-            if (moved < effectiveMinDelta) return;
-            if (now - lastEmit < cfg.emitIntervalMs) return;
+            // Check if enough time has passed to force an update (even if movement is small)
+            const timeSinceLastEmit = now - lastEmit;
+            const shouldForceUpdate = timeSinceLastEmit >= cfg.emitIntervalMs;
             
-            lastEmit = now;
-            onEmit && onEmit(state);
+            // Always emit if enough time has passed (force update every second), regardless of movement
+            // This ensures the UI updates even if GPS data is slow or movement is minimal
+            // Also emit if movement exceeds threshold (for immediate response to larger movements)
+            if (shouldForceUpdate) {
+                // Force update - emit current state even if movement is tiny
+                lastEmit = now;
+                onEmit && onEmit(state);
+            } else if (moved >= effectiveMinDelta) {
+                // Movement exceeds threshold - emit immediately
+                lastEmit = now;
+                onEmit && onEmit(state);
+            }
         };
     }
 
@@ -161,17 +389,51 @@
         return R * c;
     }
 
-    // Load animals from JSON
-    async function loadAnimals() {
+    // Load animals from JSON based on current environment
+    async function loadAnimals(environment = null) {
+        const env = environment || currentEnvironment;
+        const jsonFile = env === 'testing' ? './data/testing.json' : './data/animals.json';
         try {
-            // Switch between testing and production data by commenting/uncommenting the appropriate line:
-            const res = await fetch('./data/animals.json', { cache: 'no-cache' }); // Production/Onsite
-            // const res = await fetch('./data/testing.json', { cache: 'no-cache' }); // Testing/Home
+            const res = await fetch(jsonFile, { cache: 'no-cache' });
             const cfg = await res.json();
             animals = Array.isArray(cfg.animals) ? cfg.animals : [];
             renderAnimalHotspots();
         } catch (err) {
-            console.error('Failed to load animals.json:', err);
+            console.error(`Failed to load ${jsonFile}:`, err);
+        }
+    }
+
+    // Get badge ID for an animal (matching getBadgeDataForAnimal from script.js)
+    function getBadgeIdForAnimal(animalName) {
+        const badgeMap = {
+            'Peacock': 'peacock',
+            'Walrus': 'walrus-ar',
+            'Koala': 'koala',
+            'Bee': 'bee-ar',
+            'Clown Fish': 'clownfish-ar',
+            'Platypus': 'platypus',
+            'Cephalopod': 'cephalopod',
+            'Stag Beetle': 'stag-beetle',
+            'Snowy Owl': 'snowy-owl',
+            'Orangutan': 'orangutan',
+            'Jellyfish': 'jellyfish-ar',
+            'Robin': 'robin'
+        };
+        
+        return badgeMap[animalName] || animalName.toLowerCase().replace(/\s+/g, '-');
+    }
+
+    // Check if an animal has been found (collected)
+    function isAnimalFound(animal) {
+        if (!animal || !animal.name) return false;
+        
+        try {
+            const badgeId = getBadgeIdForAnimal(animal.name);
+            const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+            return collectedBadges.includes(badgeId);
+        } catch (e) {
+            console.warn('Error checking if animal is found:', e);
+            return false;
         }
     }
 
@@ -180,6 +442,11 @@
         if (!audio) {
             audio = new Audio('./Geo-pin-app/assets/bell.mp3');
             audio.volume = 0.5;
+            audio._originalVolume = 0.5; // Store original volume for global audio manager
+            // Register with global audio manager so it respects the audio toggle
+            if (typeof window.registerAudio === 'function') {
+                window.registerAudio(audio);
+            }
         }
         return audio;
     }
@@ -188,14 +455,18 @@
         // Only vibrate if user has interacted with the page
         if (!audioPrimed) return;
         
-        if ('vibrate' in navigator) {
-            try {
-                navigator.vibrate([100, 200, 100]);
-            } catch (err) {
-                console.log('Vibration failed:', err);
-            }
+        // Use the haptic feedback script with 'long' pattern
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('long');
         } else {
-            console.log('Vibration not supported');
+            // Fallback to native vibration API if haptic script not loaded
+            if ('vibrate' in navigator) {
+                try {
+                    navigator.vibrate([800]);
+                } catch (err) {
+                    console.log('Vibration failed:', err);
+                }
+            }
         }
     }
     
@@ -237,7 +508,7 @@
             this.targetScale = this.scale;
             this.targetTranslateX = this.translateX;
             this.targetTranslateY = this.translateY;
-            this.animationSpeed = 0.25; // Increased for smoother, faster response
+            this.animationSpeed = 0.4; // Increased for faster, more responsive updates
             
             // Touch/Drag state
             this.isDragging = false;
@@ -335,7 +606,34 @@
             }
         }
         
+        // Programmatic zoom method for button controls
+        zoom(delta) {
+            const newScale = Math.max(this.minScale, Math.min(this.maxScale, this.targetScale + delta));
+            
+            if (newScale !== this.targetScale) {
+                // Zooming doesn't disable auto-recenter - only panning does
+                
+                const rect = this.mapContainer.getBoundingClientRect();
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                // Use center of map for zoom
+                const scaleDiff = newScale - this.targetScale;
+                this.targetTranslateX -= (rect.width / 2 - centerX) * scaleDiff;
+                this.targetTranslateY -= (rect.height / 2 - centerY) * scaleDiff;
+                
+                this.targetScale = newScale;
+            }
+        }
+        
         handleTouchStart(e) {
+            // Check if touch is on an animal hotspot - if so, don't handle map dragging
+            const target = e.target;
+            if (target && (target.closest('.animal-hotspot') || target.classList.contains('animal-icon'))) {
+                // Touch is on a hotspot, let the hotspot handle it
+                return;
+            }
+            
             if (e.touches.length === 1) {
                 this.isDragging = true;
                 this.lastTouchX = e.touches[0].clientX;
@@ -358,6 +656,13 @@
         }
         
         handleTouchMove(e) {
+            // Check if touch is on an animal hotspot - if so, don't handle map dragging
+            const target = e.target;
+            if (target && (target.closest('.animal-hotspot') || target.classList.contains('animal-icon'))) {
+                // Touch is on a hotspot, let the hotspot handle it
+                return;
+            }
+            
             if (e.touches.length === 1 && this.isDragging) {
                 const deltaX = e.touches[0].clientX - this.lastTouchX;
                 const deltaY = e.touches[0].clientY - this.lastTouchY;
@@ -461,7 +766,19 @@
         
         startAnimationLoop() {
             const self = this;
+            // Cache container rect to avoid repeated getBoundingClientRect calls
+            let cachedContainerRect = null;
+            let lastContainerRectUpdate = 0;
+            const CONTAINER_RECT_CACHE_MS = 16; // Update cache roughly once per frame at 60fps
+            
+            // Cache last dot position to avoid unnecessary style updates
+            let lastDotX = null;
+            let lastDotY = null;
+            
             const animate = () => {
+                // Update transform FIRST so position calculations use the latest transform values
+                self.updateTransform();
+                
                 // Always update user location dot position in animation loop for smooth updates
                 // Only update if we have the necessary elements
                 if (userLocationDot && currentUserLocation && self.mapContainer && self.mapImage) {
@@ -470,28 +787,37 @@
                     
                     let dotX, dotY;
                     
+                    // Update cached container rect periodically to avoid layout thrashing
+                    const now = performance.now();
+                    if (!cachedContainerRect || (now - lastContainerRectUpdate) > CONTAINER_RECT_CACHE_MS) {
+                        cachedContainerRect = self.mapContainer.getBoundingClientRect();
+                        lastContainerRectUpdate = now;
+                    }
+                    
                     if (self.keepUserCentered && !self.userHasManuallyMoved && !self.cannotCenterAtBoundary) {
                         // Auto-centering mode: update jitter and position at center
                         updateUserLocationJitter();
-                        const containerRect = self.mapContainer.getBoundingClientRect();
-                        const centerX = containerRect.width / 2;
-                        const centerY = containerRect.height / 2;
+                        const centerX = cachedContainerRect.width / 2;
+                        const centerY = cachedContainerRect.height / 2;
                         dotX = centerX + userLocationJitter.x;
                         dotY = centerY + userLocationJitter.y;
-                        userLocationDot.style.left = dotX + 'px';
-                        userLocationDot.style.top = dotY + 'px';
+                        // Round to nearest pixel to avoid sub-pixel rendering issues
+                        dotX = Math.round(dotX);
+                        dotY = Math.round(dotY);
                     } else {
                         // Manual mode: show actual GPS location on map
                         // Only try if mapInstance is available (for coordinate conversion)
                         if (mapInstance) {
                             try {
-                                const coords = gpsToScreenCoordinates(currentUserLocation.lat, currentUserLocation.lng, true);
+                                // Pass cached container rect to avoid repeated getBoundingClientRect calls
+                                const coords = gpsToScreenCoordinates(currentUserLocation.lat, currentUserLocation.lng, true, cachedContainerRect);
                                 // Ensure coordinates are valid numbers
                                 if (coords && isFinite(coords.x) && isFinite(coords.y)) {
                                     dotX = coords.x;
                                     dotY = coords.y;
-                                    userLocationDot.style.left = dotX + 'px';
-                                    userLocationDot.style.top = dotY + 'px';
+                                    // Round to nearest pixel to avoid sub-pixel rendering issues
+                                    dotX = Math.round(dotX);
+                                    dotY = Math.round(dotY);
                                 }
                             } catch (e) {
                                 // If coordinate conversion fails, don't update position
@@ -500,10 +826,19 @@
                         }
                     }
                     
+                    // Only update style if position actually changed (avoids unnecessary repaints)
+                    if (dotX !== undefined && dotY !== undefined && (dotX !== lastDotX || dotY !== lastDotY)) {
+                        userLocationDot.style.left = dotX + 'px';
+                        userLocationDot.style.top = dotY + 'px';
+                        lastDotX = dotX;
+                        lastDotY = dotY;
+                    }
+                    
                     // Update accuracy circle position and size in animation loop
                     if (userLocationAccuracyCircle && dotX !== undefined && dotY !== undefined && currentUserLocation) {
-                        userLocationAccuracyCircle.style.left = dotX + 'px';
-                        userLocationAccuracyCircle.style.top = dotY + 'px';
+                        // Round positions for accuracy circle too
+                        userLocationAccuracyCircle.style.left = Math.round(dotX) + 'px';
+                        userLocationAccuracyCircle.style.top = Math.round(dotY) + 'px';
                         userLocationAccuracyCircle.style.display = 'block';
                         
                         // Convert GPS accuracy (meters) to screen pixels (diameter)
@@ -514,15 +849,40 @@
                             // Ensure minimum size for visibility
                             const minSize = 40; // Minimum 40px diameter
                             const size = Math.max(minSize, diameterPixels);
-                            userLocationAccuracyCircle.style.width = size + 'px';
-                            userLocationAccuracyCircle.style.height = size + 'px';
+                            // Round size to avoid sub-pixel rendering
+                            userLocationAccuracyCircle.style.width = Math.round(size) + 'px';
+                            userLocationAccuracyCircle.style.height = Math.round(size) + 'px';
+                        }
+                    }
+                    
+                    // Update heading triangle position to match dot position (it's now a sibling, not a child)
+                    // BUT: Only set position, don't show it until we have a valid heading
+                    if (userLocationHeading && dotX !== undefined && dotY !== undefined) {
+                        // Only update if position changed (avoids unnecessary repaints)
+                        const headingX = Math.round(dotX);
+                        const headingY = Math.round(dotY);
+                        const currentHeadingLeft = userLocationHeading.style.left;
+                        const currentHeadingTop = userLocationHeading.style.top;
+                        
+                        if (currentHeadingLeft !== (headingX + 'px') || currentHeadingTop !== (headingY + 'px')) {
+                            userLocationHeading.style.left = headingX + 'px';
+                            userLocationHeading.style.top = headingY + 'px';
                         }
                     }
                 }
-                self.updateTransform();
                 
                 // Update hotspot positions smoothly every frame for fixed appearance
                 updateHotspotPositions();
+                
+                // Update heading indicator rotation if available (after position is set)
+                // This will only show the indicator if we have BOTH position AND heading
+                if (currentHeading !== null && currentHeading !== undefined && userLocationHeading) {
+                    updateHeadingIndicator(currentHeading);
+                } else if (userLocationHeading) {
+                    // If we don't have a heading yet, make sure indicator is hidden
+                    // even if position is set
+                    userLocationHeading.style.display = 'none';
+                }
                 
                 requestAnimationFrame(animate);
             };
@@ -530,24 +890,42 @@
         }
 
         // Get current map transform for coordinate conversion
-        getMapTransform() {
-            const containerRect = this.mapContainer.getBoundingClientRect();
-            const imageRect = this.mapImage.getBoundingClientRect();
+        // Uses cached values to avoid repeated getBoundingClientRect calls
+        getMapTransform(cachedContainerRect = null) {
+            // Use cached container rect if provided, otherwise get it fresh
+            const containerRect = cachedContainerRect || this.mapContainer.getBoundingClientRect();
             const imageCenterX = containerRect.width / 2;
             const imageCenterY = containerRect.height / 2;
             
-            // Use natural image dimensions if available, otherwise use displayed dimensions
-            const naturalWidth = this.mapImage.naturalWidth || imageRect.width;
-            const naturalHeight = this.mapImage.naturalHeight || imageRect.height;
+            // Use natural image dimensions - these are stable and don't change
+            const naturalWidth = this.mapImage.naturalWidth || 0;
+            const naturalHeight = this.mapImage.naturalHeight || 0;
+            
+            // Use the interpolated scale value directly (this.scale) which matches what's being rendered
+            // This is more stable than calculating from getBoundingClientRect which can fluctuate
+            // The scale is updated in updateTransform() which is called before position calculations
+            const scaleToUse = this.scale;
+            
+            // If natural dimensions aren't available, we need to calculate from displayed size
+            // But this should rarely happen if the image has loaded properly
+            let imageWidth = naturalWidth;
+            let imageHeight = naturalHeight;
+            if (!imageWidth || !imageHeight) {
+                // Fallback: calculate from displayed size and scale
+                // This is less accurate but better than nothing
+                const imageRect = this.mapImage.getBoundingClientRect();
+                imageWidth = imageWidth || (imageRect.width / scaleToUse);
+                imageHeight = imageHeight || (imageRect.height / scaleToUse);
+            }
             
             return {
                 centerX: imageCenterX + this.translateX,
                 centerY: imageCenterY + this.translateY,
-                scale: this.scale,
-                imageWidth: naturalWidth,
-                imageHeight: naturalHeight,
-                displayedWidth: imageRect.width,
-                displayedHeight: imageRect.height
+                scale: scaleToUse,
+                imageWidth: imageWidth,
+                imageHeight: imageHeight,
+                displayedWidth: imageWidth * scaleToUse,
+                displayedHeight: imageHeight * scaleToUse
             };
         }
 
@@ -586,7 +964,7 @@
                 return;
             }
             
-            // If keepUserCentered is enabled and user hasn't manually moved, always keep user centered
+            // If keepUserCentered is enabled and user hasn't manually moved, keep user centered with tolerance zone
             if (this.keepUserCentered && !this.userHasManuallyMoved) {
                 // Get current screen position of user location (where it would be without centering)
                 const currentCoords = gpsToScreenCoordinates(userLocation.lat, userLocation.lng, true);
@@ -602,9 +980,30 @@
                 const deltaX = targetX - currentCoords.x;
                 const deltaY = targetY - currentCoords.y;
                 
-                // Use a smaller adjustment factor for smoother, less jerky movement
+                // Define tolerance zone - scales with zoom level
+                // At higher zoom (zoomed in), tolerance is larger (more give)
+                // At lower zoom (zoomed out), tolerance is smaller (less give)
+                // Calculate zoom factor: 0 at min zoom, 1 at max zoom
+                const zoomFactor = (this.targetScale - this.minScale) / (this.maxScale - this.minScale);
+                // Base tolerance at min zoom, larger tolerance at max zoom
+                const baseTolerance = 60; // pixels at minimum zoom
+                const maxTolerance = 150; // pixels at maximum zoom
+                // Interpolate tolerance based on zoom level
+                const toleranceZone = baseTolerance + (maxTolerance - baseTolerance) * zoomFactor;
+                
+                const distanceFromCenter = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                // Only recenter if user is outside the tolerance zone
+                if (distanceFromCenter <= toleranceZone) {
+                    // User is within tolerance zone, don't recenter
+                    this.isAutoRecenterActive = false;
+                    return;
+                }
+                
+                // User is outside tolerance zone, recenter toward center
+                // Use a larger adjustment factor for more responsive following
                 // The animation speed will handle the smooth interpolation
-                const centeringFactor = 0.15; // Reduced from 0.3 for smoother movement
+                const centeringFactor = 0.35; // Increased for faster, more responsive following
                 const newTranslateX = this.targetTranslateX + deltaX * centeringFactor;
                 const newTranslateY = this.targetTranslateY + deltaY * centeringFactor;
                 
@@ -616,11 +1015,11 @@
                 const maxTranslateX = Math.max(0, (scaledWidth - containerRect.width) / 2 + 250);
                 const maxTranslateY = Math.max(0, (scaledHeight - containerRect.height) / 2 + 250);
                 
-                // Use tolerance for auto-recenter
+                // Use tolerance for auto-recenter bounds checking
                 const isNearMaxZoom = this.targetScale >= this.maxScale * 0.95;
-                const baseTolerance = 1.5;
+                const boundsBaseTolerance = 1.5;
                 const zoomTolerance = isNearMaxZoom ? 2.0 : 1.0;
-                const boundsTolerance = baseTolerance * zoomTolerance;
+                const boundsTolerance = boundsBaseTolerance * zoomTolerance;
                 const effectiveMaxTranslateX = maxTranslateX * boundsTolerance;
                 const effectiveMaxTranslateY = maxTranslateY * boundsTolerance;
                 
@@ -711,7 +1110,8 @@
 
     // Convert GPS to screen coordinates
     // @param {boolean} forUserLocation - If true, uses bypass mode for user location when enabled
-    function gpsToScreenCoordinates(lat, lng, forUserLocation = false) {
+    // @param {DOMRect} cachedContainerRect - Optional cached container rect to avoid repeated getBoundingClientRect calls
+    function gpsToScreenCoordinates(lat, lng, forUserLocation = false, cachedContainerRect = null) {
         if (!mapInstance) return { x: 0, y: 0 };
         
         // Convert GPS to map pixel coordinates (using map image pixel dimensions)
@@ -719,8 +1119,8 @@
         // normalized coordinates that may be negative or > 1, which is fine
         const mapPixels = MapConfig.gpsToMapPixels(lat, lng);
         
-        // Get map transform
-        const transform = mapInstance.getMapTransform();
+        // Get map transform (pass cached container rect to avoid repeated getBoundingClientRect calls)
+        const transform = mapInstance.getMapTransform(cachedContainerRect);
         
         // Convert map pixels to screen coordinates
         // The image is centered at (centerX, centerY) and scaled by `scale`
@@ -842,6 +1242,9 @@
                 if (coords && isFinite(coords.x) && isFinite(coords.y)) {
                     dotX = coords.x;
                     dotY = coords.y;
+                    // Round to nearest pixel to avoid sub-pixel rendering issues
+                    dotX = Math.round(dotX);
+                    dotY = Math.round(dotY);
                     userLocationDot.style.left = dotX + 'px';
                     userLocationDot.style.top = dotY + 'px';
                 }
@@ -854,14 +1257,18 @@
             const centerY = containerRect.height / 2;
             dotX = centerX + userLocationJitter.x;
             dotY = centerY + userLocationJitter.y;
+            // Round to nearest pixel to avoid sub-pixel rendering issues
+            dotX = Math.round(dotX);
+            dotY = Math.round(dotY);
             userLocationDot.style.left = dotX + 'px';
             userLocationDot.style.top = dotY + 'px';
         }
         
         // Update accuracy circle position and size
         if (userLocationAccuracyCircle && dotX !== undefined && dotY !== undefined) {
-            userLocationAccuracyCircle.style.left = dotX + 'px';
-            userLocationAccuracyCircle.style.top = dotY + 'px';
+            // Round positions for accuracy circle too
+            userLocationAccuracyCircle.style.left = Math.round(dotX) + 'px';
+            userLocationAccuracyCircle.style.top = Math.round(dotY) + 'px';
             userLocationAccuracyCircle.style.display = 'block';
             
             // Convert GPS accuracy (meters) to screen pixels (diameter)
@@ -877,6 +1284,27 @@
             }
         }
         
+        // Update heading triangle position to match dot position (it's now a sibling, not a child)
+        // BUT: Only set position, don't show it until we have a valid heading
+        if (userLocationHeading && dotX !== undefined && dotY !== undefined) {
+            // Round positions and only update if changed (avoids unnecessary repaints)
+            const headingX = Math.round(dotX);
+            const headingY = Math.round(dotY);
+            const currentHeadingLeft = userLocationHeading.style.left;
+            const currentHeadingTop = userLocationHeading.style.top;
+            
+            if (currentHeadingLeft !== (headingX + 'px') || currentHeadingTop !== (headingY + 'px')) {
+                userLocationHeading.style.left = headingX + 'px';
+                userLocationHeading.style.top = headingY + 'px';
+            }
+            
+            // If we don't have a heading yet, make sure indicator stays hidden
+            // even if position is set
+            if (currentHeading === null || currentHeading === undefined) {
+                userLocationHeading.style.display = 'none';
+            }
+        }
+        
         // Check if user is outside map bounds
         checkBoundaryWarning(location);
         
@@ -888,8 +1316,8 @@
     function checkBoundaryWarning(location) {
         if (!location || !MapConfig) return;
         
-        // Check if location is outside map bounds
-        const withinBounds = MapConfig.isWithinBounds(location.lat, location.lng);
+        // Check if location is outside boundary warning bounds (separate from map alignment bounds)
+        const withinBounds = MapConfig.isWithinBoundaryWarningBounds(location.lat, location.lng);
         
         // Only show warning if user has dismissed instructions (to avoid showing multiple overlays)
         if (!instructionsDismissed) return;
@@ -933,6 +1361,7 @@
             if (!currentAnimalIds.has(animalId)) {
                 element.remove();
                 hotspotElements.delete(animalId);
+                hotspotPositions.delete(animalId); // Clean up position cache
             }
         });
         
@@ -946,26 +1375,521 @@
                 hotspot.className = 'animal-hotspot';
                 hotspot.dataset.animalId = animal.id;
                 
-                const pin = document.createElement('div');
-                pin.className = 'animal-pin';
+                // Initialize with display block and hardware acceleration hints for iOS
+                hotspot.style.display = 'block';
+                hotspot.style.transform = 'translate(-50%, -50%) translateZ(0)';
+                hotspot.style.willChange = 'transform, left, top';
+                
+                // Create icon element (img) or fallback to pin
+                let iconElement;
+                if (animal.icon && animal.icon.shadow && animal.icon.found) {
+                    // Use animal icon
+                    iconElement = document.createElement('img');
+                    iconElement.className = 'animal-icon';
+                    iconElement.alt = animal.name;
+                    // Set initial icon based on found status
+                    const isFound = isAnimalFound(animal);
+                    iconElement.src = isFound ? animal.icon.found : animal.icon.shadow;
+                    // Handle icon load errors with fallback
+                    iconElement.onerror = function() {
+                        console.warn(`Failed to load icon for ${animal.name} (${iconElement.src}), using fallback pin`);
+                        // Replace with fallback pin
+                        const fallbackPin = document.createElement('div');
+                        fallbackPin.className = 'animal-pin';
+                        if (iconElement.parentNode) {
+                            iconElement.parentNode.replaceChild(fallbackPin, iconElement);
+                        }
+                    };
+                } else {
+                    // Fallback to default pin if no icon configuration
+                    console.warn(`No icon configuration for ${animal.name}, using fallback pin`);
+                    iconElement = document.createElement('div');
+                    iconElement.className = 'animal-pin';
+                }
                 
                 const label = document.createElement('div');
                 label.className = 'animal-pin-label';
                 label.textContent = animal.name;
                 
-                hotspot.appendChild(pin);
+                hotspot.appendChild(iconElement);
                 hotspot.appendChild(label);
                 animalHotspots.appendChild(hotspot);
                 
+                // Add click and touch handlers to show animal detail popup
+                // Use both click and touchend for better mobile support
+                let touchStartTime = 0;
+                let touchStartPos = { x: 0, y: 0 };
+                
+                const handleHotspotTap = (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    
+                    // Only show popup if it was a tap (not a drag)
+                    const touchDuration = Date.now() - touchStartTime;
+                    const touchDistance = Math.sqrt(
+                        Math.pow(e.changedTouches?.[0]?.clientX - touchStartPos.x || 0, 2) +
+                        Math.pow(e.changedTouches?.[0]?.clientY - touchStartPos.y || 0, 2)
+                    );
+                    
+                    // If touch was quick (< 300ms) and didn't move much (< 10px), treat as tap
+                    if (!e.changedTouches || (touchDuration < 300 && touchDistance < 10)) {
+                        showAnimalDetailPopup(animal);
+                    }
+                };
+                
+                hotspot.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    showAnimalDetailPopup(animal);
+                });
+                
+                hotspot.addEventListener('touchstart', (e) => {
+                    touchStartTime = Date.now();
+                    if (e.touches[0]) {
+                        touchStartPos.x = e.touches[0].clientX;
+                        touchStartPos.y = e.touches[0].clientY;
+                    }
+                    e.stopPropagation(); // Prevent map from handling this touch
+                }, { passive: true });
+                
+                hotspot.addEventListener('touchend', handleHotspotTap, { passive: false });
+                
                 hotspotElements.set(animal.id, hotspot);
+            } else {
+                // Update existing hotspot - replace pin with icon if needed, or update icon
+                if (animal.icon && animal.icon.shadow && animal.icon.found) {
+                    let iconElement = hotspot.querySelector('.animal-icon');
+                    const pinElement = hotspot.querySelector('.animal-pin');
+                    
+                    // If we have a pin but no icon, replace pin with icon
+                    if (pinElement && !iconElement) {
+                        iconElement = document.createElement('img');
+                        iconElement.className = 'animal-icon';
+                        iconElement.alt = animal.name;
+                        const isFound = isAnimalFound(animal);
+                        iconElement.src = isFound ? animal.icon.found : animal.icon.shadow;
+                        // Handle icon load errors with fallback
+                        iconElement.onerror = function() {
+                            console.warn(`Failed to load icon for ${animal.name} (${iconElement.src}), keeping fallback pin`);
+                            // Don't replace, just log the error
+                        };
+                        pinElement.replaceWith(iconElement);
+                    } else if (iconElement && iconElement.tagName === 'IMG') {
+                        // Update existing icon if found status changed
+                        const isFound = isAnimalFound(animal);
+                        const newSrc = isFound ? animal.icon.found : animal.icon.shadow;
+                        // Get current src without full URL (just the path)
+                        const currentSrc = iconElement.getAttribute('src') || '';
+                        if (currentSrc !== newSrc) {
+                            iconElement.src = newSrc;
+                        }
+                    }
+                }
             }
             // Position will be updated in updateHotspotPositions()
         });
     }
     
+    // Store last known positions to avoid unnecessary updates (iOS optimization)
+    const hotspotPositions = new Map(); // Map<animalId, {x, y, visible}>
+    
+    // Update hotspot icons when collection status changes
+    function updateHotspotIcons() {
+        animals.forEach(animal => {
+            const hotspot = hotspotElements.get(animal.id);
+            if (hotspot && animal.icon && animal.icon.shadow && animal.icon.found) {
+                const iconElement = hotspot.querySelector('.animal-icon');
+                if (iconElement && iconElement.tagName === 'IMG') {
+                    const isFound = isAnimalFound(animal);
+                    const newSrc = isFound ? animal.icon.found : animal.icon.shadow;
+                    const currentSrc = iconElement.getAttribute('src') || '';
+                    if (currentSrc !== newSrc) {
+                        iconElement.src = newSrc;
+                    }
+                }
+            }
+        });
+    }
+
+    // Show animal detail popup
+    function showAnimalDetailPopup(animal) {
+        if (!animal || !animalDetailPopup) return;
+        
+        const isFound = isAnimalFound(animal);
+        
+        // Update title
+        if (animalDetailTitle) {
+            animalDetailTitle.textContent = isFound ? animal.name : '???';
+        }
+        
+        // Update message
+        if (animalDetailMessage) {
+            animalDetailMessage.textContent = isFound 
+                ? "You've already discovered this animal! Want to visit it again?"
+                : "What could this be?";
+        }
+        
+        // Store current animal for button handlers
+        if (animalDetailDirections) {
+            animalDetailDirections.dataset.animalId = animal.id;
+        }
+        if (animalDetailDetails) {
+            animalDetailDetails.dataset.animalId = animal.id;
+        }
+        
+        // Show popup with slide-in animation
+        animalDetailPopup.classList.remove('hidden');
+        // Force reflow to ensure transition works
+        animalDetailPopup.offsetHeight;
+        animalDetailPopup.classList.add('show');
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Hide animal detail popup
+    function hideAnimalDetailPopup() {
+        if (!animalDetailPopup) return;
+        
+        animalDetailPopup.classList.remove('show');
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+            if (animalDetailPopup.classList.contains('show')) return; // If shown again, don't hide
+            animalDetailPopup.classList.add('hidden');
+        }, 300); // Match CSS transition duration
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Handle Directions button click
+    function handleDirectionsClick(animalId) {
+        if (!animalId) return;
+        
+        const animal = animals.find(a => a.id === animalId);
+        if (!animal || !animal.location) return;
+        
+        // Calculate distance from user's current location to animal
+        let distanceMeters = 0;
+        if (currentUserLocation && currentUserLocation.lat && currentUserLocation.lng) {
+            distanceMeters = haversineMeters(
+                { lat: currentUserLocation.lat, lng: currentUserLocation.lng },
+                { lat: animal.location.lat, lng: animal.location.lng }
+            );
+        }
+        
+        // Format distance (show in meters if < 1000m, otherwise show in km)
+        let distanceText;
+        if (distanceMeters < 1000) {
+            distanceText = `${Math.round(distanceMeters)}M AWAY`;
+        } else {
+            const distanceKm = (distanceMeters / 1000).toFixed(1);
+            distanceText = `${distanceKm}KM AWAY`;
+        }
+        
+        // Update directions popup content
+        if (directionsTitle) {
+            directionsTitle.textContent = distanceText;
+        }
+        
+        if (directionsMessage) {
+            directionsMessage.textContent = "Your route is ready. Head to the marked area to scan this animal.";
+        }
+        
+        // Close detail popup first
+        hideAnimalDetailPopup();
+        
+        // Wait for detail popup to close, then show directions popup
+        setTimeout(() => {
+            showDirectionsPopup();
+        }, 300); // Match CSS transition duration
+    }
+
+    // Show directions popup
+    function showDirectionsPopup() {
+        if (!directionsPopup) return;
+        
+        directionsPopup.classList.remove('hidden');
+        // Force reflow to ensure transition works
+        directionsPopup.offsetHeight;
+        directionsPopup.classList.add('show');
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Hide directions popup
+    function hideDirectionsPopup() {
+        if (!directionsPopup) return;
+        
+        directionsPopup.classList.remove('show');
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+            if (directionsPopup.classList.contains('show')) return; // If shown again, don't hide
+            directionsPopup.classList.add('hidden');
+        }, 300); // Match CSS transition duration
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Handle Details button click
+    function handleDetailsClick(animalId) {
+        if (!animalId) return;
+        
+        const animal = animals.find(a => a.id === animalId);
+        if (!animal) return;
+        
+        // Close the detail popup first
+        hideAnimalDetailPopup();
+        
+        // Show the animal details overlay
+        showAnimalDetailsOverlay(animal);
+    }
+
+    // Show animal details overlay
+    function showAnimalDetailsOverlay(animal) {
+        if (!animal || !animalDetailsOverlay) return;
+        
+        // Get badge ID for the animal
+        const badgeId = getBadgeIdForAnimal(animal.name);
+        
+        // Check if animal is found
+        const isFound = isAnimalFound(animal);
+        
+        // Animal data - matching animals.html structure
+        const animalData = {
+            'peacock': {
+                icon: '../assets/animals/found/peacock.svg',
+                name: 'Peacock',
+                description: 'You found the magnificent peacock! A true explorer of the Horniman grounds.',
+                gamePath: '../games/proud-photographer/index.html'
+            },
+            'walrus-ar': {
+                icon: '../assets/animals/found/walrus.svg',
+                name: 'Walrus',
+                description: 'You discovered the walrus! Great tracking skills on your adventure.',
+                gamePath: '../games/walrus-feeder/index.html'
+            },
+            'koala': {
+                icon: '../assets/animals/found/koala.svg',
+                name: 'Koala',
+                description: 'You found the koala! Your keen eye spotted this hidden treasure.'
+            },
+            'bee-ar': {
+                icon: '../assets/animals/found/bee.svg',
+                name: 'Bee',
+                description: 'You found the bee! A tiny but important discovery on your journey.',
+                gamePath: '../games/sunflower-planter/index.html'
+            },
+            'clownfish-ar': {
+                icon: '../assets/animals/found/clownfish.svg',
+                name: 'Clownfish',
+                description: 'You found the clownfish! A colorful addition to your collection.',
+                gamePath: '../games/anemone-cleaning/index.html'
+            },
+            'platypus': {
+                icon: '../assets/animals/found/platypus.svg',
+                name: 'Platypus',
+                description: 'You found the platypus! One of nature\'s most unique creatures.'
+            },
+            'cephalopod': {
+                icon: '../assets/animals/found/Shelled cephalopod.svg',
+                name: 'Cephalopod',
+                description: 'You found the cephalopod! A fascinating marine discovery.'
+            },
+            'stag-beetle': {
+                icon: '../assets/animals/found/stag beetle.svg',
+                name: 'Stag Beetle',
+                description: 'You found the stag beetle! A small but impressive find.'
+            },
+            'snowy-owl': {
+                icon: '../assets/animals/found/snowy owl.svg',
+                name: 'Snowy Owl',
+                description: 'You found the snowy owl! A wise and majestic discovery.'
+            },
+            'orangutan': {
+                icon: '../assets/animals/found/orangutan.svg',
+                name: 'Orangutan',
+                description: 'You found the orangutan! A great ape discovery on your adventure.'
+            },
+            'jellyfish-ar': {
+                icon: '../assets/animals/found/jellyfish.svg',
+                name: 'Jellyfish',
+                description: 'You found the jellyfish! A graceful and mesmerizing discovery.'
+            },
+            'robin': {
+                icon: '../assets/animals/found/robin.svg',
+                name: 'Robin',
+                description: 'You found the robin! A cheerful bird to add to your collection.'
+            }
+        };
+        
+        const data = animalData[badgeId];
+        if (!data) {
+            console.warn(`No data found for animal with badge ID: ${badgeId}`);
+            return;
+        }
+        
+        // Update icon - use shadow icon if not found, found icon if found
+        if (animalDetailsIcon) {
+            if (isFound) {
+                // Use found icon
+                if (animal.icon && animal.icon.found) {
+                    animalDetailsIcon.src = animal.icon.found.replace('../assets/', '../assets/');
+                } else if (data.icon) {
+                    animalDetailsIcon.src = data.icon;
+                }
+            } else {
+                // Use shadow icon for unfound animals
+                if (animal.icon && animal.icon.shadow) {
+                    animalDetailsIcon.src = animal.icon.shadow.replace('../assets/', '../assets/');
+                } else {
+                    // Fallback if no shadow icon available
+                    animalDetailsIcon.src = data.icon || '';
+                }
+            }
+        }
+        
+        // Update name - show "???" if not found
+        if (animalDetailsName) {
+            animalDetailsName.textContent = isFound ? data.name : '???';
+        }
+        
+        // Update date - only show if found
+        if (animalDetailsDate) {
+            if (isFound) {
+                let collectionDate = null;
+                try {
+                    const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+                    if (userData && userData.progress && userData.progress.badgeDates && userData.progress.badgeDates[badgeId]) {
+                        collectionDate = new Date(userData.progress.badgeDates[badgeId]);
+                    }
+                } catch (e) {
+                    console.warn('Error retrieving animal date:', e);
+                }
+                
+                const monthNames = ["January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"];
+                
+                if (collectionDate && !isNaN(collectionDate.getTime())) {
+                    const month = monthNames[collectionDate.getMonth()];
+                    const day = collectionDate.getDate();
+                    const year = collectionDate.getFullYear();
+                    animalDetailsDate.textContent = `Found in ${month} ${day}, ${year}`;
+                } else {
+                    // Fallback to current date if no stored date
+                    const currentDate = new Date();
+                    const month = monthNames[currentDate.getMonth()];
+                    const day = currentDate.getDate();
+                    const year = currentDate.getFullYear();
+                    animalDetailsDate.textContent = `Found in ${month} ${day}, ${year}`;
+                }
+                animalDetailsDate.style.display = 'block';
+            } else {
+                // Hide date if not found
+                animalDetailsDate.style.display = 'none';
+            }
+        }
+        
+        // Update description - show different message if not found
+        if (animalDetailsDescription) {
+            if (isFound) {
+                animalDetailsDescription.textContent = data.description;
+            } else {
+                animalDetailsDescription.textContent = "You haven't found this animal yet. Keep exploring to find it!";
+            }
+        }
+        
+        // Show/hide Play Game button - only show if found and has game
+        if (animalDetailsPlayGameButton) {
+            if (data.gamePath && isFound) {
+                animalDetailsPlayGameButton.classList.remove('hidden');
+                animalDetailsPlayGameButton.setAttribute('data-game-path', data.gamePath);
+            } else {
+                animalDetailsPlayGameButton.classList.add('hidden');
+            }
+        }
+        
+        // Initialize starburst background if needed
+        initStarburstOverlay();
+        
+        // Show overlay with slide-in animation
+        animalDetailsOverlay.classList.remove('hidden');
+        // Force reflow to ensure transition works
+        animalDetailsOverlay.offsetHeight;
+        animalDetailsOverlay.classList.add('show');
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Hide animal details overlay
+    function hideAnimalDetailsOverlay() {
+        if (!animalDetailsOverlay) return;
+        
+        // Remove show class to trigger slide-out animation
+        animalDetailsOverlay.classList.remove('show');
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+            if (animalDetailsOverlay.classList.contains('show')) return; // If shown again, don't hide
+            animalDetailsOverlay.classList.add('hidden');
+        }, 300); // Match CSS transition duration
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Initialize starburst background overlay
+    function initStarburstOverlay() {
+        if (!animalDetailsOverlay) return;
+        
+        const overlay = animalDetailsOverlay.querySelector('.starburst-background-overlay');
+        if (overlay && !overlay.querySelector('img')) {
+            const img = document.createElement('img');
+            img.src = '../assets/Startburst.svg';
+            img.alt = 'Starburst background';
+            overlay.appendChild(img);
+        }
+    }
+
+    // Handle Play Game button click
+    function handlePlayGame() {
+        if (!animalDetailsPlayGameButton) return;
+        
+        const gamePath = animalDetailsPlayGameButton.getAttribute('data-game-path');
+        if (gamePath) {
+            // Trigger haptic feedback
+            if (typeof triggerHaptic === 'function') {
+                triggerHaptic('single');
+            }
+            window.location.href = gamePath;
+        }
+    }
+
     // Update hotspot positions smoothly (called every frame)
     function updateHotspotPositions() {
         if (!mapInstance || !animalHotspots) return;
+        
+        // Get container bounds for visibility checking
+        const containerRect = mapContainer ? mapContainer.getBoundingClientRect() : null;
+        const containerWidth = containerRect ? containerRect.width : window.innerWidth;
+        const containerHeight = containerRect ? containerRect.height : window.innerHeight;
         
         hotspotElements.forEach((hotspot, animalId) => {
             const animal = animals.find(a => a.id === animalId);
@@ -975,11 +1899,43 @@
                 // Animal hotspots always use real positioning
                 const coords = gpsToScreenCoordinates(animal.location.lat, animal.location.lng, false);
                 if (coords && isFinite(coords.x) && isFinite(coords.y)) {
-                    hotspot.style.left = coords.x + 'px';
-                    hotspot.style.top = coords.y + 'px';
+                    // Round to integers to avoid fractional pixel issues on iOS
+                    const x = Math.round(coords.x);
+                    const y = Math.round(coords.y);
+                    
+                    // Check if hotspot is within viewport bounds (with some margin for transform offset)
+                    const margin = 50; // Account for transform translate(-50%, -50%)
+                    const isVisible = x >= -margin && x <= containerWidth + margin &&
+                                     y >= -margin && y <= containerHeight + margin;
+                    
+                    // Get last known position
+                    const lastPos = hotspotPositions.get(animalId);
+                    
+                    // Only update if position changed or visibility changed (iOS optimization)
+                    if (!lastPos || lastPos.x !== x || lastPos.y !== y || lastPos.visible !== isVisible) {
+                        // Update position
+                        hotspot.style.left = x + 'px';
+                        hotspot.style.top = y + 'px';
+                        hotspot.style.display = isVisible ? 'block' : 'none';
+                        
+                        // Store current position
+                        hotspotPositions.set(animalId, { x, y, visible: isVisible });
+                    }
+                } else {
+                    // Invalid coordinates - hide hotspot
+                    const lastPos = hotspotPositions.get(animalId);
+                    if (!lastPos || lastPos.visible !== false) {
+                        hotspot.style.display = 'none';
+                        hotspotPositions.set(animalId, { x: 0, y: 0, visible: false });
+                    }
                 }
             } catch (e) {
                 // Silently handle coordinate conversion errors
+                const lastPos = hotspotPositions.get(animalId);
+                if (!lastPos || lastPos.visible !== false) {
+                    hotspot.style.display = 'none';
+                    hotspotPositions.set(animalId, { x: 0, y: 0, visible: false });
+                }
             }
         });
     }
@@ -1056,22 +2012,49 @@
     
     // Separate function to show the actual notifications (called when instructions are dismissed)
     function showInRangeNotifications(animal, isFirstTime) {
-        // Show notification
-        if (proximityNotification) {
-            proximityNotification.textContent = `An animal is nearby: ${animal.name}. Open the camera to scan the area.`;
-            proximityNotification.className = 'proximity-notification show';
+        // Show new animal nearby popup
+        if (animalNearbyPopup && animal && animal.name) {
+            // Update title with animal name
+            if (animalNearbyTitle) {
+                animalNearbyTitle.textContent = `A ${animal.name.toUpperCase()} IS NEARBY!`;
+            }
+            
+            // Update message
+            if (animalNearbyMessage) {
+                animalNearbyMessage.textContent = "Open the camera to scan the area.";
+            }
+            
+            // Set up open camera button
+            if (animalNearbyOpenCamera) {
+                // Remove any existing onclick handler first
+                animalNearbyOpenCamera.onclick = null;
+                // Set new onclick handler with current animal
+                animalNearbyOpenCamera.onclick = function() {
+                    // Trigger short haptic feedback
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('single');
+                    }
+                    window.location.href = `./animalsAR.html?animalId=${encodeURIComponent(animal.id)}`;
+                };
+            }
+            
+            // Show popup with slide-in animation
+            animalNearbyPopup.classList.remove('hidden');
+            // Force reflow to ensure transition works
+            animalNearbyPopup.offsetHeight;
+            animalNearbyPopup.classList.add('show');
         }
         
-        // Show and enable camera button
+        // Hide proximity notification when in range (popup shows instead)
+        if (proximityNotification) {
+            proximityNotification.classList.remove('show');
+            proximityNotification.classList.add('hidden');
+        }
+        
+        // Keep old button for backwards compatibility (hidden)
         if (openCameraBtn) {
-            openCameraBtn.classList.add('show');
-            openCameraBtn.disabled = false;
-            // Remove any existing onclick handler first
-            openCameraBtn.onclick = null;
-            // Set new onclick handler with current animal
-            openCameraBtn.onclick = function() {
-                window.location.href = `./animalsAR.html?animalId=${encodeURIComponent(animal.id)}`;
-            };
+            openCameraBtn.classList.remove('show');
+            openCameraBtn.disabled = true;
         }
         
         // Trigger sound and vibration when notification appears
@@ -1090,8 +2073,9 @@
         if (proximityState === 'in-range' && currentAnimal) {
             showInRangeNotifications(currentAnimal, true);
         } else if (proximityState === 'nearby' && currentAnimal) {
-            // If we're in nearby range, show that notification
-            showNearbyNotifications(currentAnimal);
+            // If we're in nearby range, recalculate distance and show that notification
+            const distance = haversineMeters(currentUserLocation, currentAnimal.location);
+            showNearbyNotifications(currentAnimal, distance);
         } else {
             // Otherwise re-check proximity to trigger notifications
             checkProximity(currentUserLocation);
@@ -1106,17 +2090,22 @@
             return; // Skip this trigger if not primed yet
         }
         
-        // Play sound
-        try {
-            const audioObj = ensureAudio();
-            if (audioObj) {
-                audioObj.currentTime = 0; // Reset to start
-                audioObj.play().catch(err => {
-                    console.log('Audio play failed:', err);
-                });
+        // Check if audio is enabled before playing
+        const audioEnabled = (typeof window.isAudioEnabled === 'function') ? window.isAudioEnabled() : true;
+        
+        // Play sound (only if audio is enabled)
+        if (audioEnabled) {
+            try {
+                const audioObj = ensureAudio();
+                if (audioObj) {
+                    audioObj.currentTime = 0; // Reset to start
+                    audioObj.play().catch(err => {
+                        console.log('Audio play failed:', err);
+                    });
+                }
+            } catch (err) {
+                console.log('Audio error:', err);
             }
-        } catch (err) {
-            console.log('Audio error:', err);
         }
         
         // Vibrate
@@ -1135,27 +2124,29 @@
             return; // Don't show anything until user dismisses instructions
         }
         
-        // Show softer notification
-        if (proximityNotification) {
-            proximityNotification.textContent = `You are near ${animal.name}. Move closer to unlock it.`;
-            proximityNotification.className = 'proximity-notification show nearby';
+        // Hide animal nearby popup when not in range
+        if (animalNearbyPopup) {
+            hideAnimalNearbyPopup();
         }
         
-        // Hide camera button
-        if (openCameraBtn) {
-            openCameraBtn.classList.remove('show');
-            openCameraBtn.disabled = true;
-        }
+        // Show proximity notification at top of screen
+        showNearbyNotifications(animal, distance);
     }
     
-    function showNearbyNotifications(animal) {
-        // Show softer notification
-        if (proximityNotification) {
-            proximityNotification.textContent = `You are near ${animal.name}. Move closer to unlock it.`;
-            proximityNotification.className = 'proximity-notification show nearby';
+    function showNearbyNotifications(animal, distance) {
+        // Hide animal nearby popup when not in range
+        if (animalNearbyPopup) {
+            hideAnimalNearbyPopup();
         }
         
-        // Hide camera button
+        // Show proximity notification at top of screen
+        if (proximityNotification && animal) {
+            proximityNotification.textContent = `You are near a ${animal.name}. Move closer to scan it!`;
+            proximityNotification.classList.remove('hidden');
+            proximityNotification.className = 'proximity-notification nearby show';
+        }
+        
+        // Keep old button for backwards compatibility (hidden)
         if (openCameraBtn) {
             openCameraBtn.classList.remove('show');
             openCameraBtn.disabled = true;
@@ -1166,12 +2157,18 @@
         proximityState = null;
         currentAnimal = null;
         
-        // Hide notification
-        if (proximityNotification) {
-            proximityNotification.classList.remove('show');
+        // Hide animal nearby popup
+        if (animalNearbyPopup) {
+            hideAnimalNearbyPopup();
         }
         
-        // Hide camera button and clear onclick
+        // Hide proximity notification
+        if (proximityNotification) {
+            proximityNotification.classList.remove('show');
+            proximityNotification.classList.add('hidden');
+        }
+        
+        // Keep old button for backwards compatibility (hidden)
         if (openCameraBtn) {
             openCameraBtn.classList.remove('show');
             openCameraBtn.disabled = true;
@@ -1179,16 +2176,399 @@
         }
     }
 
+    // Show animal nearby popup
+    function showAnimalNearbyPopup() {
+        if (!animalNearbyPopup) return;
+        
+        animalNearbyPopup.classList.remove('hidden');
+        // Force reflow to ensure transition works
+        animalNearbyPopup.offsetHeight;
+        animalNearbyPopup.classList.add('show');
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Hide animal nearby popup
+    function hideAnimalNearbyPopup() {
+        if (!animalNearbyPopup) return;
+        
+        animalNearbyPopup.classList.remove('show');
+        
+        // Wait for animation to complete before hiding
+        setTimeout(() => {
+            if (animalNearbyPopup.classList.contains('show')) return; // If shown again, don't hide
+            animalNearbyPopup.classList.add('hidden');
+        }, 300); // Match CSS transition duration
+        
+        // Trigger haptic feedback
+        if (typeof triggerHaptic === 'function') {
+            triggerHaptic('single');
+        }
+    }
+
+    // Update heading indicator rotation
+    // Cache last heading value to avoid unnecessary updates
+    let lastHeadingValue = null;
+    let hasReceivedFirstHeading = false; // Track if we've received the first valid heading
+    
+    function updateHeadingIndicator(heading) {
+        if (!userLocationHeading) {
+            return;
+        }
+        
+        // If heading is null/undefined, hide the indicator
+        if (heading === null || heading === undefined || isNaN(heading)) {
+            userLocationHeading.style.display = 'none';
+            userLocationHeading.style.opacity = '0';
+            userLocationHeading.style.visibility = 'hidden';
+            lastHeadingValue = null;
+            hasReceivedFirstHeading = false;
+            return;
+        }
+        
+        // Ensure heading is a valid number between 0-360
+        let normalizedHeading = Number(heading);
+        if (isNaN(normalizedHeading)) {
+            userLocationHeading.style.display = 'none';
+            lastHeadingValue = null;
+            hasReceivedFirstHeading = false;
+            return;
+        }
+        
+        // Normalize to 0-360 range
+        normalizedHeading = normalizedHeading % 360;
+        if (normalizedHeading < 0) {
+            normalizedHeading = 360 + normalizedHeading;
+        }
+        
+        // Round heading to nearest degree to avoid sub-degree flickering
+        const roundedHeading = Math.round(normalizedHeading);
+        
+        // Check if position is set (required before showing)
+        const currentLeft = userLocationHeading.style.left;
+        const currentTop = userLocationHeading.style.top;
+        
+        if (!currentLeft || !currentTop) {
+            // Position not set yet, hide until it's ready
+            userLocationHeading.style.display = 'none';
+            return;
+        }
+        
+        // Mark that we've received the first valid heading
+        if (!hasReceivedFirstHeading) {
+            hasReceivedFirstHeading = true;
+            
+            // Log to haptic debug UI if available
+            logToHapticDebug(`First heading: ${roundedHeading}° - Showing triangle`);
+            
+            // CRITICAL FIX: Use CSS custom property to set rotation BEFORE making visible
+            // This ensures the rotation is in the CSS before the element is rendered
+            // Set the CSS custom property first
+            userLocationHeading.style.setProperty('--heading-rotation', `${roundedHeading}deg`);
+            
+            // Also set inline transform as fallback for browsers that don't support CSS variables in transform
+            userLocationHeading.style.transform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
+            userLocationHeading.style.webkitTransform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
+            
+            // Force a reflow to ensure CSS is applied
+            void userLocationHeading.offsetHeight;
+            
+            // NOW make it visible - rotation is already set in CSS, so no flash at 0deg
+            userLocationHeading.style.display = 'block';
+            userLocationHeading.style.opacity = '1';
+            userLocationHeading.style.visibility = 'visible';
+            lastHeadingValue = roundedHeading;
+            
+            // Log to haptic debug UI if available
+            logToHapticDebug(`Triangle visible at ${roundedHeading}°`);
+            return;
+        }
+        
+        // Only update if heading actually changed (avoids unnecessary repaints)
+        if (roundedHeading === lastHeadingValue) {
+            return;
+        }
+        
+        // Update heading for subsequent changes
+        // Rotate triangle to point in the direction of heading
+        // Heading is in degrees (0-360, where 0 is North)
+        // CSS rotate rotates clockwise, and 0 degrees points up (North)
+        // The triangle is positioned outside the dot border with spacing (19px from center)
+        // Use scale(1) and translateZ(0) to prevent scaling and ensure GPU acceleration
+        // Position is set separately in animation loop, so we only update rotation here
+        // Use rounded heading to avoid sub-degree flickering
+        // Update CSS custom property for rotation
+        userLocationHeading.style.setProperty('--heading-rotation', `${roundedHeading}deg`);
+        // Also set inline transform as fallback
+        userLocationHeading.style.transform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
+        // Also update webkit transform for better browser compatibility
+        userLocationHeading.style.webkitTransform = `translate(-50%, -50%) translateY(-19px) rotate(${roundedHeading}deg) scale(1) translateZ(0)`;
+        lastHeadingValue = roundedHeading;
+    }
+    
+    // Handle device orientation for compass heading
+    function handleDeviceOrientation(event) {
+        let heading = null;
+        let source = 'none';
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /Android/.test(navigator.userAgent);
+        
+        // Log first event to see what we're getting
+        if (!window._firstOrientationEventLogged) {
+            window._firstOrientationEventLogged = true;
+            const hasWebkit = event.webkitCompassHeading !== null && event.webkitCompassHeading !== undefined && !isNaN(event.webkitCompassHeading);
+            logToHapticDebug(`Event: webkit=${hasWebkit ? Math.round(event.webkitCompassHeading) : 'no'}, alpha=${event.alpha !== null ? Math.round(event.alpha) : 'no'}`);
+        }
+        
+        // CRITICAL: On iOS, webkitCompassHeading is the ACTUAL compass heading
+        // event.alpha on iOS is device orientation, NOT compass heading
+        // Always prioritize webkitCompassHeading if available (iOS Safari)
+        if (event.webkitCompassHeading !== null && event.webkitCompassHeading !== undefined && !isNaN(event.webkitCompassHeading)) {
+            heading = event.webkitCompassHeading;
+            source = 'webkitCompassHeading';
+        } 
+            // On Android, calculate compass heading from device orientation
+            // event.alpha on Android represents rotation around z-axis, but needs proper calculation
+            else if (isAndroid && event.alpha !== null && event.alpha !== undefined && !isNaN(event.alpha)) {
+            // Only use alpha if we don't have a recent GPS heading (GPS is more accurate when moving)
+            // Check if we have a recent GPS heading (within last 3 seconds)
+            const now = Date.now();
+            if (window._lastGPSHeadingTime && (now - window._lastGPSHeadingTime) < 3000) {
+                // GPS heading is recent, don't override it
+                return;
+            }
+            
+            // Calculate compass heading from device orientation
+            // For Android, when device is held in portrait mode and relatively flat:
+            // - alpha: rotation around z-axis (0-360, where 0 is when device points north)
+            // - beta: tilt forward/backward (-180 to 180)
+            // - gamma: tilt left/right (-90 to 90)
+            
+            // If device is relatively flat (beta and gamma close to 0), alpha can be used directly
+            // But we need to normalize it properly
+            let calculatedHeading = event.alpha;
+            
+            // Normalize alpha to 0-360 range
+            if (calculatedHeading < 0) {
+                calculatedHeading = 360 + calculatedHeading;
+            }
+            calculatedHeading = calculatedHeading % 360;
+            
+            // On some Android devices, alpha might need to be inverted or offset
+            // Try to calibrate based on GPS heading if we have a reference
+            // Store multiple calibration samples for better accuracy
+            if (window._androidCalibrationSamples === undefined) {
+                window._androidCalibrationSamples = [];
+            }
+            
+            // Collect calibration samples when GPS heading is available
+            if (window._lastGPSHeadingTime && lastGPSHeading !== null) {
+                const timeSinceGPS = now - window._lastGPSHeadingTime;
+                if (timeSinceGPS < 5000) {
+                    // Calculate offset between GPS and alpha
+                    let offset = lastGPSHeading - calculatedHeading;
+                    // Normalize offset to -180 to 180 range
+                    if (offset > 180) offset -= 360;
+                    if (offset < -180) offset += 360;
+                    
+                    // Store sample (keep last 10 samples)
+                    window._androidCalibrationSamples.push(offset);
+                    if (window._androidCalibrationSamples.length > 10) {
+                        window._androidCalibrationSamples.shift();
+                    }
+                    
+                    // Calculate average offset from samples
+                    const avgOffset = window._androidCalibrationSamples.reduce((a, b) => a + b, 0) / window._androidCalibrationSamples.length;
+                    window._androidCalibrationOffset = avgOffset;
+                    
+                    if (window._androidCalibrationSamples.length === 1) {
+                        logToHapticDebug(`Calibrating...`);
+                    } else if (window._androidCalibrationSamples.length === 10) {
+                        logToHapticDebug(`Calibrated: ${Math.round(avgOffset)}°`);
+                    }
+                }
+            }
+            
+            // Apply calibration offset if available
+            if (window._androidCalibrationOffset !== undefined) {
+                calculatedHeading = (calculatedHeading + window._androidCalibrationOffset) % 360;
+                if (calculatedHeading < 0) calculatedHeading += 360;
+            }
+            
+            heading = calculatedHeading;
+            source = 'alpha (Android)';
+        }
+        // On iOS, if webkitCompassHeading is missing, log once then exit
+        else if (isIOS) {
+            if (!window._iosHeadingWarningLogged) {
+                window._iosHeadingWarningLogged = true;
+                logToHapticDebug('iOS: No webkit');
+            }
+            return; // Exit early on iOS if no webkitCompassHeading
+        }
+        // On other platforms or if no heading data available, exit
+        else {
+            return;
+        }
+        
+        // If we have a valid heading, process it
+        if (heading !== null && heading !== undefined && !isNaN(heading)) {
+            // Normalize to 0-360 range
+            if (heading < 0) {
+                heading = 360 + heading;
+            }
+            heading = heading % 360;
+            
+            // Store the heading
+            currentHeading = heading;
+            
+            // Update heading indicator immediately (always update for smooth rotation)
+            updateHeadingIndicator(currentHeading);
+            
+            // Only log heading changes (every 5 degrees or first time) to avoid spam but show more updates
+            const roundedHeading = Math.round(heading);
+            if (!window._lastLoggedHeading || Math.abs(roundedHeading - window._lastLoggedHeading) >= 5) {
+                const sourceText = source === 'webkitCompassHeading' ? 'iOS' : 'Android';
+                logToHapticDebug(`${roundedHeading}° (${sourceText})`);
+                window._lastLoggedHeading = roundedHeading;
+            }
+        }
+        
+        // Log event properties only on first event to help debug
+        if (!window._headingDebugLogged) {
+            window._headingDebugLogged = true;
+            if (isIOS) {
+                logToHapticDebug(`iOS: webkit=${event.webkitCompassHeading}, acc=${event.webkitCompassAccuracy}`);
+            } else if (isAndroid) {
+                logToHapticDebug(`Android: alpha=${Math.round(event.alpha || 0)}, beta=${Math.round(event.beta || 0)}, gamma=${Math.round(event.gamma || 0)}`);
+            }
+        }
+    }
+    
+    // Handle GPS heading from Geolocation API (works on Android when device is moving)
+    let lastGPSHeading = null;
+    function handleGPSHeading(coords) {
+        // Log first GPS position to see if heading is available
+        if (!window._firstGPSHeadingLogged) {
+            window._firstGPSHeadingLogged = true;
+            const hasHeading = coords && coords.heading !== null && coords.heading !== undefined && !isNaN(coords.heading) && coords.heading >= 0;
+            logToHapticDebug(`GPS: heading=${hasHeading ? Math.round(coords.heading) : 'no'}`);
+        }
+        
+        // GPS heading is only available when device is moving
+        // coords.heading is the direction of travel in degrees (0-360, where 0 is North)
+        if (coords && coords.heading !== null && coords.heading !== undefined && !isNaN(coords.heading) && coords.heading >= 0) {
+            let heading = coords.heading;
+            
+            // Normalize to 0-360 range
+            if (heading < 0) {
+                heading = 360 + heading;
+            }
+            heading = heading % 360;
+            
+            // Store the heading
+            currentHeading = heading;
+            
+            // Track when GPS heading was last updated (for Android alpha fallback)
+            window._lastGPSHeadingTime = Date.now();
+            
+            // Update heading indicator (always update for smooth rotation)
+            updateHeadingIndicator(currentHeading);
+            
+            // Only log heading changes (every 5 degrees or first time) to avoid spam but show more updates
+            const roundedHeading = Math.round(heading);
+            if (lastGPSHeading === null || Math.abs(roundedHeading - lastGPSHeading) >= 5) {
+                logToHapticDebug(`${roundedHeading}° (GPS)`);
+                lastGPSHeading = roundedHeading;
+            }
+        } else if (!window._gpsNoHeadingLogged) {
+            window._gpsNoHeadingLogged = true;
+            const isAndroid = /Android/.test(navigator.userAgent);
+            if (isAndroid) {
+                logToHapticDebug('GPS: No heading (using compass)');
+            } else {
+                logToHapticDebug('GPS: No heading (move device)');
+            }
+        }
+    }
+    
+    // Start compass/heading tracking
+    function startHeadingTracking() {
+        console.log('[Heading] startHeadingTracking() called');
+        
+        // Ensure heading indicator is hidden and reset before starting
+        if (userLocationHeading) {
+            userLocationHeading.style.display = 'none';
+            hasReceivedFirstHeading = false;
+            lastHeadingValue = null;
+        }
+        
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isAndroid = /Android/.test(navigator.userAgent);
+        
+        // Log that we're starting heading tracking
+        const platform = isIOS ? 'iOS' : isAndroid ? 'Android' : 'Other';
+        console.log(`[Heading] Platform: ${platform}`);
+        logToHapticDebug(`Starting... (${platform})`);
+        
+        // Check if DeviceOrientationEvent is supported
+        if (typeof DeviceOrientationEvent !== 'undefined' && 
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS 13+ requires permission
+            logToHapticDebug('iOS: Requesting...');
+            DeviceOrientationEvent.requestPermission()
+                .then(response => {
+                    if (response === 'granted') {
+                        // Add listener - should fire immediately with current orientation
+                        window.addEventListener('deviceorientation', handleDeviceOrientation, { passive: true });
+                        logToHapticDebug('iOS: Granted');
+                    } else {
+                        logToHapticDebug('iOS: Denied');
+                        if (userLocationHeading) {
+                            userLocationHeading.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(err => {
+                    logToHapticDebug(`iOS: Error ${err.message || ''}`);
+                    if (userLocationHeading) {
+                        userLocationHeading.style.display = 'none';
+                    }
+                });
+        } else if ('DeviceOrientationEvent' in window) {
+            // Android/other browsers - add listener (but won't use alpha, will use GPS heading)
+            window.addEventListener('deviceorientation', handleDeviceOrientation, { passive: true });
+            if (isAndroid) {
+                logToHapticDebug('Android: Waiting GPS');
+            } else {
+                logToHapticDebug('Other: Listening...');
+            }
+        } else {
+            logToHapticDebug('No orientation API');
+            if (userLocationHeading) {
+                userLocationHeading.style.display = 'none';
+            }
+        }
+    }
+    
+    // Stop compass/heading tracking
+    function stopHeadingTracking() {
+        window.removeEventListener('deviceorientation', handleDeviceOrientation);
+    }
+    
     // GPS position handler
     // Reduced emitIntervalMs for more frequent updates and smoother movement
     // Enhanced with stationary detection to reduce jitter when still
     const pushStabilized = makeGpsStabilizer({ 
-        minAccuracy: 30, 
-        alpha: 0.45, 
-        minDelta: 0.2, 
-        emitIntervalMs: 80,
+        minAccuracy: 50, // Increased to allow less accurate GPS (more frequent updates)
+        alpha: 0.7, // Increased for faster response to location changes
+        minDelta: 0.01, // Very small threshold - almost any movement triggers update
+        emitIntervalMs: 1000, // Force update at least once per second
         stationaryThreshold: 1.0, // Consider stationary if movement < 1 meter
-        stationaryTime: 3000 // Apply higher threshold after 3 seconds of being still
+        stationaryTime: 10000 // Increased time before applying higher threshold (allows more updates)
     });
 
     function onPosition(pos) {
@@ -1196,6 +2576,13 @@
         try {
             localStorage.setItem('geopin-location-permission', 'granted');
         } catch (_) {}
+        
+        // Extract GPS heading if available (works on Android when device is moving)
+        // GPS heading is the direction of travel, which is useful for compass heading
+        // Always call handleGPSHeading to log diagnostic info, even if heading is null
+        if (pos && pos.coords) {
+            handleGPSHeading(pos.coords);
+        }
         
         // Use the actual GPS coordinates (will be fake GPS if set in browser)
         // In fake location mode, we just allow coordinates outside bounds to be mapped
@@ -1209,10 +2596,7 @@
 
     function onError(err) {
         console.error('Location error:', err);
-        if (USE_FAKE_LOCATION) {
-            // Fallback to hardcoded fake location if GPS fails in fake mode
-            handleStabilizedLocation({ lat: FAKE_LOCATION.lat, lng: FAKE_LOCATION.lng, acc: FAKE_LOCATION.accuracy });
-        }
+        // Location errors are handled by the browser's geolocation API
     }
 
     // Stop GPS tracking
@@ -1227,6 +2611,8 @@
             clearInterval(fakeLocationInterval);
             fakeLocationInterval = null;
         }
+        // Stop heading tracking
+        stopHeadingTracking();
     }
 
     // Start GPS tracking
@@ -1236,52 +2622,55 @@
 
         if (!('geolocation' in navigator)) {
             console.error('Geolocation not supported');
-            if (USE_FAKE_LOCATION) {
-                // Set permission flag even for fake location
-                try {
-                    localStorage.setItem('geopin-location-permission', 'granted');
-                } catch (_) {}
-                handleStabilizedLocation({ lat: FAKE_LOCATION.lat, lng: FAKE_LOCATION.lng, acc: FAKE_LOCATION.accuracy });
-            }
             return;
         }
 
-        // Always use real geolocation API (which will return fake GPS if set in browser)
-        // In fake location mode, we just allow coordinates outside map bounds to be mapped
-        const opts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+        // Use real geolocation API with faster update frequency
+        // maximumAge: 0 means always use fresh GPS data (no cache)
+        // timeout: 5000 means wait up to 5 seconds for GPS fix
+        const opts = { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 };
         watchId = navigator.geolocation.watchPosition(onPosition, onError, opts);
         
-        if (USE_FAKE_LOCATION) {
-            // Set permission flag for fake location mode
-            try {
-                localStorage.setItem('geopin-location-permission', 'granted');
-            } catch (_) {}
-        }
+        // Start heading/compass tracking
+        startHeadingTracking();
     }
 
-    // Toggle fake location mode (called by long-press on help button)
-    function toggleFakeLocationMode() {
-        USE_FAKE_LOCATION = !USE_FAKE_LOCATION;
-        BYPASS_COORDINATE_SYSTEM = USE_FAKE_LOCATION; // Enable coordinate bypass when fake location is enabled
+    // Toggle between production and testing environments (called by long-press on help button)
+    function toggleEnvironment() {
+        // Toggle environment
+        currentEnvironment = currentEnvironment === 'production' ? 'testing' : 'production';
         
-        // Restart tracking with new mode
-        startTracking();
+        // Save to localStorage
+        saveEnvironment();
         
-        // Show notification
+        // Show notification briefly before reload
         if (proximityNotification) {
-            const modeText = USE_FAKE_LOCATION ? 'TEST MODE: Fake location enabled - coordinates outside bounds will be mapped' : 'REAL MODE: Using real GPS';
+            const modeText = currentEnvironment === 'testing' 
+                ? 'TESTING MODE: Reloading page...' 
+                : 'PRODUCTION MODE: Reloading page...';
             proximityNotification.textContent = modeText;
             proximityNotification.className = 'proximity-notification show';
-            
-            // Hide notification after 3 seconds
-            setTimeout(() => {
-                if (proximityNotification.textContent === modeText) {
-                    proximityNotification.classList.remove('show');
-                }
-            }, 3000);
         }
         
-        console.log(`Fake location mode: ${USE_FAKE_LOCATION ? 'ON' : 'OFF'}, Coordinate bypass: ${BYPASS_COORDINATE_SYSTEM ? 'ON' : 'OFF'}`);
+        console.log(`Environment switched to: ${currentEnvironment.toUpperCase()}, reloading page...`);
+        
+        // Reload the page to ensure everything loads correctly with the new environment
+        setTimeout(() => {
+            window.location.reload();
+        }, 500); // Small delay to show the notification
+    }
+    
+    /**
+     * Initialize environment from saved state or default to production
+     */
+    function initializeEnvironment() {
+        // Load saved environment
+        currentEnvironment = loadSavedEnvironment();
+        
+        // Update MapConfig with the loaded environment
+        MapConfig.setEnvironment(currentEnvironment);
+        
+        console.log(`Environment initialized to: ${currentEnvironment.toUpperCase()}`);
     }
 
     // Instructions overlay
@@ -1376,13 +2765,31 @@
 
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', () => {
+        // Initialize environment from saved state or default to production
+        initializeEnvironment();
+        
+        // Ensure heading indicator is hidden until we have a valid heading
+        if (userLocationHeading) {
+            userLocationHeading.style.display = 'none';
+        }
+        
+        // Sync user data to Customer.io on page load (ensures latest badge status is synced)
+        try {
+            const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+            if (userData && userData.userId && typeof syncUserToCustomerIO === 'function') {
+                syncUserToCustomerIO(userData);
+            }
+        } catch (e) {
+            console.warn('Error syncing to Customer.io on page load:', e);
+        }
+        
         // Initialize map
         mapInstance = new InteractiveMap();
         
         // Initialize orientation manager
         new OrientationManager();
         
-        // Load animals and render hotspots
+        // Load animals and render hotspots (will use currentEnvironment)
         loadAnimals();
         
         // Setup instructions overlay and long-press detection
@@ -1402,6 +2809,10 @@
             helpButton.addEventListener('click', (e) => {
                 // Only show instructions if it wasn't a long press
                 if (!longPressTriggered) {
+                    // Trigger short haptic feedback
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('single');
+                    }
                     showInstructions();
                 }
                 longPressTriggered = false;
@@ -1413,7 +2824,11 @@
                 longPressTriggered = false;
                 longPressTimer = setTimeout(() => {
                     longPressTriggered = true;
-                    toggleFakeLocationMode();
+                    // Trigger long haptic feedback for long press
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('long');
+                    }
+                    toggleEnvironment();
                 }, LONG_PRESS_DURATION);
             }, { passive: true });
             
@@ -1444,7 +2859,11 @@
                 longPressTriggered = false;
                 longPressTimer = setTimeout(() => {
                     longPressTriggered = true;
-                    toggleFakeLocationMode();
+                    // Trigger long haptic feedback for long press
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('long');
+                    }
+                    toggleEnvironment();
                 }, LONG_PRESS_DURATION);
             });
             
@@ -1467,6 +2886,10 @@
         }
         if (instructionsClose) {
             instructionsClose.addEventListener('click', () => {
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
                 // Prime audio when user clicks "Got It!" button
                 primeAudio();
                 hideInstructions();
@@ -1476,6 +2899,10 @@
         // Setup back button - show leave confirmation overlay
         if (backButton) {
             backButton.addEventListener('click', () => {
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
                 showLeaveConfirmation();
             });
         }
@@ -1483,6 +2910,10 @@
         // Setup leave confirmation overlay buttons
         if (leaveConfirmClose) {
             leaveConfirmClose.addEventListener('click', () => {
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
                 // Close overlay and stay on page
                 hideLeaveConfirmation();
             });
@@ -1490,17 +2921,115 @@
 
         if (leaveConfirmButton) {
             leaveConfirmButton.addEventListener('click', () => {
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
                 // Navigate to menu page
                 window.location.href = '../menu.html';
             });
         }
 
+        // Setup zoom buttons (after mapInstance is created)
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', () => {
+                if (!mapInstance) return;
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
+                mapInstance.zoom(0.1);
+            });
+        }
+        
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', () => {
+                if (!mapInstance) return;
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
+                mapInstance.zoom(-0.1);
+            });
+        }
+
         // Setup recenter button
         if (recenterBtn) {
-            recenterBtn.addEventListener('click', () => {
-                if (mapInstance && currentUserLocation) {
+            let longPressTimer = null;
+            let isLongPress = false;
+            const longPressDuration = 500; // 500ms for long press
+
+            // Normal click handler
+            recenterBtn.addEventListener('click', (e) => {
+                // Only recenter if it wasn't a long press
+                if (!isLongPress && mapInstance && currentUserLocation) {
+                    // Trigger short haptic feedback
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('single');
+                    }
                     // Reset manual movement flag so auto-recenter can work again
                     mapInstance.recenterToUserLocation(currentUserLocation, true);
+                }
+                isLongPress = false; // Reset flag
+            });
+
+            // Long press detection
+            recenterBtn.addEventListener('touchstart', (e) => {
+                isLongPress = false;
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    // Trigger long haptic feedback for long press
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('long');
+                    }
+                    // Show haptic debug toggle on long press
+                    if (typeof window.showHapticDebug === 'function') {
+                        window.showHapticDebug();
+                    }
+                }, longPressDuration);
+            }, { passive: true });
+
+            recenterBtn.addEventListener('touchend', () => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }, { passive: true });
+
+            recenterBtn.addEventListener('touchcancel', () => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            }, { passive: true });
+
+            // Also support mouse events for desktop testing
+            recenterBtn.addEventListener('mousedown', (e) => {
+                isLongPress = false;
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    // Trigger long haptic feedback for long press
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('long');
+                    }
+                    // Show haptic debug toggle on long press
+                    if (typeof window.showHapticDebug === 'function') {
+                        window.showHapticDebug();
+                    }
+                }, longPressDuration);
+            });
+
+            recenterBtn.addEventListener('mouseup', () => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            });
+
+            recenterBtn.addEventListener('mouseleave', () => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
                 }
             });
         }
@@ -1508,7 +3037,91 @@
         // Setup boundary warning close button
         if (boundaryWarningClose) {
             boundaryWarningClose.addEventListener('click', () => {
+                // Trigger short haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
                 hideBoundaryWarning();
+            });
+        }
+
+        // Setup animal detail popup close button
+        if (animalDetailClose) {
+            animalDetailClose.addEventListener('click', () => {
+                hideAnimalDetailPopup();
+            });
+        }
+
+        // Setup animal detail popup buttons
+        if (animalDetailDirections) {
+            animalDetailDirections.addEventListener('click', () => {
+                const animalId = animalDetailDirections.dataset.animalId;
+                handleDirectionsClick(animalId);
+            });
+        }
+
+        if (animalDetailDetails) {
+            animalDetailDetails.addEventListener('click', () => {
+                const animalId = animalDetailDetails.dataset.animalId;
+                handleDetailsClick(animalId);
+            });
+        }
+
+        // Close popup when clicking outside (on the overlay background)
+        if (animalDetailPopup) {
+            animalDetailPopup.addEventListener('click', (e) => {
+                // Only close if clicking the popup background, not the content
+                if (e.target === animalDetailPopup) {
+                    hideAnimalDetailPopup();
+                }
+            });
+        }
+
+        // Setup directions popup close button
+        if (directionsClose) {
+            directionsClose.addEventListener('click', () => {
+                hideDirectionsPopup();
+            });
+        }
+
+        // Close directions popup when clicking outside (on the overlay background)
+        if (directionsPopup) {
+            directionsPopup.addEventListener('click', (e) => {
+                // Only close if clicking the popup background, not the content
+                if (e.target === directionsPopup) {
+                    hideDirectionsPopup();
+                }
+            });
+        }
+
+        // Setup animal details overlay back button
+        if (animalDetailsBackButton) {
+            animalDetailsBackButton.addEventListener('click', () => {
+                hideAnimalDetailsOverlay();
+            });
+        }
+
+        // Setup animal details play game button
+        if (animalDetailsPlayGameButton) {
+            animalDetailsPlayGameButton.addEventListener('click', () => {
+                handlePlayGame();
+            });
+        }
+
+        // Setup animal nearby popup close button
+        if (animalNearbyClose) {
+            animalNearbyClose.addEventListener('click', () => {
+                hideAnimalNearbyPopup();
+            });
+        }
+
+        // Close animal nearby popup when clicking outside (on the overlay background)
+        if (animalNearbyPopup) {
+            animalNearbyPopup.addEventListener('click', (e) => {
+                // Only close if clicking the popup background, not the content
+                if (e.target === animalNearbyPopup) {
+                    hideAnimalNearbyPopup();
+                }
             });
         }
         
@@ -1546,6 +3159,25 @@
             }
             renderAnimalHotspots();
         });
+        
+        // Listen for storage changes to update icons when animals are collected
+        // This allows icons to update when badges are collected in other pages
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'collectedBadges') {
+                updateHotspotIcons();
+            }
+        });
+        
+        // Also listen for custom storage events (for same-tab updates)
+        // Some browsers don't fire storage events for same-tab changes
+        window.addEventListener('badgeCollected', () => {
+            updateHotspotIcons();
+        });
+        
+        // Periodically check for icon updates (fallback for browsers that don't support storage events)
+        setInterval(() => {
+            updateHotspotIcons();
+        }, 2000); // Check every 2 seconds
     });
 })();
 

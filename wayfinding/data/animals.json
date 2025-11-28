@@ -5,6 +5,10 @@
       "name": "Peacock",
       "location": { "lat": 51.44129305801467,"lng": -0.06254973913577873 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/peacock.svg",
+        "found": "../assets/animals/found/peacock.svg"
+      },
       "model": {
         "url": "./assets/model/peacock.glb",
         "scale": "0.7 0.7 0.7",
@@ -17,6 +21,10 @@
       "name": "Walrus",
       "location": { "lat": 51.4412995380551, "lng": -0.061731048122385 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/walrus.svg",
+        "found": "../assets/animals/found/walrus.svg"
+      },
       "model": {
         "url": "./assets/model/walrus.glb",
         "scale": "0.7 0.7 0.7",
@@ -29,6 +37,10 @@
       "name": "Koala",
       "location": { "lat": 51.44203501686166, "lng": -0.06038215725936267 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/koala.svg",
+        "found": "../assets/animals/found/koala.svg"
+      },
       "model": {
         "url": "./assets/model/koala.glb",
         "scale": "1 1 1",
@@ -41,6 +53,10 @@
       "name": "Bee",
       "location": { "lat": 51.44160571900145, "lng": -0.062458773411353787 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/bee.svg",
+        "found": "../assets/animals/found/bee.svg"
+      },
       "model": {
         "url": "./assets/model/bee.glb",
         "scale": "20 20 20",
@@ -53,6 +69,10 @@
       "name": "Clown Fish",
       "location": { "lat": 51.442049950589215, "lng":  -0.061462106160756556 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/clownfish.svg",
+        "found": "../assets/animals/found/clownfish.svg"
+      },
       "model": {
         "url": "./assets/model/clownfish.glb",
         "scale": "10 10 10",
@@ -65,6 +85,10 @@
       "name": "Platypus",
       "location": { "lat": 51.44389,  "lng":  -0.063 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/platypus.svg",
+        "found": "../assets/animals/found/platypus.svg"
+      },
       "model": {
         "url": "./assets/model/platypus.glb",
         "scale": "1 1 1",
@@ -77,6 +101,10 @@
       "name": "Cephalopod",
       "location": { "lat": 51.44165194483198,  "lng": -0.06371623033081127 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/shelled_cephalopod.svg",
+        "found": "../assets/animals/found/Shelled cephalopod.svg"
+      },
       "model": {
         "url": "./assets/model/cephalopod.glb",
         "scale": "1 1 1",
@@ -89,6 +117,10 @@
       "name": "Stag Beetle",
       "location": { "lat": 51.442491717769016, "lng": -0.06372508240364229 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/stag_beetle.svg",
+        "found": "../assets/animals/found/stag beetle.svg"
+      },
       "model": {
         "url": "./assets/model/stag_beetle.glb",
         "scale": "1 1 1",
@@ -101,6 +133,10 @@
       "name": "Snowy Owl",
       "location": { "lat": 51.441974472338934, "lng":  -0.06266235462773426 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/snowy_owl.svg",
+        "found": "../assets/animals/found/snowy owl.svg"
+      },
       "model": {
         "url": "./assets/model/snowy_owl.glb",
         "scale": "1 1 1",
@@ -113,6 +149,10 @@
       "name": "Orangutan",
       "location": { "lat":  51.44300935995027,"lng": -0.06150155224422255 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/orangutan.svg",
+        "found": "../assets/animals/found/orangutan.svg"
+      },
       "model": {
         "url": "./assets/model/orangutan.glb",
         "scale": "1 1 1",
@@ -125,6 +165,10 @@
       "name": "Jellyfish",
       "location": { "lat": 51.442364224539155,"lng": -0.0614534544999886 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/jellyfish.svg",
+        "found": "../assets/animals/found/jellyfish.svg"
+      },
       "model": {
         "url": "./assets/model/jellyfish.glb",
         "scale": "1 1 1",
@@ -137,6 +181,10 @@
       "name": "Robin",
       "location": { "lat":51.44222732926731, "lng":  -0.06060150197770573 },
       "radiusMeters": 10,
+      "icon": {
+        "shadow": "../assets/animals/shadows/european_robin.svg",
+        "found": "../assets/animals/found/robin.svg"
+      },
       "model": {
         "url": "./assets/model/robin.glb",
         "scale": "10 10 10",
