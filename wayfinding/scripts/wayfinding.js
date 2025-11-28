@@ -1390,6 +1390,10 @@
                     // Set initial icon based on found status
                     const isFound = isAnimalFound(animal);
                     iconElement.src = isFound ? animal.icon.found : animal.icon.shadow;
+                    // Add class to hotspot for found animals
+                    if (isFound) {
+                        hotspot.classList.add('found');
+                    }
                     // Handle icon load errors with fallback
                     iconElement.onerror = function() {
                         console.warn(`Failed to load icon for ${animal.name} (${iconElement.src}), using fallback pin`);
@@ -1483,6 +1487,12 @@
                         if (currentSrc !== newSrc) {
                             iconElement.src = newSrc;
                         }
+                        // Update found class on hotspot
+                        if (isFound) {
+                            hotspot.classList.add('found');
+                        } else {
+                            hotspot.classList.remove('found');
+                        }
                     }
                 }
             }
@@ -1505,6 +1515,12 @@
                     const currentSrc = iconElement.getAttribute('src') || '';
                     if (currentSrc !== newSrc) {
                         iconElement.src = newSrc;
+                    }
+                    // Update found class on hotspot
+                    if (isFound) {
+                        hotspot.classList.add('found');
+                    } else {
+                        hotspot.classList.remove('found');
                     }
                 }
             }
