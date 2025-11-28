@@ -121,16 +121,27 @@ function getBadgeDataForAnimal(animalName) {
     // Return badge data or use placeholder
     const badgeData = badgeMap[animalName];
     if (badgeData) {
+        // Use description from currentAnimalConfig (loaded from JSON) if available, otherwise use fallback
+        if (currentAnimalConfig && currentAnimalConfig.name === animalName && currentAnimalConfig.description) {
+            badgeData.description = currentAnimalConfig.description;
+        }
         return badgeData;
     }
     
     // Fallback to placeholder
-    return {
+    const fallback = {
         badgeId: animalName.toLowerCase().replace(/\s+/g, '-'),
         iconPath: '../assets/badges/icons/placeholder.svg',
         badgeName: animalName + ' Finder',
         description: 'You found ' + animalName + '! A great discovery on your adventure.'
     };
+    
+    // Use description from currentAnimalConfig if available
+    if (currentAnimalConfig && currentAnimalConfig.name === animalName && currentAnimalConfig.description) {
+        fallback.description = currentAnimalConfig.description;
+    }
+    
+    return fallback;
 }
 
 window.onload = async () => {

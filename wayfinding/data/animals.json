@@ -3,6 +3,9 @@
     {
       "id": "peacock-home",
       "name": "Peacock",
+      "scientificName": "Indian Peafowl",
+      "description": "Peacocks aren't great at flying, so they eat insects, small animals and plants that they find on the ground.",
+      "badgeDescription": "Nice job, you found the peacock! Peacocks show off their tail feathers to impress others.",
       "location": { "lat": 51.44129305801467,"lng": -0.06254973913577873 },
       "radiusMeters": 10,
       "icon": {
@@ -19,6 +22,9 @@
     {
       "id": "walrus-home",
       "name": "Walrus",
+      "scientificName": "Atlantic walrus",
+      "description": "Walruses spend most of their lives in very cold waters, migrating with floating sea ice to find food.",
+      "badgeDescription": "Nice job, you found the walrus! This blubber lover eats lots of snacks to stay warm in the cold winter.",
       "location": { "lat": 51.4412995380551, "lng": -0.061731048122385 },
       "radiusMeters": 10,
       "icon": {
@@ -35,6 +41,9 @@
     {
       "id": "koala-1",
       "name": "Koala",
+      "scientificName": "Phascolarctos cinereus",
+      "description": "Koalas sleep for about 18 hours each day, and spend the rest of their day eating eucalyptus leaves.",
+      "badgeDescription": "Nice job, you found the koala! Don't expect it to stay awake though - koalas sleep for 18 hours a day!",
       "location": { "lat": 51.44203501686166, "lng": -0.06038215725936267 },
       "radiusMeters": 10,
       "icon": {
@@ -51,6 +60,9 @@
     {
       "id": "bee-1",
       "name": "Bee",
+      "scientificName": "Common carder bee",
+      "description": "These fuzzy bees nest in cavities, such as old bird's nests or in moss mats in lawns.",
+      "badgeDescription": "Nice job, you found the bumblebee! These furry fellows go from flower to flower to collect pollen and nectar.",
       "location": { "lat": 51.44160571900145, "lng": -0.062458773411353787 },
       "radiusMeters": 10,
       "icon": {
@@ -67,6 +79,9 @@
     {
       "id": "clownfish-1",
       "name": "Clown Fish",
+      "scientificName": "Clown Anemonefish",
+      "description": "Clownfish live in groups, and talk to one another by making popping and clicking noises.",
+      "badgeDescription": "Nice job, you found the clownfish! They swim playfully among anemones to stay safe.",
       "location": { "lat": 51.442049950589215, "lng":  -0.061462106160756556 },
       "radiusMeters": 10,
       "icon": {
@@ -83,6 +98,9 @@
     {
       "id": "platypus-1",
       "name": "Platypus",
+      "scientificName": "Platypus",
+      "description": "Even though Platypuses are mammals, they lay eggs which is very rare for mammals.",
+      "badgeDescription": "Nice job, you found the platypus! With a bill like a duck and a tail like a beaver, the platypus is a unique looking mammal!",
       "location": { "lat": 51.44389,  "lng":  -0.063 },
       "radiusMeters": 10,
       "icon": {
@@ -99,6 +117,9 @@
     {
       "id": "cephalopod-1",
       "name": "Cephalopod",
+      "scientificName": "Palau Nautilus",
+      "description": "Shelled cephalopods have been around for over 500 million years, making them older than dinosaurs!",
+      "badgeDescription": "Nice job, you found the shelled cephalopod! This cephalopod wears a twisty shell on its back, always ready for an adventure.",
       "location": { "lat": 51.44165194483198,  "lng": -0.06371623033081127 },
       "radiusMeters": 10,
       "icon": {
@@ -115,6 +136,9 @@
     {
       "id": "stag_beetle-1",
       "name": "Stag Beetle",
+      "scientificName": "Lucanus cervus",
+      "description": "Stag beetles spend most of their life as a grub underground eating decomposing wood.",
+      "badgeDescription": "Nice job, you found the stag beetle! Male stag beetles use their impressive jaws to fight one another.",
       "location": { "lat": 51.442491717769016, "lng": -0.06372508240364229 },
       "radiusMeters": 10,
       "icon": {
@@ -131,6 +155,8 @@
     {
       "id": "snowy_owl-1",
       "name": "Snowy Owl",
+      "scientificName": "Bubo scandiacus",
+      "description": "Snowy owls have white feathers to blend into the snow of the tundra, protecting them from predators.",
       "location": { "lat": 51.441974472338934, "lng":  -0.06266235462773426 },
       "radiusMeters": 10,
       "icon": {
@@ -147,6 +173,8 @@
     {
       "id": "orangutan-1",
       "name": "Orangutan",
+      "scientificName": "Pan troglodytes",
+      "description": "Orangutans have hands and feet that are equally skillful, and are happy to eat with their feet.",
       "location": { "lat":  51.44300935995027,"lng": -0.06150155224422255 },
       "radiusMeters": 10,
       "icon": {
@@ -163,6 +191,8 @@
     {
       "id": "Jellyfish-1",
       "name": "Jellyfish",
+      "scientificName": "Moon Jellyfish",
+      "description": "Moon Jellyfish go with the flow on the ocean currents, eating tiny prey which drift into their short tentacles.",
       "location": { "lat": 51.442364224539155,"lng": -0.0614534544999886 },
       "radiusMeters": 10,
       "icon": {
@@ -179,6 +209,8 @@
     {
       "id": "robin-1",
       "name": "Robin",
+      "scientificName": "European robin",
+      "description": "Despite their cute appearance, robins are fiercely territorial and do their best to scare off intruders with their loud call.",
       "location": { "lat":51.44222732926731, "lng":  -0.06060150197770573 },
       "radiusMeters": 10,
       "icon": {

@@ -1769,7 +1769,8 @@
         // Update name - show "???" if not found
         if (animalDetailsName) {
             if (isFound) {
-                animalDetailsName.textContent = data.name;
+                // Use name from JSON (animal.name) if available, otherwise fallback to data.name
+                animalDetailsName.textContent = animal.name || data.name || '';
             } else {
                 // Use regular weight (400) for question marks - Amatic-Regular.ttf has the question mark
                 animalDetailsName.innerHTML = '<span style="font-weight: 400;">???</span>';
@@ -1812,10 +1813,12 @@
             }
         }
         
-        // Update description - show different message if not found
+        // Update description - use description from JSON if available, otherwise fallback to data.description
         if (animalDetailsDescription) {
             if (isFound) {
-                animalDetailsDescription.textContent = data.description;
+                // Use description from JSON (animal.description) if available, otherwise fallback to data.description
+                const description = animal.description || data.description || '';
+                animalDetailsDescription.textContent = description;
             } else {
                 animalDetailsDescription.textContent = "You haven't found this animal yet. Keep exploring to find it!";
             }

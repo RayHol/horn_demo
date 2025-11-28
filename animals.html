@@ -953,25 +953,33 @@
             const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
             const isFound = collectedBadges.includes(animalId);
             
-            // Load animal icons from JSON to get shadow icons
+            // Load animal icons and descriptions from JSON
             let animalIconMap = {};
+            let animalDescriptionMap = {};
             try {
                 const res = await fetch('./wayfinding/data/animals.json', { cache: 'no-cache' });
                 const cfg = await res.json();
                 const animals = Array.isArray(cfg.animals) ? cfg.animals : [];
                 animals.forEach(animal => {
-                    if (animal.name && animal.icon && animal.icon.shadow && animal.icon.found) {
+                    if (animal.name) {
                         const badgeId = getBadgeIdFromAnimalName(animal.name);
                         if (badgeId) {
-                            animalIconMap[badgeId] = {
-                                shadow: animal.icon.shadow.replace('../assets/', './assets/'),
-                                found: animal.icon.found.replace('../assets/', './assets/')
-                            };
+                            // Store icon paths if available
+                            if (animal.icon && animal.icon.shadow && animal.icon.found) {
+                                animalIconMap[badgeId] = {
+                                    shadow: animal.icon.shadow.replace('../assets/', './assets/'),
+                                    found: animal.icon.found.replace('../assets/', './assets/')
+                                };
+                            }
+                            // Store description if available
+                            if (animal.description) {
+                                animalDescriptionMap[badgeId] = animal.description;
+                            }
                         }
                     }
                 });
             } catch (e) {
-                console.warn('Error loading animal icons from JSON:', e);
+                console.warn('Error loading animal data from JSON:', e);
             }
             
             // Animal data - matching badge data for consistency
@@ -1106,8 +1114,15 @@
                     }
                 }
                 
-                // Update name - show "???" if not found
-                name.textContent = isFound ? animalData[animalId].name : '???';
+                // Update name - use name from JSON if available, otherwise use animalData
+                if (isFound) {
+                    // Try to get name from JSON first
+                    const animalName = getAnimalNameFromBadgeId(animalId);
+                    name.textContent = animalName || animalData[animalId].name || '';
+                } else {
+                    // Use regular weight (400) for question marks - Amatic-Regular.ttf has the question mark
+                    name.innerHTML = '<span style="font-weight: 400;">???</span>';
+                }
                 
                 // Update date - only show if found
                 if (isFound) {
@@ -1146,9 +1161,11 @@
                     date.style.display = 'none';
                 }
                 
-                // Update description - show different message if not found
+                // Update description - use description from JSON if available, otherwise fallback to animalData
                 if (isFound) {
-                    description.textContent = animalData[animalId].description;
+                    // Use description from JSON if available, otherwise fallback to animalData.description
+                    const jsonDescription = animalDescriptionMap[animalId];
+                    description.textContent = jsonDescription || animalData[animalId].description || '';
                 } else {
                     description.textContent = "You haven't found this animal yet. Keep exploring to find it!";
                 }
