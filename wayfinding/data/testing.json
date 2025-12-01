@@ -234,7 +234,7 @@
       "scientificName": "Velociraptor",
       "description": "Velociraptors had great vision, sharp claws, and were very fast, making them excellent hunters.",
       "badgeDescription": "Nice job, you found the velociraptor! These feathered dinosaurs were fast as a flash, making them great hunters.",
-      "location": { "lat":55.74819469705947,  "lng": -4.643983900706268 },
+      "location": { "lat":55.748195761373346, "lng":-4.643449082033262 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/velociraptor.svg",
