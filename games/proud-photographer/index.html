@@ -411,7 +411,48 @@
       document.querySelector('#click-sfx').emit('startsound')
     }
     
-    function showBadgeCollection() {
+    // Load badge data from JSON file
+    async function loadBadgeData(badgeId) {
+      try {
+        // Get environment from localStorage (set by wayfinding page)
+        let environment = 'production';
+        try {
+          const saved = localStorage.getItem('wayfinding-environment');
+          if (saved === 'testing' || saved === 'production') {
+            environment = saved;
+          }
+        } catch (_) {
+          // localStorage not available, use default
+        }
+        
+        const jsonFile = environment === 'testing' ? '../../wayfinding/data/testing.json' : '../../wayfinding/data/animals.json';
+        const res = await fetch(jsonFile, { cache: 'no-cache' });
+        const cfg = await res.json();
+        const gameBadges = Array.isArray(cfg.gameBadges) ? cfg.gameBadges : [];
+        
+        // Find the badge by ID
+        const badge = gameBadges.find(b => b.id === badgeId);
+        if (badge) {
+          // Adjust icon path - JSON paths are relative to wayfinding, we need relative to games/proud-photographer
+          // JSON has "../assets/..." which from wayfinding becomes "../../assets/..." from games folder
+          let iconPath = badge.icon;
+          if (iconPath.startsWith('../assets/')) {
+            iconPath = '../../' + iconPath.substring(3); // Remove '../' and add '../../'
+          }
+          
+          return {
+            name: badge.name,
+            description: badge.description,
+            icon: iconPath
+          };
+        }
+      } catch (e) {
+        console.warn('Error loading badge data from JSON:', e);
+      }
+      return null;
+    }
+
+    async function showBadgeCollection() {
       // Stop background music - pause direct audio and mute A-Frame sound
       const backgroundAudio = document.getElementById('background-mp3');
       if (backgroundAudio) {
@@ -435,6 +476,26 @@
           collectedBadges.push('photographer');
           localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
         }
+      }
+      
+      // Load badge data from JSON
+      const badgeData = await loadBadgeData('photographer');
+      
+      // Update badge splash icon
+      const splashIcon = document.querySelector('#badgeSplash .splash-badge-icon');
+      if (badgeData && splashIcon) {
+        splashIcon.src = badgeData.icon;
+      }
+      
+      // Update badge collection detail screen
+      if (badgeData) {
+        const detailIcon = document.querySelector('#badgeCollection .badge-detail-icon');
+        const detailName = document.querySelector('#badgeCollection .badge-name');
+        const detailDescription = document.querySelector('#badgeCollection .badge-description');
+        
+        if (detailIcon) detailIcon.src = badgeData.icon;
+        if (detailName) detailName.textContent = badgeData.name;
+        if (detailDescription) detailDescription.textContent = badgeData.description;
       }
       
       // Hide the game complete popup
@@ -639,8 +700,8 @@
       <div class="starburst-background-overlay"></div>
       <div class="badge-detail-content">
         <img src="../../assets/badges/icons/peacock-game-badge.svg" class="badge-detail-icon">
-        <h2 class="badge-name">Proud Photographer</h2>
-        <p class="badge-description">You captured the peacock's proudest moment.</p>
+        <h2 class="badge-name">Peacock Paparazzi</h2>
+        <p class="badge-description">Perfect timing! You took a photo of the peacock's proudest moment.</p>
         <button class="primaryButton" onclick="goHome()">Continue</button>
       </div>
     </div>
@@ -712,6 +773,11 @@
         <audio id="ding2-wav" src="assets/audio/ding2.wav" autostart="0" preload ="none"></audio>
         <audio id="tada-wav" src="assets/audio/tada.mp3" autostart="0" preload ="none"></audio>
 
+        <audio id="polaroid-snap-wav" src="assets/audio/polaroid-snap.wav" autostart="0" preload ="none"></audio>
+        <audio id="polaroid-print-wav" src="assets/audio/polaroid-print.wav" autostart="0" preload ="none"></audio>
+
+        <audio id="peacock-call-wav" src="assets/audio/peacock-call.wav" autostart="0" preload ="none"></audio>
+
         <!-- <img id="texture" src="https://cdn.glitch.global/8edb8ccc-1d3b-4b5f-b3c1-4b7d8d39f2fb/WaterPour_texture.png?v=1739875301530"> -->
       </a-assets>
 
@@ -726,6 +792,11 @@
 
       <a-entity id="click-sfx" sound="src: #click-mp3; on: startsound; loop: false; volume: 2;"></a-entity>
       <a-entity id="tada-sfx" sound="src: #tada-wav; on: startsound; loop: false; volume: 1;"></a-entity>
+
+      <a-entity id="polaroid-snap-sfx" sound="src: #polaroid-snap-wav; on: startsound; loop: false; volume: 1;"></a-entity>
+      <a-entity id="polaroid-print-sfx" sound="src: #polaroid-print-wav; on: startsound; loop: false; volume: 1;"></a-entity>
+
+      <a-entity id="peacock-call-sfx" sound="src: #peacock-call-wav; on: startsound; loop: false; volume: 1;"></a-entity>
       
       <!-- Scene contents -->
       <a-entity id="floor" position="0 -0.5 0" geometry="primitive: cylinder; radius: 50; height: 1;" visible="false" grip="0.9" material="color: lime;"
