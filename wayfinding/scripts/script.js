@@ -228,7 +228,7 @@ window.onload = async () => {
                     if (moved < cfg.minDelta) return; if (now - lastEmit < cfg.emitIntervalMs) return; lastEmit = now; onEmit && onEmit(state);
                 };
             }
-            const pushStabilized = makeGpsStabilizer({ minAccuracy: 20, alpha: 0.4, minDelta: 0.3, emitIntervalMs: 100 });
+            const pushStabilized = makeGpsStabilizer({ minAccuracy: 20, alpha: 0.6, minDelta: 0.15, emitIntervalMs: 100 });
             const VISIBILITY_THRESHOLD_METERS = 20; // Show model within 20 meters
             const GPS_ACCURACY_THRESHOLD = 30; // Hide model if GPS accuracy is worse than this (meters) - increased to be less restrictive
             const infoDiv = document.querySelector('.instructions');
@@ -388,7 +388,7 @@ window.onload = async () => {
                         cameraEl.dispatchEvent(evt);
                     };
 
-                    const pushForDispatch = makeGpsStabilizer({ minAccuracy: 20, alpha: 0.4, minDelta: 0.3, emitIntervalMs: 150 });
+                    const pushForDispatch = makeGpsStabilizer({ minAccuracy: 20, alpha: 0.6, minDelta: 0.15, emitIntervalMs: 100 });
 
                     if ('geolocation' in navigator) {
                         navigator.geolocation.getCurrentPosition(function (p) {
@@ -400,7 +400,7 @@ window.onload = async () => {
                             pushForDispatch({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, function (u) {
                                 dispatchGpsUpdate(u.lat, u.lng, u.acc);
                             });
-                        }, function () { }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
+                        }, function () { }, { enableHighAccuracy: true, maximumAge: 500, timeout: 5000 });
                     }
                 } catch (_) { }
             }
@@ -412,7 +412,7 @@ window.onload = async () => {
                     });
                     navigator.geolocation.watchPosition(function(p){
                         pushStabilized({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, update);
-                    }, function(){}, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
+                    }, function(){}, { enableHighAccuracy: true, maximumAge: 500, timeout: 5000 });
                 } catch (_) {}
             }
         }
@@ -673,7 +673,7 @@ function renderPlaces(places) {
         model.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
 
         // Defer GLTF load until GPS appears stable; append entity immediately (hidden by lack of model)
-        model.setAttribute('animation-mixer', '');
+        model.setAttribute('animation-mixer', 'clip: *;');
 
         // New behavior: if active (enabled), tapping collects badge
         if (actionButton) {
@@ -749,10 +749,36 @@ function renderPlaces(places) {
             waitForStableGPS(cameraGps, { sampleCount: 3, maxDriftMeters: 2.0, maxAccuracyMeters: 30, timeoutMs: 3000 }, function () {
                 setModel(models[modelIndex], model);
                 model.addEventListener('model-loaded', function () {
+                    // Get animations from the loaded model and play the first one automatically
+                    const gltfModel = model.object3D;
+                    let animationClip = null;
+                    
+                    // Traverse the model to find animations
+                    gltfModel.traverse(function(node) {
+                        if (node.animations && node.animations.length > 0 && !animationClip) {
+                            animationClip = node.animations[0].name;
+                        }
+                    });
+                    
+                    // Play the first animation found, or use default behavior
+                    if (animationClip) {
+                        model.setAttribute('animation-mixer', {
+                            clip: animationClip,
+                            loop: 'repeat',
+                            timeScale: 1
+                        });
+                    } else {
+                        // Fallback: try without specifying clip (should play first animation)
+                        model.setAttribute('animation-mixer', {
+                            loop: 'repeat',
+                            timeScale: 1
+                        });
+                    }
+                    
                     checkInitialVisibility();
-                    isLoading = false; // Mark loading as complete
+                    isLoading = false;
                     setTimeout(function() {
-                        hideLoader(); // This will hide the loader and set text appropriately
+                        hideLoader();
                     }, 100);
                 }, { once: true });
             });
