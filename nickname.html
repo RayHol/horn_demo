@@ -274,19 +274,66 @@
 
         // Save user data to local storage
         function saveUserData(nickname) {
-            // Check if collectedBadges already exists and sync them
-            const existingBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+            // Check if userData already exists
+            let userData = JSON.parse(localStorage.getItem('userData') || 'null');
             
-            const userData = {
-                nickname: nickname,
-                userId: Date.now().toString(36) + Math.random().toString(36).substr(2),
-                created: new Date().toISOString(),
-                progress: {
-                    gamesCompleted: [],
-                    badges: existingBadges, // Sync existing badges if any
-                    highScores: {}
+            if (userData) {
+                // User already exists - preserve existing data and only update nickname
+                userData.nickname = nickname;
+                
+                // Ensure progress object exists
+                if (!userData.progress) {
+                    userData.progress = { gamesCompleted: [], badges: [], badgeDates: {}, highScores: {} };
                 }
-            };
+                
+                // Sync badges from collectedBadges if they exist
+                const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+                if (collectedBadges.length > 0) {
+                    // Merge badges and preserve badgeDates
+                    const existingBadges = userData.progress.badges || [];
+                    const allBadges = [...new Set([...existingBadges, ...collectedBadges])];
+                    userData.progress.badges = allBadges;
+                    
+                    // Preserve existing badgeDates, add dates for new badges without dates
+                    if (!userData.progress.badgeDates) {
+                        userData.progress.badgeDates = {};
+                    }
+                    collectedBadges.forEach(badgeId => {
+                        if (!userData.progress.badgeDates[badgeId]) {
+                            userData.progress.badgeDates[badgeId] = new Date().toISOString();
+                        }
+                    });
+                }
+                
+                // Ensure other progress properties exist
+                if (!userData.progress.gamesCompleted) {
+                    userData.progress.gamesCompleted = [];
+                }
+                if (!userData.progress.highScores) {
+                    userData.progress.highScores = {};
+                }
+            } else {
+                // New user - create userData from scratch
+                const existingBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+                
+                userData = {
+                    nickname: nickname,
+                    userId: Date.now().toString(36) + Math.random().toString(36).substr(2),
+                    created: new Date().toISOString(),
+                    progress: {
+                        gamesCompleted: [],
+                        badges: existingBadges,
+                        badgeDates: {},
+                        highScores: {}
+                    }
+                };
+                
+                // Add badgeDates for existing badges
+                existingBadges.forEach(badgeId => {
+                    userData.progress.badgeDates[badgeId] = new Date().toISOString();
+                });
+            }
+            
             localStorage.setItem('userData', JSON.stringify(userData));
             
             // Sync to Customer.io (will work when snippet is added)
