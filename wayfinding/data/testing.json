@@ -71,7 +71,7 @@
       },
       "model": {
         "url": "./assets/model/bee.glb",
-        "scale": "20 20 20",
+        "scale": "0.01 0.01 0.01",
         "rotation": "0 180 0"
       },
       "ping": { "cooldownMinutes": 3 }
@@ -295,11 +295,11 @@
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/tiger_cub.svg",
-        "found": "../assets/animals/found/tiger cub.svg"
+        "found": "../assets/animals/found/tiger_cub.svg"
       },
       "model": {
         "url": "./assets/model/tiger_cub.glb",
-        "scale": "1 1 1",
+        "scale": "1.5 1.5 1.5",
         "rotation": "0 180 0"
       },
       "ping": { "cooldownMinutes": 3 }
