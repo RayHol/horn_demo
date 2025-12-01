@@ -228,7 +228,7 @@ window.onload = async () => {
                     if (moved < cfg.minDelta) return; if (now - lastEmit < cfg.emitIntervalMs) return; lastEmit = now; onEmit && onEmit(state);
                 };
             }
-            const pushStabilized = makeGpsStabilizer({ minAccuracy: 20, alpha: 0.4, minDelta: 0.3, emitIntervalMs: 100 });
+            const pushStabilized = makeGpsStabilizer({ minAccuracy: 20, alpha: 0.6, minDelta: 0.15, emitIntervalMs: 100 });
             const VISIBILITY_THRESHOLD_METERS = 20; // Show model within 20 meters
             const GPS_ACCURACY_THRESHOLD = 30; // Hide model if GPS accuracy is worse than this (meters) - increased to be less restrictive
             const infoDiv = document.querySelector('.instructions');
@@ -388,7 +388,7 @@ window.onload = async () => {
                         cameraEl.dispatchEvent(evt);
                     };
 
-                    const pushForDispatch = makeGpsStabilizer({ minAccuracy: 20, alpha: 0.4, minDelta: 0.3, emitIntervalMs: 150 });
+                    const pushForDispatch = makeGpsStabilizer({ minAccuracy: 20, alpha: 0.6, minDelta: 0.15, emitIntervalMs: 100 });
 
                     if ('geolocation' in navigator) {
                         navigator.geolocation.getCurrentPosition(function (p) {
@@ -400,7 +400,7 @@ window.onload = async () => {
                             pushForDispatch({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, function (u) {
                                 dispatchGpsUpdate(u.lat, u.lng, u.acc);
                             });
-                        }, function () { }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
+                        }, function () { }, { enableHighAccuracy: true, maximumAge: 500, timeout: 5000 });
                     }
                 } catch (_) { }
             }
@@ -412,7 +412,7 @@ window.onload = async () => {
                     });
                     navigator.geolocation.watchPosition(function(p){
                         pushStabilized({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, update);
-                    }, function(){}, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
+                    }, function(){}, { enableHighAccuracy: true, maximumAge: 500, timeout: 5000 });
                 } catch (_) {}
             }
         }

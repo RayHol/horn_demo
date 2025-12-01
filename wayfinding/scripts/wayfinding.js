@@ -2599,15 +2599,15 @@
     }
     
     // GPS position handler
-    // Reduced emitIntervalMs for more frequent updates and smoother movement
+    // Optimized for faster updates and smoother movement
     // Enhanced with stationary detection to reduce jitter when still
     const pushStabilized = makeGpsStabilizer({ 
         minAccuracy: 50, // Increased to allow less accurate GPS (more frequent updates)
-        alpha: 0.7, // Increased for faster response to location changes
+        alpha: 0.75, // Increased for faster response to location changes
         minDelta: 0.01, // Very small threshold - almost any movement triggers update
-        emitIntervalMs: 1000, // Force update at least once per second
+        emitIntervalMs: 200, // Force update at least every 200ms (5 times per second)
         stationaryThreshold: 1.0, // Consider stationary if movement < 1 meter
-        stationaryTime: 10000 // Increased time before applying higher threshold (allows more updates)
+        stationaryTime: 5000 // Time before applying higher threshold when stationary
     });
 
     function onPosition(pos) {
@@ -2666,8 +2666,8 @@
 
         // Use real geolocation API with faster update frequency
         // maximumAge: 0 means always use fresh GPS data (no cache)
-        // timeout: 5000 means wait up to 5 seconds for GPS fix
-        const opts = { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 };
+        // timeout: 3000 means wait up to 3 seconds for GPS fix (faster timeout for responsiveness)
+        const opts = { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 };
         watchId = navigator.geolocation.watchPosition(onPosition, onError, opts);
         
         // Start heading/compass tracking
@@ -2804,6 +2804,40 @@
 
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', () => {
+        // Prevent page-level pinch zoom and double-tap zoom
+        // Allow map container to handle its own touch events
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (e) {
+            const now = Date.now();
+            // Prevent double-tap zoom (300ms threshold)
+            if (now - lastTouchEnd < 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+        
+        // Prevent iOS gesture zoom
+        document.addEventListener('gesturestart', function (e) {
+            // Only prevent if not on map container (map handles its own gestures)
+            if (!e.target.closest('.map-container')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        document.addEventListener('gesturechange', function (e) {
+            // Only prevent if not on map container
+            if (!e.target.closest('.map-container')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        document.addEventListener('gestureend', function (e) {
+            // Only prevent if not on map container
+            if (!e.target.closest('.map-container')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
         // Initialize environment from saved state or default to production
         initializeEnvironment();
         

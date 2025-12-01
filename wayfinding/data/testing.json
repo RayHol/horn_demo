@@ -367,7 +367,7 @@
       "scientificName": "Nile crocodile",
       "description": "Crocodiles have one of the strongest bites in the animal kingdom, and can eat half their body weight in one meal.",
       "badgeDescription": "Nice job, you found the Nile Crocodile! Just don't get in the way of its strong bite - one of the strongest bites in the animal kingdom!",
-      "location": { "lat": 55.747943271481645,  "lng": -4.643971070837338 },
+      "location": { "lat": 55.74814120337128,  "lng": -4.6438482870547  },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/crocodile.svg",
