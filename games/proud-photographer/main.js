@@ -84,34 +84,56 @@ function saveCanvas(canvas, imagename) {
 }
 
 let peacock = document.querySelector('#peacock')
+let looped = false
 
 // Init game when peacock placed
 peacock.addEventListener('placed', () => {
   gameStarted = true
   cameraReady = true
+  document.querySelector('#peacock-call-sfx').emit('startsound')
   document.querySelector('#hint').innerHTML = "Snap a pic of the peacock displaying its full plumage."
   document.querySelector('#placezone').setAttribute('visible', false)
   document.querySelector('#peacock').setAttribute('ar-place', {
     enabled: false,
   })
   window.setTimeout(() => {
+    document.querySelector('#peacock-call-sfx').emit('startsound')
+  }, 7500)
+  window.setTimeout(() => {
+    document.querySelector('#peacock-call-sfx').emit('startsound')
     console.log('now posing')
     peacock.components.photographersubject.posing = true
   }, 8500)
+  window.setTimeout(() => {
+    console.log('stopped posing')
+    peacock.components.photographersubject.posing = false
+    looped = false
+  }, 11000)
   // document.querySelector('#camera').emit('enter')
   // document.querySelector('#peacockHint').classList.add('hidden')
 })
 
 peacock.addEventListener('animation-loop', () => {
-  console.log('looped!')
-  if(peacock.components.photographersubject.posing && gameStarted) {
-    peacock.components.photographersubject.posing = false
-    window.setTimeout(() => {
-      if(gameStarted) {
-        console.log('now posing')
-        peacock.components.photographersubject.posing = true
-      }
-    }, 8500)
+  if(!looped) {
+    console.log('looped!')
+    looped = true
+    if(gameStarted) {
+      window.setTimeout(() => {
+        document.querySelector('#peacock-call-sfx').emit('startsound')
+      }, 7500)
+      window.setTimeout(() => {
+        if(gameStarted) {
+          document.querySelector('#peacock-call-sfx').emit('startsound')
+          console.log('now posing')
+          peacock.components.photographersubject.posing = true
+        }
+      }, 8500)
+      window.setTimeout(() => {
+        console.log('stopped posing')
+        peacock.components.photographersubject.posing = false
+        looped = false
+      }, 11000)
+    }
   }
 })
 
@@ -119,14 +141,19 @@ peacock.addEventListener('animation-loop', () => {
 function cameraButton() {
   if(cameraReady) {
     cameraReady = false
-    document.querySelector('#camera').emit('shutter')
-    document.querySelector('#flashfilter').classList.add('flash')
-    document.querySelector('#click-sfx').emit('startsound')
+    document.querySelector('#polaroid-snap-sfx').emit('startsound')
     setTimeout(() => {
-      document.querySelector('#polaroid-container').classList.remove('polaroid-above')
+      document.querySelector('#flashfilter').classList.add('flash')
+      document.querySelector('#camera').emit('shutter')
+    }, 250)
+    setTimeout(() => {
+      document.querySelector('#polaroid-print-sfx').emit('startsound')
       document.querySelector('#darkfilter').style.opacity = 1   
       document.querySelector('#flashfilter').classList.remove('flash')
     }, 1000)
+    setTimeout(() => {
+      document.querySelector('#polaroid-container').classList.remove('polaroid-above')
+    }, 2000)
   }
 }
 // function zoomInButton() {

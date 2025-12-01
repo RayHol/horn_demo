@@ -88,6 +88,7 @@
     let currentAnimal = null;
     let proximityState = null; // 'in-range', 'nearby', or null
     let audioPrimed = false; // Track if audio has been primed with user interaction
+    let detectToneAudio = null; // Audio for nearby detection tone
     let instructionsDismissed = false; // Track if instructions overlay has been dismissed
     
     // Message buffer for heading debug (stores messages even when debug UI isn't visible)
@@ -443,12 +444,41 @@
             audio = new Audio('../assets/audio/bell.mp3');
             audio.volume = 0.5;
             audio._originalVolume = 0.5; // Store original volume for global audio manager
+            
+            // Add error handling for audio loading issues
+            audio.addEventListener('error', function(e) {
+                console.error('Audio loading error:', e);
+                console.error('Audio src:', audio.src);
+                console.error('Audio error code:', audio.error ? audio.error.code : 'unknown');
+            });
+            
             // Register with global audio manager so it respects the audio toggle
             if (typeof window.registerAudio === 'function') {
                 window.registerAudio(audio);
             }
         }
         return audio;
+    }
+
+    function ensureDetectToneAudio() {
+        if (!detectToneAudio) {
+            detectToneAudio = new Audio('../assets/audio/DetectTone.mp3');
+            detectToneAudio.volume = 0.5;
+            detectToneAudio._originalVolume = 0.5; // Store original volume for global audio manager
+            
+            // Add error handling for audio loading issues
+            detectToneAudio.addEventListener('error', function(e) {
+                console.error('DetectTone audio loading error:', e);
+                console.error('DetectTone audio src:', detectToneAudio.src);
+                console.error('DetectTone audio error code:', detectToneAudio.error ? detectToneAudio.error.code : 'unknown');
+            });
+            
+            // Register with global audio manager so it respects the audio toggle
+            if (typeof window.registerAudio === 'function') {
+                window.registerAudio(detectToneAudio);
+            }
+        }
+        return detectToneAudio;
     }
 
     function vibrate() {
@@ -472,23 +502,40 @@
     
     // Prime audio with user interaction (required by browsers)
     function primeAudio() {
-        if (audioPrimed) return;
+        if (audioPrimed) return Promise.resolve();
         
-        try {
-            const audioObj = ensureAudio();
-            if (audioObj) {
-                // Play and immediately pause to "prime" the audio
-                audioObj.play().then(() => {
-                    audioObj.pause();
-                    audioObj.currentTime = 0;
-                    audioPrimed = true;
-                }).catch(() => {
-                    // Audio priming failed, will try again on next interaction
+        return new Promise((resolve) => {
+            try {
+                const audioObj = ensureAudio();
+                const detectToneObj = ensureDetectToneAudio();
+                
+                // Prime both audio files
+                Promise.all([
+                    audioObj ? audioObj.play().then(() => {
+                        audioObj.pause();
+                        audioObj.currentTime = 0;
+                        return true;
+                    }).catch(() => false) : Promise.resolve(false),
+                    detectToneObj ? detectToneObj.play().then(() => {
+                        detectToneObj.pause();
+                        detectToneObj.currentTime = 0;
+                        return true;
+                    }).catch(() => false) : Promise.resolve(false)
+                ]).then(([bellPrimed, detectTonePrimed]) => {
+                    // Consider primed if at least one succeeded
+                    if (bellPrimed || detectTonePrimed) {
+                        audioPrimed = true;
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
                 });
+            } catch (err) {
+                // Ignore errors during priming
+                console.log('Audio priming error:', err);
+                resolve(false);
             }
-        } catch (err) {
-            // Ignore errors during priming
-        }
+        });
     }
 
     // Interactive Map class (adapted from temp/map.html)
@@ -2113,8 +2160,9 @@
             showInRangeNotifications(currentAnimal, true);
         } else if (proximityState === 'nearby' && currentAnimal) {
             // If we're in nearby range, recalculate distance and show that notification
+            // Don't play sound again if already showing (isNewEntry = false)
             const distance = haversineMeters(currentUserLocation, currentAnimal.location);
-            showNearbyNotifications(currentAnimal, distance);
+            showNearbyNotifications(currentAnimal, distance, false);
         } else {
             // Otherwise re-check proximity to trigger notifications
             checkProximity(currentUserLocation);
@@ -2122,29 +2170,40 @@
     }
     
     function triggerNotificationSoundAndVibration(animal) {
-        // Only play if audio has been primed (user has interacted)
-        if (!audioPrimed) {
-            // Try to prime now (might work if there was recent interaction)
-            primeAudio();
-            return; // Skip this trigger if not primed yet
-        }
-        
-        // Check if audio is enabled before playing
-        const audioEnabled = (typeof window.isAudioEnabled === 'function') ? window.isAudioEnabled() : true;
-        
-        // Play sound (only if audio is enabled)
-        if (audioEnabled) {
-            try {
-                const audioObj = ensureAudio();
-                if (audioObj) {
-                    audioObj.currentTime = 0; // Reset to start
-                    audioObj.play().catch(err => {
-                        console.log('Audio play failed:', err);
-                    });
+        // Try to prime audio if not already primed
+        const playSound = () => {
+            // Check if audio is enabled before playing
+            const audioEnabled = (typeof window.isAudioEnabled === 'function') ? window.isAudioEnabled() : true;
+            
+            // Play sound (only if audio is enabled)
+            if (audioEnabled) {
+                try {
+                    const audioObj = ensureAudio();
+                    if (audioObj) {
+                        audioObj.currentTime = 0; // Reset to start
+                        audioObj.play().catch(err => {
+                            console.log('Audio play failed:', err);
+                        });
+                    }
+                } catch (err) {
+                    console.log('Audio error:', err);
                 }
-            } catch (err) {
-                console.log('Audio error:', err);
             }
+        };
+        
+        // If audio is already primed, play immediately
+        if (audioPrimed) {
+            playSound();
+        } else {
+            // Try to prime and play
+            primeAudio().then((primed) => {
+                if (primed) {
+                    playSound();
+                } else {
+                    // If priming failed, still try to play (might work on some browsers)
+                    playSound();
+                }
+            });
         }
         
         // Vibrate
@@ -2155,6 +2214,9 @@
     }
 
     function handleNearby(animal, distance) {
+        // Check if this is a new entry into nearby state (not already in nearby state for this animal)
+        const isNewNearbyEntry = proximityState !== 'nearby' || currentAnimal?.id !== animal.id;
+        
         proximityState = 'nearby';
         currentAnimal = animal;
         
@@ -2169,10 +2231,10 @@
         }
         
         // Show proximity notification at top of screen
-        showNearbyNotifications(animal, distance);
+        showNearbyNotifications(animal, distance, isNewNearbyEntry);
     }
     
-    function showNearbyNotifications(animal, distance) {
+    function showNearbyNotifications(animal, distance, isNewEntry = true) {
         // Hide animal nearby popup when not in range
         if (animalNearbyPopup) {
             hideAnimalNearbyPopup();
@@ -2185,10 +2247,34 @@
             proximityNotification.className = 'proximity-notification nearby show';
         }
         
+        // Play detect tone only when entering nearby state (not when already in it)
+        if (isNewEntry) {
+            playDetectTone();
+        }
+        
         // Keep old button for backwards compatibility (hidden)
         if (openCameraBtn) {
             openCameraBtn.classList.remove('show');
             openCameraBtn.disabled = true;
+        }
+    }
+    
+    function playDetectTone() {
+        // Check if audio is enabled before playing
+        const audioEnabled = (typeof window.isAudioEnabled === 'function') ? window.isAudioEnabled() : true;
+        
+        if (!audioEnabled) return;
+        
+        try {
+            const audioObj = ensureDetectToneAudio();
+            if (audioObj) {
+                audioObj.currentTime = 0; // Reset to start
+                audioObj.play().catch(err => {
+                    console.log('DetectTone audio play failed:', err);
+                });
+            }
+        } catch (err) {
+            console.log('DetectTone audio error:', err);
         }
     }
 
@@ -2804,6 +2890,19 @@
 
     // Initialize on DOM ready
     document.addEventListener('DOMContentLoaded', () => {
+        // Prime audio on any user interaction (touch or click)
+        // This ensures audio is ready when proximity notifications appear
+        const primeOnInteraction = () => {
+            if (!audioPrimed) {
+                primeAudio();
+            }
+        };
+        
+        // Prime audio on various user interactions
+        document.addEventListener('touchstart', primeOnInteraction, { once: true, passive: true });
+        document.addEventListener('click', primeOnInteraction, { once: true, passive: true });
+        document.addEventListener('touchend', primeOnInteraction, { once: true, passive: true });
+        
         // Prevent page-level pinch zoom and double-tap zoom
         // Allow map container to handle its own touch events
         let lastTouchEnd = 0;

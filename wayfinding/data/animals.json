@@ -17,7 +17,14 @@
         "scale": "0.7 0.7 0.7",
         "rotation": "0 0 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "peacock",
+        "name": "Peacock Spotter",
+        "icon": "../assets/badges/icons/peacock-badge.svg",
+        "description": "You found the magnificent peacock! A true explorer of the Horniman grounds.",
+        "gamePath": "../games/proud-photographer/index.html"
+      }
     },
     {
       "id": "walrus-home",
@@ -36,7 +43,14 @@
         "scale": "0.7 0.7 0.7",
         "rotation": "0 0 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "walrus-ar",
+        "name": "Walrus Finder",
+        "icon": "../assets/badges/icons/walrus-badge.svg",
+        "description": "You discovered the walrus! Great tracking skills on your adventure.",
+        "gamePath": "../games/walrus-feeder/index.html"
+      }
     },
     {
       "id": "koala-1",
@@ -55,7 +69,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "koala",
+        "name": "Koala Discoverer",
+        "icon": "../assets/badges/icons/Koala.svg",
+        "description": "You found the koala! Your keen eye spotted this hidden treasure."
+      }
     },
     {
       "id": "bee-1",
@@ -74,7 +94,14 @@
         "scale": "2 2 2",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "bee-ar",
+        "name": "Bee Hunter",
+        "icon": "../assets/badges/icons/bee-badge.svg",
+        "description": "You found the bee! A tiny but important discovery on your journey.",
+        "gamePath": "../games/sunflower-planter/index.html"
+      }
     },
     {
       "id": "clownfish-1",
@@ -93,7 +120,14 @@
         "scale": "10 10 10",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "clownfish-ar",
+        "name": "Clownfish Seeker",
+        "icon": "../assets/badges/icons/clownfish-badge.svg",
+        "description": "You found the clownfish! A colorful addition to your collection.",
+        "gamePath": "../games/anemone-cleaning/index.html"
+      }
     },
     {
       "id": "platypus-1",
@@ -112,7 +146,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "platypus",
+        "name": "Platypus Explorer",
+        "icon": "../assets/badges/icons/platypus.svg",
+        "description": "You found the platypus! One of nature's most unique creatures."
+      }
     },
     {
       "id": "cephalopod-1",
@@ -129,10 +169,15 @@
       "model": {
         "url": "./assets/model/cephalopod.glb",
         "scale": "3 3 3",
-        "scale": "3 3 3",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "cephalopod",
+        "name": "Cephalopod Collector",
+        "icon": "../assets/badges/icons/Shelled Cephalopod.svg",
+        "description": "You found the cephalopod! A fascinating marine discovery."
+      }
     },
     {
       "id": "stag_beetle-1",
@@ -151,7 +196,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "stag-beetle",
+        "name": "Beetle Spotter",
+        "icon": "../assets/badges/icons/Stag Beetle.svg",
+        "description": "You found the stag beetle! A small but impressive find."
+      }
     },
     {
       "id": "snowy_owl-1",
@@ -170,7 +221,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "snowy-owl",
+        "name": "Owl Watcher",
+        "icon": "../assets/badges/icons/snowy owl.svg",
+        "description": "You found the snowy owl! A wise and majestic discovery."
+      }
     },
     {
       "id": "orangutan-1",
@@ -189,7 +246,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "orangutan",
+        "name": "Orangutan Tracker",
+        "icon": "../assets/badges/icons/orangutan.svg",
+        "description": "You found the orangutan! A great ape discovery on your adventure."
+      }
     },
     {
       "id": "Jellyfish-1",
@@ -208,7 +271,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "jellyfish-ar",
+        "name": "Jellyfish Finder",
+        "icon": "../assets/badges/icons/jellyfish-badge.svg",
+        "description": "You found the jellyfish! A graceful and mesmerizing discovery."
+      }
     },
     {
       "id": "robin-1",
@@ -227,7 +296,13 @@
         "scale": "10 10 10",
         "rotation": "0 -90 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "robin",
+        "name": "Robin Seeker",
+        "icon": "../assets/badges/icons/Robin.svg",
+        "description": "You found the robin! A cheerful bird to add to your collection."
+      }
     },
     {
       "id": "velociraptor-1",
@@ -246,7 +321,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "velociraptor",
+        "name": "Velociraptor Hunter",
+        "icon": "../assets/badges/icons/velociraptor-badge.svg",
+        "description": "You found the velociraptor! A prehistoric predator discovery."
+      }
     },
     {
       "id": "fox-1",
@@ -265,7 +346,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "fox",
+        "name": "Fox Finder",
+        "icon": "../assets/badges/icons/fox-badge.svg",
+        "description": "You found the fox! This clever creature enjoys sneaking through gardens at night."
+      }
     },
     {
       "id": "puffin-1",
@@ -284,7 +371,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "puffin",
+        "name": "Puffin Spotter",
+        "icon": "../assets/badges/icons/puffin-badge.svg",
+        "description": "You found the puffin! These seabirds spend much of their life hunting for fish at sea."
+      }
     },
     {
       "id": "tiger_cub-1",
@@ -303,7 +396,13 @@
         "scale": "1.5 1.5 1.5",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "tiger-cub",
+        "name": "Tiger Cub Finder",
+        "icon": "../assets/badges/icons/tiger_cub-badge.svg",
+        "description": "You found the tiger cub! Playful and curious, this little cub is learning the ways of the jungle."
+      }
     },
     {
       "id": "grass_snake-1",
@@ -322,7 +421,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "grass-snake",
+        "name": "Snake Spotter",
+        "icon": "../assets/badges/icons/grass snake-badge.svg",
+        "description": "You found the grass snake! Experts at slithering and sliding around, grass snakes are also great swimmers."
+      }
     },
     {
       "id": "dodo-1",
@@ -341,7 +446,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "dodo",
+        "name": "Dodo Discoverer",
+        "icon": "../assets/badges/icons/dodo-badge.svg",
+        "description": "You found the dodo! Large and flightless, this extinct bird is related to pigeons."
+      }
     },
     {
       "id": "ostrich-1",
@@ -360,7 +471,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "ostrich",
+        "name": "Ostrich Watcher",
+        "icon": "../assets/badges/icons/ostrich-badge.svg",
+        "description": "You found the ostrich! The fastest bird on land, ostriches are always ready to dash across the plains."
+      }
     },
     {
       "id": "crocodile-1",
@@ -379,7 +496,13 @@
         "scale": "0.5 0.5 0.5",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "crocodile",
+        "name": "Crocodile Finder",
+        "icon": "../assets/badges/icons/crocodile-badge.svg",
+        "description": "You found the Nile Crocodile! Just don't get in the way of its strong bite - one of the strongest bites in the animal kingdom!"
+      }
     },
     {
       "id": "butterfly-1",
@@ -398,7 +521,13 @@
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
-      "ping": { "cooldownMinutes": 3 }
+      "ping": { "cooldownMinutes": 3 },
+      "badge": {
+        "id": "butterfly",
+        "name": "Butterfly Spotter",
+        "icon": "../assets/badges/icons/butterfly-badge.svg",
+        "description": "You found the butterfly! A beautiful and delicate discovery."
+      }
     }
   ],
   "gameBadges": [

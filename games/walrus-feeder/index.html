@@ -388,7 +388,47 @@
       window.top.location.href = '../../badges.html';
     }
     
-    function showBadgeCollection() {
+    // Load badge data from JSON file
+    async function loadBadgeData(badgeId) {
+      try {
+        // Get environment from localStorage (set by wayfinding page)
+        let environment = 'production';
+        try {
+          const saved = localStorage.getItem('wayfinding-environment');
+          if (saved === 'testing' || saved === 'production') {
+            environment = saved;
+          }
+        } catch (_) {
+          // localStorage not available, use default
+        }
+        
+        const jsonFile = environment === 'testing' ? '../../wayfinding/data/testing.json' : '../../wayfinding/data/animals.json';
+        const res = await fetch(jsonFile, { cache: 'no-cache' });
+        const cfg = await res.json();
+        const gameBadges = Array.isArray(cfg.gameBadges) ? cfg.gameBadges : [];
+        
+        // Find the badge by ID
+        const badge = gameBadges.find(b => b.id === badgeId);
+        if (badge) {
+          // Adjust icon path - JSON paths are relative to wayfinding, we need relative to games folder
+          let iconPath = badge.icon;
+          if (iconPath.startsWith('../assets/')) {
+            iconPath = '../../' + iconPath.substring(3); // Remove '../' and add '../../'
+          }
+          
+          return {
+            name: badge.name,
+            description: badge.description,
+            icon: iconPath
+          };
+        }
+      } catch (e) {
+        console.warn('Error loading badge data from JSON:', e);
+      }
+      return null;
+    }
+
+    async function showBadgeCollection() {
       // Play TaDA celebration sound
       if (window.AudioManager) {
         window.AudioManager.playSound('tada').catch(error => {
@@ -406,6 +446,26 @@
           collectedBadges.push('walrus');
           localStorage.setItem('collectedBadges', JSON.stringify(collectedBadges));
         }
+      }
+      
+      // Load badge data from JSON
+      const badgeData = await loadBadgeData('walrus');
+      
+      // Update badge splash icon
+      const splashIcon = document.querySelector('#badgeSplash .splash-badge-icon');
+      if (badgeData && splashIcon) {
+        splashIcon.src = badgeData.icon;
+      }
+      
+      // Update badge collection detail screen
+      if (badgeData) {
+        const detailIcon = document.querySelector('#badgeCollection .badge-detail-icon');
+        const detailName = document.querySelector('#badgeCollection .badge-name');
+        const detailDescription = document.querySelector('#badgeCollection .badge-description');
+        
+        if (detailIcon) detailIcon.src = badgeData.icon;
+        if (detailName) detailName.textContent = badgeData.name;
+        if (detailDescription) detailDescription.textContent = badgeData.description;
       }
       
       // Hide the game complete popup
