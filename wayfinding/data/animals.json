@@ -71,7 +71,7 @@
       },
       "model": {
         "url": "./assets/model/bee.glb",
-        "scale": "20 20 20",
+        "scale": "2 2 2",
         "rotation": "0 180 0"
       },
       "ping": { "cooldownMinutes": 3 }
