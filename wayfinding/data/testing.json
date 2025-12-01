@@ -196,7 +196,7 @@
       "scientificName": "Moon Jellyfish",
       "description": "Moon Jellyfish go with the flow on the ocean currents, eating tiny prey which drift into their short tentacles.",
       "badgeDescription": "Nice job, you found the jellyfish! It goes with the flow, following the movement of the ocean's currents.",
-      "location": { "lat": 55.747426629351544,"lng": -4.644616205145255 },
+      "location": { "lat": 55.747910920637736, "lng": -4.643848112834773 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/jellyfish.svg",
@@ -234,7 +234,7 @@
       "scientificName": "Velociraptor",
       "description": "Velociraptors had great vision, sharp claws, and were very fast, making them excellent hunters.",
       "badgeDescription": "Nice job, you found the velociraptor! These feathered dinosaurs were fast as a flash, making them great hunters.",
-      "location": { "lat": 55.749, "lng": -4.645 },
+      "location": { "lat":55.74819469705947,  "lng": -4.643983900706268 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/velociraptor.svg",
@@ -253,7 +253,7 @@
       "scientificName": "European red fox",
       "description": "The red fox often lives near cities, where there are fewer predators and more food available.",
       "badgeDescription": "Nice job, you found the fox! This clever creature enjoys sneaking through gardens at night.",
-      "location": { "lat": 55.750, "lng": -4.646 },
+      "location": { "lat": 55.74898874138705,  "lng": -4.642603110211279 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/fox.svg",
@@ -272,7 +272,7 @@
       "scientificName": "Atlantic Puffin",
       "description": "Puffins are excellent at flying and swimming, and use their wings as flippers when they're underwater.",
       "badgeDescription": "Nice job, you found the puffin! These seabirds spend much of their life hunting for fish at sea.",
-      "location": { "lat": 55.751, "lng": -4.647 },
+      "location": { "lat": 55.74855222510373,  "lng": -4.642240313994647 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/puffin.svg",
@@ -291,7 +291,7 @@
       "scientificName": "Tiger Panthera tigris",
       "description": "Newborn tiger cubs are born blind, and don't open their eyes for about two weeks!",
       "badgeDescription": "Nice job, you found the tiger cub! Playful and curious, this little cub is learning the ways of the jungle.",
-      "location": { "lat": 55.752, "lng": -4.648 },
+      "location": { "lat": 55.74813740951522,  "lng": -4.643478677468369 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/tiger_cub.svg",
@@ -310,7 +310,7 @@
       "scientificName": "Natrix Natrix",
       "description": "Grass snakes eat frogs and newts, which they swallow whole and often while still alive!",
       "badgeDescription": "Nice job, you found the grass snake! Experts at slithering and sliding around, grass snakes are also great swimmers.",
-      "location": { "lat": 55.753, "lng": -4.649 },
+      "location": { "lat": 55.74813580169685,  "lng": -4.644914150725167 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/grass snake.svg",
@@ -329,7 +329,7 @@
       "scientificName": "Raphus cucullatus",
       "description": "Today dodos are extinct, but they once were a flightless bird that lived in Mauritius, off the coast of Africa.",
       "badgeDescription": "Nice job, you found the dodo! Large and flightless, this extinct bird is related to pigeons.",
-      "location": { "lat": 55.754, "lng": -4.650 },
+      "location": { "lat": 55.74781768375782,  "lng": -4.644615027649935 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/dodo.svg",
@@ -348,7 +348,7 @@
       "scientificName": "Common ostrich struthio camelus",
       "description": "Ostriches might not be able to fly, but they can run twice as fast as a human, and have a very strong kick.",
       "badgeDescription": "Nice job, you found the ostrich! The fastest bird on land, ostriches are always ready to dash across the plains.",
-      "location": { "lat": 55.755, "lng": -4.651 },
+      "location": { "lat": 55.74745193475033,  "lng": -4.643929967211002 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/ostrich.svg",
@@ -367,7 +367,7 @@
       "scientificName": "Nile crocodile",
       "description": "Crocodiles have one of the strongest bites in the animal kingdom, and can eat half their body weight in one meal.",
       "badgeDescription": "Nice job, you found the Nile Crocodile! Just don't get in the way of its strong bite - one of the strongest bites in the animal kingdom!",
-      "location": { "lat": 55.756, "lng": -4.652 },
+      "location": { "lat": 55.747943271481645,  "lng": -4.643971070837338 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/crocodile.svg",
@@ -375,7 +375,7 @@
       },
       "model": {
         "url": "./assets/model/crocodile.glb",
-        "scale": "1 1 1",
+        "scale": "0.5 0.5 0.5",
         "rotation": "0 180 0"
       },
       "ping": { "cooldownMinutes": 3 }
@@ -386,7 +386,7 @@
       "scientificName": "Butterfly",
       "description": "Butterflies are beautiful insects that go through metamorphosis.",
       "badgeDescription": "Nice job, you found the butterfly! A beautiful and delicate discovery.",
-      "location": { "lat": 55.757, "lng": -4.653 },
+      "location": { "lat": 55.74760547475324,  "lng": -4.643106239834881 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/butterfly.svg",

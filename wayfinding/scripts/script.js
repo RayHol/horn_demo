@@ -673,7 +673,7 @@ function renderPlaces(places) {
         model.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
 
         // Defer GLTF load until GPS appears stable; append entity immediately (hidden by lack of model)
-        model.setAttribute('animation-mixer', '');
+        model.setAttribute('animation-mixer', 'clip: *;');
 
         // New behavior: if active (enabled), tapping collects badge
         if (actionButton) {
@@ -749,10 +749,36 @@ function renderPlaces(places) {
             waitForStableGPS(cameraGps, { sampleCount: 3, maxDriftMeters: 2.0, maxAccuracyMeters: 30, timeoutMs: 3000 }, function () {
                 setModel(models[modelIndex], model);
                 model.addEventListener('model-loaded', function () {
+                    // Get animations from the loaded model and play the first one automatically
+                    const gltfModel = model.object3D;
+                    let animationClip = null;
+                    
+                    // Traverse the model to find animations
+                    gltfModel.traverse(function(node) {
+                        if (node.animations && node.animations.length > 0 && !animationClip) {
+                            animationClip = node.animations[0].name;
+                        }
+                    });
+                    
+                    // Play the first animation found, or use default behavior
+                    if (animationClip) {
+                        model.setAttribute('animation-mixer', {
+                            clip: animationClip,
+                            loop: 'repeat',
+                            timeScale: 1
+                        });
+                    } else {
+                        // Fallback: try without specifying clip (should play first animation)
+                        model.setAttribute('animation-mixer', {
+                            loop: 'repeat',
+                            timeScale: 1
+                        });
+                    }
+                    
                     checkInitialVisibility();
-                    isLoading = false; // Mark loading as complete
+                    isLoading = false;
                     setTimeout(function() {
-                        hideLoader(); // This will hide the loader and set text appropriately
+                        hideLoader();
                     }, 100);
                 }, { once: true });
             });

@@ -25,7 +25,7 @@
       "scientificName": "Atlantic walrus",
       "description": "Walruses spend most of their lives in very cold waters, migrating with floating sea ice to find food.",
       "badgeDescription": "Nice job, you found the walrus! This blubber lover eats lots of snacks to stay warm in the cold winter.",
-      "location": { "lat": 51.4412995380551, "lng": -0.061731048122385 },
+      "location": { "lat": 51.44318941916975,  "lng": -0.06268936838756291 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/walrus.svg",
@@ -101,7 +101,7 @@
       "scientificName": "Platypus",
       "description": "Even though Platypuses are mammals, they lay eggs which is very rare for mammals.",
       "badgeDescription": "Nice job, you found the platypus! With a bill like a duck and a tail like a beaver, the platypus is a unique looking mammal!",
-      "location": { "lat": 51.44389,  "lng":  -0.063 },
+      "location": { "lat": 51.44354759824092, "lng": -0.06261340197819894 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/platypus.svg",
@@ -128,7 +128,8 @@
       },
       "model": {
         "url": "./assets/model/cephalopod.glb",
-        "scale": "1 1 1",
+        "scale": "3 3 3",
+        "scale": "3 3 3",
         "rotation": "0 180 0"
       },
       "ping": { "cooldownMinutes": 3 }
@@ -139,7 +140,7 @@
       "scientificName": "Lucanus cervus",
       "description": "Stag beetles spend most of their life as a grub underground eating decomposing wood.",
       "badgeDescription": "Nice job, you found the stag beetle! Male stag beetles use their impressive jaws to fight one another.",
-      "location": { "lat": 51.442491717769016, "lng": -0.06372508240364229 },
+      "location": { "lat": 51.44230670293039,  "lng": -0.06326604333007238 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/stag_beetle.svg",
@@ -215,7 +216,7 @@
       "scientificName": "European robin",
       "description": "Despite their cute appearance, robins are fiercely territorial and do their best to scare off intruders with their loud call.",
       "badgeDescription": "Nice job, you found the European robin! With its bright red chest and distinct call, robins are easy to spot.",
-      "location": { "lat":51.44222732926731, "lng":  -0.06060150197770573 },
+      "location": { "lat":51.44220806502314,  "lng":  -0.060798411043083166 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/european_robin.svg",
@@ -234,11 +235,11 @@
       "scientificName": "Velociraptor",
       "description": "Velociraptors had great vision, sharp claws, and were very fast, making them excellent hunters.",
       "badgeDescription": "Nice job, you found the velociraptor! These feathered dinosaurs were fast as a flash, making them great hunters.",
-      "location": { "lat": 51.443, "lng": -0.064 },
+      "location": { "lat": 51.44078842742922,  "lng": -0.06185855188358537 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/velociraptor.svg",
-        "found": "../assets/animals/found/velocirapton.svg"
+        "found": "../assets/animals/found/velociraptor.svg"
       },
       "model": {
         "url": "./assets/model/velociraptor.glb",
@@ -253,7 +254,7 @@
       "scientificName": "European red fox",
       "description": "The red fox often lives near cities, where there are fewer predators and more food available.",
       "badgeDescription": "Nice job, you found the fox! This clever creature enjoys sneaking through gardens at night.",
-      "location": { "lat": 51.444, "lng": -0.065 },
+      "location": { "lat": 51.45164204194204,  "lng": -0.07159891395864079 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/fox.svg",
@@ -291,11 +292,11 @@
       "scientificName": "Tiger Panthera tigris",
       "description": "Newborn tiger cubs are born blind, and don't open their eyes for about two weeks!",
       "badgeDescription": "Nice job, you found the tiger cub! Playful and curious, this little cub is learning the ways of the jungle.",
-      "location": { "lat": 51.446, "lng": -0.067 },
+      "location": { "lat": 51.44191382185362, "lng":  -0.06075281348822714 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/tiger_cub.svg",
-        "found": "../assets/animals/found/tiger cub.svg"
+        "found": "../assets/animals/found/tiger_cub.svg"
       },
       "model": {
         "url": "./assets/model/tiger_cub.glb",
@@ -329,7 +330,7 @@
       "scientificName": "Raphus cucullatus",
       "description": "Today dodos are extinct, but they once were a flightless bird that lived in Mauritius, off the coast of Africa.",
       "badgeDescription": "Nice job, you found the dodo! Large and flightless, this extinct bird is related to pigeons.",
-      "location": { "lat": 51.448, "lng": -0.069 },
+      "location": { "lat": 51.44099294753119,"lng":  -0.06345359946971237 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/dodo.svg",
@@ -367,7 +368,7 @@
       "scientificName": "Nile crocodile",
       "description": "Crocodiles have one of the strongest bites in the animal kingdom, and can eat half their body weight in one meal.",
       "badgeDescription": "Nice job, you found the Nile Crocodile! Just don't get in the way of its strong bite - one of the strongest bites in the animal kingdom!",
-      "location": { "lat": 51.450, "lng": -0.071 },
+      "location": { "lat": 51.44134372031686,  "lng":  -0.062037591611069066 },
       "radiusMeters": 10,
       "icon": {
         "shadow": "../assets/animals/shadows/crocodile.svg",
@@ -375,7 +376,7 @@
       },
       "model": {
         "url": "./assets/model/crocodile.glb",
-        "scale": "1 1 1",
+        "scale": "0.5 0.5 0.5",
         "rotation": "0 180 0"
       },
       "ping": { "cooldownMinutes": 3 }
