@@ -94,6 +94,43 @@ body {
     transition: none;
 }
 
+/* Mapbox overlay for route drawing */
+.mapbox-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Allow clicks to pass through to map container */
+    z-index: 150; /* Above map image but below user location and hotspots */
+    overflow: hidden;
+    background: transparent !important;
+}
+
+.mapbox-overlay .mapboxgl-map {
+    pointer-events: none;
+    background: transparent !important;
+}
+
+.mapbox-overlay .mapboxgl-canvas-container {
+    pointer-events: none;
+    background: transparent !important;
+}
+
+.mapbox-overlay .mapboxgl-canvas {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Force all Mapbox internal elements to be transparent */
+.mapbox-overlay * {
+    background-color: transparent !important;
+}
+
+.mapbox-overlay .mapboxgl-ctrl {
+    display: none !important;
+}
+
 /* User location accuracy circle */
 .user-location-accuracy-circle {
     position: absolute;

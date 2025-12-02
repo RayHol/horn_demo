@@ -9,6 +9,44 @@
     <link rel="preload" href="../assets/fonts/Amatic-Bold.ttf" as="font" type="font/ttf" crossorigin>
     <link rel="stylesheet" href="./scripts/style.css">
     <link rel="stylesheet" href="./scripts/wayfinding.css">
+    
+    <!-- Mapbox GL JS CSS -->
+    <link rel="preconnect" href="https://api.mapbox.com" crossorigin>
+    <link id="mapbox-css" rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css">
+    <script>
+      // Ensure Mapbox CSS is actually applied; if not, inject a fallback.
+      (function ensureMapboxCSS(){
+        function hasMapboxCSS(){
+          try {
+            return Array.from(document.styleSheets).some(ss => (ss.href||"").includes("mapbox-gl.css"));
+          } catch { return false; }
+        }
+
+        const link = document.getElementById('mapbox-css');
+        link.addEventListener('error', function () {
+          var alt = document.createElement('link');
+          alt.rel = 'stylesheet';
+          alt.href = 'https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.css';
+          document.head.appendChild(alt);
+          console.warn('[Mapbox] Primary CSS failed — using fallback CDN.');
+        });
+
+        function lateCheck(){
+          if (!hasMapboxCSS()) {
+            var alt = document.createElement('link');
+            alt.rel = 'stylesheet';
+            alt.href = 'https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.css';
+            document.head.appendChild(alt);
+            console.warn('[Mapbox] No Mapbox CSS detected — injected fallback.');
+          }
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', lateCheck);
+        } else {
+          lateCheck();
+        }
+      })();
+    </script>
 </head>
 <body>
     <button class="back-button" id="backButton" aria-label="Back to menu">
@@ -71,7 +109,7 @@
         <div class="instructions-content">
             <button class="boundary-warning-close" id="boundaryWarningClose">✕</button>
             <h2>Out of bounds</h2>
-            <p class="boundary-warning-message">There are no animals here! Return to the garden grounds to continue your search.</p>
+            <p class="boundary-warning-message">There are no animals here!Return to the garden grounds to continue your search.</p>
         </div>
     </div>
 
@@ -113,6 +151,8 @@
         <div class="user-location-dot" id="userLocationDot"></div>
         <div class="user-location-heading" id="userLocationHeading"></div>
         <div id="animalHotspots"></div>
+        <!-- Mapbox overlay for route drawing -->
+        <div id="mapboxOverlay" class="mapbox-overlay"></div>
     </div>
 
     <!-- Animal Detail Popup (slides in from bottom) -->
@@ -144,6 +184,12 @@
             </button>
             <h2 class="animal-detail-title" id="directionsTitle">0M AWAY</h2>
             <p class="animal-detail-message" id="directionsMessage">Your route is ready. Head to the marked area to scan this animal.</p>
+            <div class="animal-detail-buttons">
+                <button class="animal-detail-btn directions-btn" id="directionsClearRoute">
+                    <img src="./assets/ui/Directions.svg" alt="Clear Route" class="btn-icon">
+                    <span>Clear Route</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -171,8 +217,24 @@
     <script src="../customer-io-helper.js"></script>
     <!-- Customer.io snippet will go here when available -->
     
+    <!-- Mapbox GL JS (with fallback) -->
+    <script id="mapbox-js" src="https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.js" defer></script>
+    <script>
+      (function(){
+        const primary = document.getElementById('mapbox-js');
+        primary.addEventListener('error', function(){
+          console.warn('[Mapbox] Primary JS failed — trying fallback CDN.');
+          var s = document.createElement('script');
+          s.src = 'https://unpkg.com/mapbox-gl@3.14.0/dist/mapbox-gl.js';
+          s.defer = true;
+          document.head.appendChild(s);
+        });
+      })();
+    </script>
+    
     <script src="../scripts/audio-manager-main.js"></script>
     <script src="./scripts/map-config.js"></script>
+    <script src="./scripts/mapbox-directions.js"></script>
     <script src="./scripts/wayfinding.js"></script>
 </body>
 </html>

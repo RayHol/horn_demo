@@ -1152,8 +1152,9 @@
         }
     }
 
-    // Global map instance
+    // Global map instance (exposed globally for Mapbox sync)
     let mapInstance = null;
+    window.mapInstance = null; // Will be set when mapInstance is created
 
     // Convert GPS to screen coordinates
     // @param {boolean} forUserLocation - If true, uses bypass mode for user location when enabled
@@ -1578,6 +1579,11 @@
     function showAnimalDetailPopup(animal) {
         if (!animal || !animalDetailPopup) return;
         
+        // Clear any existing route when showing a new animal
+        if (window.MapboxDirections && window.MapboxDirections.isInitialized()) {
+            window.MapboxDirections.clearRoute();
+        }
+        
         const isFound = isAnimalFound(animal);
         
         // Update title
@@ -1646,7 +1652,7 @@
     }
 
     // Handle Directions button click
-    function handleDirectionsClick(animalId) {
+    async function handleDirectionsClick(animalId) {
         if (!animalId) return;
         
         const animal = animals.find(a => a.id === animalId);
@@ -1670,17 +1676,66 @@
             distanceText = `${distanceKm}KM AWAY`;
         }
         
-        // Update directions popup content
+        // Update directions popup content with distance (will be updated with route info if available)
         if (directionsTitle) {
             directionsTitle.textContent = distanceText;
         }
         
         if (directionsMessage) {
-            directionsMessage.textContent = "Your route is ready. Head to the marked area to scan this animal.";
+            directionsMessage.textContent = "Calculating route...";
         }
         
         // Close detail popup first
         hideAnimalDetailPopup();
+        
+        // Try to fetch route from Mapbox if user location is available
+        let routeFetched = false;
+        if (currentUserLocation && currentUserLocation.lat && currentUserLocation.lng && 
+            window.MapboxDirections && window.MapboxDirections.isInitialized()) {
+            try {
+                const origin = [currentUserLocation.lng, currentUserLocation.lat];
+                const destination = [animal.location.lng, animal.location.lat];
+                
+                const route = await window.MapboxDirections.getRoute(origin, destination);
+                
+                if (route && route.distance && route.duration) {
+                    // Update popup with route information
+                    const routeDistance = window.MapboxDirections.formatDistance(route.distance);
+                    const routeDuration = window.MapboxDirections.formatDuration(route.duration);
+                    
+                    if (directionsTitle) {
+                        directionsTitle.textContent = `${routeDistance} • ${routeDuration}`;
+                    }
+                    
+                    if (directionsMessage) {
+                        directionsMessage.textContent = "Your route is ready. Head to the marked area to scan this animal.";
+                    }
+                    
+                    routeFetched = true;
+                }
+            } catch (error) {
+                console.warn('[Directions] Failed to fetch route:', error);
+                // Fall back to distance-only display with helpful message
+                if (directionsMessage) {
+                    if (error.message && error.message.includes('timeout')) {
+                        directionsMessage.textContent = "Route calculation timed out. Showing direct distance instead.";
+                    } else if (error.message && error.message.includes('No route')) {
+                        directionsMessage.textContent = "No walking route found. Showing direct distance instead.";
+                    } else {
+                        directionsMessage.textContent = "Unable to calculate route. Showing direct distance instead.";
+                    }
+                }
+            }
+        } else {
+            // No user location or Mapbox not initialized - show distance only
+            if (directionsMessage) {
+                if (!currentUserLocation || !currentUserLocation.lat || !currentUserLocation.lng) {
+                    directionsMessage.textContent = "Enable location services to get walking directions.";
+                } else {
+                    directionsMessage.textContent = "Your route is ready. Head to the marked area to scan this animal.";
+                }
+            }
+        }
         
         // Wait for detail popup to close, then show directions popup
         setTimeout(() => {
@@ -1713,6 +1768,11 @@
         setTimeout(() => {
             if (directionsPopup.classList.contains('show')) return; // If shown again, don't hide
             directionsPopup.classList.add('hidden');
+            
+            // Auto-clear route when popup is closed
+            if (window.MapboxDirections && window.MapboxDirections.isInitialized()) {
+                window.MapboxDirections.clearRoute();
+            }
         }, 300); // Match CSS transition duration
         
         // Trigger haptic feedback
@@ -2957,6 +3017,22 @@
         
         // Initialize map
         mapInstance = new InteractiveMap();
+        window.mapInstance = mapInstance; // Expose globally for Mapbox sync
+        
+        // Initialize Mapbox Directions overlay
+        // Wait for Mapbox to load, then initialize with current GPS bounds
+        function initMapboxDirections() {
+            if (window.MapboxDirections && MapConfig && MapConfig.gpsBounds) {
+                window.MapboxDirections.init(MapConfig.gpsBounds);
+            } else if (window.mapboxgl) {
+                // Mapbox loaded but directions module not ready yet
+                setTimeout(initMapboxDirections, 100);
+            } else {
+                // Mapbox not loaded yet, wait a bit longer
+                setTimeout(initMapboxDirections, 200);
+            }
+        }
+        initMapboxDirections();
         
         // Initialize orientation manager
         new OrientationManager();
@@ -3253,6 +3329,24 @@
         if (directionsClose) {
             directionsClose.addEventListener('click', () => {
                 hideDirectionsPopup();
+            });
+        }
+
+        // Setup directions popup clear route button
+        const directionsClearRoute = document.getElementById('directionsClearRoute');
+        if (directionsClearRoute) {
+            directionsClearRoute.addEventListener('click', () => {
+                if (window.MapboxDirections && window.MapboxDirections.isInitialized()) {
+                    window.MapboxDirections.clearRoute();
+                    // Update message to indicate route cleared
+                    if (directionsMessage) {
+                        directionsMessage.textContent = "Route cleared. Tap Directions again to get a new route.";
+                    }
+                    // Trigger haptic feedback
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('single');
+                    }
+                }
             });
         }
 
