@@ -14,6 +14,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/peacock.glb",
+        "usdz": "../../assets/wayfinding/model/peacock.usdz",
         "scale": "0.7 0.7 0.7",
         "rotation": "0 0 0"
       },
@@ -33,6 +34,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/walrus.glb",
+        "usdz": "../../assets/wayfinding/model/walrus.usdz",
         "scale": "0.7 0.7 0.7",
         "rotation": "0 0 0"
       },
@@ -52,6 +54,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/koala.glb",
+        "usdz": "../../assets/wayfinding/model/koala.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -71,6 +74,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/bee.glb",
+        "usdz": "../../assets/wayfinding/model/bee.usdz",
         "scale": "0.01 0.01 0.01",
         "rotation": "0 180 0"
       },
@@ -90,6 +94,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/clownfish.glb",
+        "usdz": "../../assets/wayfinding/model/clownfish.usdz",
         "scale": "10 10 10",
         "rotation": "0 180 0"
       },
@@ -109,6 +114,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/platypus.glb",
+        "usdz": "../../assets/wayfinding/model/platypus.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -128,6 +134,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/cephalopod.glb",
+        "usdz": "../../assets/wayfinding/model/cephalopod.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -147,6 +154,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/stag_beetle.glb",
+        "usdz": "../../assets/wayfinding/model/stag_beetle.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -166,6 +174,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/snowy_owl.glb",
+        "usdz": "../../assets/wayfinding/model/snowy_owl.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -185,6 +194,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/orangutan.glb",
+        "usdz": "../../assets/wayfinding/model/orangutan.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -204,6 +214,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/jellyfish.glb",
+        "usdz": "../../assets/wayfinding/model/jellyfish.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -223,6 +234,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/robin.glb",
+        "usdz": "../../assets/wayfinding/model/robin.usdz",
         "scale": "10 10 10",
         "rotation": "0 -90 0"
       },
@@ -242,6 +254,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/velociraptor.glb",
+        "usdz": "../../assets/wayfinding/model/velociraptor.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -261,6 +274,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/fox.glb",
+        "usdz": "../../assets/wayfinding/model/fox.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -280,6 +294,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/puffin.glb",
+        "usdz": "../../assets/wayfinding/model/puffin.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -299,6 +314,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/tiger_cub.glb",
+        "usdz": "../../assets/wayfinding/model/tiger_cub.usdz",
         "scale": "1.5 1.5 1.5",
         "rotation": "0 180 0"
       },
@@ -318,6 +334,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/grass_snake.glb",
+        "usdz": "../../assets/wayfinding/model/grass_snake.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -337,6 +354,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/dodo.glb",
+        "usdz": "../../assets/wayfinding/model/dodo.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -356,6 +374,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/ostrich.glb",
+        "usdz": "../../assets/wayfinding/model/ostrich.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
@@ -375,6 +394,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/crocodile.glb",
+        "usdz": "../../assets/wayfinding/model/crocodile.usdz",
         "scale": "0.5 0.5 0.5",
         "rotation": "0 180 0"
       },
@@ -394,6 +414,7 @@
       },
       "model": {
         "url": "../../assets/wayfinding/model/butterfly.glb",
+        "usdz": "../../assets/wayfinding/model/butterfly.usdz",
         "scale": "1 1 1",
         "rotation": "0 180 0"
       },
