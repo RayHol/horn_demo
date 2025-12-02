@@ -115,6 +115,23 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
+            pointer-events: none; /* Allow clicks to pass through to button */
+            z-index: 1;
+        }
+
+        .title-unlock-button {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 50px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            z-index: 2;
+            /* Make it invisible but clickable */
+            opacity: 0;
         }
 
         .hidden {
@@ -728,6 +745,7 @@
         <img src="../assets/Arrow2.png" alt="Back">
     </button>
     <h1 class="title">Animals</h1>
+    <button class="title-unlock-button" id="titleUnlockButton" aria-label="Unlock all animals"></button>
 
     <!-- Animal Grid Container -->
     <div class="animal-grid">
@@ -922,9 +940,49 @@
             }
         }
 
+        // Title tap counter for unlock-all mode
+        let titleTapCount = 0;
+        let titleTapResetTimer = null;
+        const TITLE_TAP_RESET_TIME = 2000; // Reset counter after 2 seconds of no taps
+
+        function setupTitleUnlockButton() {
+            const titleButton = document.getElementById('titleUnlockButton');
+            if (!titleButton) return;
+            
+            titleButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Reset timer if it exists
+                if (titleTapResetTimer) {
+                    clearTimeout(titleTapResetTimer);
+                }
+                
+                titleTapCount++;
+                console.log('Title tapped:', titleTapCount, 'times');
+                
+                // If 4 taps, toggle unlock-all mode
+                if (titleTapCount >= 4) {
+                    toggleUnlockAllAnimals();
+                    titleTapCount = 0;
+                    // Trigger haptic feedback
+                    if (typeof triggerHaptic === 'function') {
+                        triggerHaptic('medium');
+                    }
+                } else {
+                    // Set timer to reset counter if no more taps
+                    titleTapResetTimer = setTimeout(() => {
+                        titleTapCount = 0;
+                        console.log('Title tap counter reset');
+                    }, TITLE_TAP_RESET_TIME);
+                }
+            });
+        }
+
         // Initialize orientation manager when page loads
         document.addEventListener('DOMContentLoaded', async () => {
             new OrientationManager();
+            setupTitleUnlockButton();
             await initializeAnimalCollection();
             addAnimalClickListeners();
             
@@ -1062,12 +1120,74 @@
         }
 
         // Animal Collection System
+        // Testing mode: unlock all animals temporarily
+        let originalCollectedAnimals = null;
+        let isUnlockAllAnimalsMode = false;
+
+        function toggleUnlockAllAnimals() {
+            if (!isUnlockAllAnimalsMode) {
+                // Store original data
+                originalCollectedAnimals = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+                
+                // Animal badge IDs that correspond to animals
+                const animalBadgeIds = ['peacock', 'walrus-ar', 'koala', 'bee-ar', 'clownfish-ar', 'platypus', 'cephalopod', 'stag-beetle', 'snowy-owl', 'orangutan', 'jellyfish-ar', 'robin', 'butterfly', 'crocodile', 'dodo', 'fox', 'grass-snake', 'ostrich', 'puffin', 'tiger-cub', 'velociraptor'];
+                
+                // Temporarily set all animals as collected (don't save to localStorage)
+                sessionStorage.setItem('tempUnlockAllAnimals', 'true');
+                sessionStorage.setItem('originalCollectedAnimals', JSON.stringify(originalCollectedAnimals));
+                sessionStorage.setItem('tempAllAnimals', JSON.stringify(animalBadgeIds));
+                
+                isUnlockAllAnimalsMode = true;
+                console.log('Unlocked all animals for testing');
+                console.log('sessionStorage tempUnlockAllAnimals:', sessionStorage.getItem('tempUnlockAllAnimals'));
+                console.log('sessionStorage tempAllAnimals:', sessionStorage.getItem('tempAllAnimals'));
+                
+                // Re-initialize to show all animals
+                initializeAnimalCollection();
+                
+                // If detail popup is open, refresh it to show unlocked state
+                const popup = document.getElementById('animalDetailPopup');
+                if (popup && !popup.classList.contains('hidden') && currentAnimalId) {
+                    showAnimalDetail(currentAnimalId);
+                }
+            } else {
+                // Restore original data
+                const original = JSON.parse(sessionStorage.getItem('originalCollectedAnimals') || '[]');
+                sessionStorage.removeItem('tempUnlockAllAnimals');
+                sessionStorage.removeItem('originalCollectedAnimals');
+                sessionStorage.removeItem('tempAllAnimals');
+                
+                isUnlockAllAnimalsMode = false;
+                console.log('Restored original animal collection');
+                
+                // Re-initialize to show only original animals
+                initializeAnimalCollection();
+                
+                // If detail popup is open, refresh it to show original state
+                const popup = document.getElementById('animalDetailPopup');
+                if (popup && !popup.classList.contains('hidden') && currentAnimalId) {
+                    showAnimalDetail(currentAnimalId);
+                }
+            }
+        }
+
         async function initializeAnimalCollection() {
             // Load icons from JSON first
             await loadAnimalIconsFromJSON();
             
-            // Check localStorage for collected badges (animals use the same badge IDs)
-            const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+            // Check if we're in unlock-all mode
+            const tempUnlock = sessionStorage.getItem('tempUnlockAllAnimals') === 'true';
+            let collectedBadges;
+            
+            if (tempUnlock) {
+                // Use all animals for testing
+                collectedBadges = JSON.parse(sessionStorage.getItem('tempAllAnimals') || '[]');
+                isUnlockAllAnimalsMode = true;
+            } else {
+                // Use actual collected badges from localStorage
+                collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+                isUnlockAllAnimalsMode = false;
+            }
             
             // Animal badge IDs that correspond to animals (including future animals)
             const animalBadgeIds = ['peacock', 'walrus-ar', 'koala', 'bee-ar', 'clownfish-ar', 'platypus', 'cephalopod', 'stag-beetle', 'snowy-owl', 'orangutan', 'jellyfish-ar', 'robin', 'butterfly', 'crocodile', 'dodo', 'fox', 'grass-snake', 'ostrich', 'puffin', 'tiger-cub', 'velociraptor'];
@@ -1160,16 +1280,72 @@
             // Set current animal ID for 3D viewer
             currentAnimalId = animalId;
             
-            // Check if animal is found
-            const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
-            const isFound = collectedBadges.includes(animalId);
+            // Check if animal is found - check unlock-all mode first
+            // Check both the global variable and sessionStorage for redundancy
+            let isFound = false;
+            
+            // First check the global variable (set by toggleUnlockAllAnimals)
+            if (typeof isUnlockAllAnimalsMode !== 'undefined' && isUnlockAllAnimalsMode === true) {
+                isFound = true;
+                console.log('✓ Unlock-all mode active (global variable) - treating animal as found');
+            } else {
+                // Fallback to sessionStorage check
+                try {
+                    const tempUnlockValue = sessionStorage.getItem('tempUnlockAllAnimals');
+                    const tempUnlock = tempUnlockValue === 'true';
+                    
+                    console.log('showAnimalDetail - animalId:', animalId);
+                    console.log('isUnlockAllAnimalsMode:', typeof isUnlockAllAnimalsMode !== 'undefined' ? isUnlockAllAnimalsMode : 'undefined');
+                    console.log('tempUnlockValue:', tempUnlockValue, 'tempUnlock:', tempUnlock);
+                    
+                    if (tempUnlock) {
+                        // In unlock-all mode, ALL animals are treated as found
+                        isFound = true;
+                        console.log('✓ Unlock-all mode active (sessionStorage) - treating animal as found');
+                    } else {
+                        // Normal mode - get from localStorage
+                        try {
+                            const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+                            isFound = Array.isArray(collectedBadges) && collectedBadges.includes(animalId);
+                            console.log('Normal mode - collectedBadges:', collectedBadges, 'isFound:', isFound);
+                        } catch (e) {
+                            console.warn('Error parsing collectedBadges:', e);
+                            isFound = false;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error accessing sessionStorage:', e);
+                    // Fallback to localStorage check
+                    try {
+                        const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+                        isFound = Array.isArray(collectedBadges) && collectedBadges.includes(animalId);
+                    } catch (e2) {
+                        console.warn('Error parsing collectedBadges:', e2);
+                        isFound = false;
+                    }
+                }
+            }
+            
+            console.log('Final isFound value:', isFound, 'for animal:', animalId);
             
             // Load animal icons and descriptions from JSON
             let animalIconMap = {};
             let animalDescriptionMap = {};
             let animals = [];
             try {
-                const res = await fetch('../data/animals.json', { cache: 'no-cache' });
+                // Get environment from localStorage (set by wayfinding page)
+                let environment = 'production';
+                try {
+                    const saved = localStorage.getItem('wayfinding-environment');
+                    if (saved === 'testing' || saved === 'production') {
+                        environment = saved;
+                    }
+                } catch (_) {
+                    // localStorage not available, use default
+                }
+                
+                const jsonFile = environment === 'testing' ? '../data/testing.json' : '../data/animals.json';
+                const res = await fetch(jsonFile, { cache: 'no-cache' });
                 const cfg = await res.json();
                 animals = Array.isArray(cfg.animals) ? cfg.animals : [];
                 animals.forEach(animal => {
