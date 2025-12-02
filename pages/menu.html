@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animals Everywhere! - Menu</title>
+    
+    <!-- Resource Hints -->
+    <link rel="preload" href="../assets/fonts/BentonSansCompBlackRegular.otf" as="font" type="font/otf" crossorigin>
+    <link rel="preload" href="../assets/HMGLogo-Header.png" as="image">
+    <link rel="preload" href="../assets/HTPBG.png" as="image">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/menu.css">
+    <style>
+        .settings-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .settings-dialog {
+            background: var(--button-bg);
+            border-radius: 24px;
+            padding: 40px;
+            position: relative;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-dialog h2 {
+            font-family: "Amatic SC", sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 20px;
+        }
+
+        .settings-dialog h3 {
+            font-family: "BentonSans", system-ui, sans-serif;
+            font-size: 24px;
+            color: var(--text-color);
+            margin-bottom: 30px;
+        }
+
+        .close-button {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 12px;
+        }
+
+        .close-button img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .settings-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .settings-icon-button {
+            display: flex;
+            height: 56px;
+            padding: 12px 16px;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            border-radius: 12px;
+            border: 1px solid var(--UI-border, #E7D4A3);
+            background: var(--UI-buttonWhite, #FCEFE1);
+            box-shadow: 0 3px 0 0 #E7D4A3;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .settings-icon-button:hover {
+            transform: translateY(1px);
+            box-shadow: 0 2px 0 0 #E7D4A3;
+        }
+
+        .settings-icon-button:active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+        .settings-icon-button.disabled {
+            opacity: 0.4;
+            filter: grayscale(100%);
+            background: #e0e0e0;
+            border-color: #999;
+        }
+
+        .settings-icon-img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .how-to-play-button {
+            background: var(--primary-color);
+            color: var(--cream-text);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-family: 'BentonSans Comp Black', sans-serif;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0px 4px 0px 0px var(--button-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 auto;
+        }
+
+        .how-to-play-button:hover {
+            transform: translateY(2px);
+            box-shadow: 0px 2px 0px 0px var(--button-shadow);
+        }
+
+        .how-to-play-button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* Orientation Warning Overlay */
+        .orientation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .orientation-content {
+            background-color: #FCF6EF;
+            border: 3px solid #E7D4A3;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            max-width: 300px;
+            margin: 1rem;
+            box-shadow: 0px 4px 0px 0px #E7D4A3;
+        }
+
+        .orientation-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: rotateToPortrait 2.5s ease-in-out infinite;
+            transform-origin: 0 100%;
+            display: inline-block;
+        }
+
+        .orientation-content h2 {
+            color: #C14400;
+            font-family: "Amatic SC", sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            margin: 0 0 1rem 0;
+        }
+
+        .orientation-content p {
+            color: #333;
+            font-size: 1.1rem;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        @keyframes rotateToPortrait {
+            0% { transform: rotate(-90deg); opacity: 1; }
+            40% { transform: rotate(0deg); opacity: 1; }
+            60% { transform: rotate(0deg); opacity: 1; }
+            70% { transform: rotate(0deg); opacity: 0; }
+            71% { transform: rotate(-90deg); opacity: 0; }
+            80% { transform: rotate(-90deg); opacity: 1; }
+            100% { transform: rotate(-90deg); opacity: 1; }
+        }
+
+        /* Hidden class for orientation overlay */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Disable scrolling */
+        body {
+            overflow: hidden;
+        }
+
+        /* Position title at top between buttons */
+        .title {
+            position: fixed !important;
+            top: 20px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 5 !important;
+            margin-bottom: 0 !important;
+        }
+
+        /* Adjust content positioning for fixed title */
+        .content-wrapper {
+            padding-top: 80px !important;
+        }
+
+        /* Responsive Design for Menu Page */
+        @media (max-width: 480px) {
+            .title {
+                font-size: 27px !important;
+                margin-bottom: 0 !important;
+            }
+            
+            .subtitle {
+                font-size: 32px !important;
+                margin-bottom: 16px !important;
+            }
+            
+            .description {
+                font-size: 16px !important;
+                margin-bottom: 24px !important;
+            }
+            
+            .button-container {
+                gap: 12px !important;
+                padding: 0 16px !important;
+            }
+            
+            .main-button, .secondary-button, .full-button {
+                font-size: 24px !important;
+                padding: 12px 24px !important;
+            }
+            
+            .button-icon {
+                width: 32px !important;
+                height: 32px !important;
+            }
+            
+            footer {
+                margin-bottom: 100px !important;
+            }
+            
+            .footer-logo {
+                height: 24px !important;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .title {
+                font-size: 27px !important;
+                margin-bottom: 0 !important;
+            }
+            
+            .subtitle {
+                font-size: 28px !important;
+                margin-bottom: 12px !important;
+            }
+            
+            .description {
+                font-size: 14px !important;
+                margin-bottom: 20px !important;
+            }
+            
+            .button-container {
+                gap: 10px !important;
+                padding: 0 12px !important;
+            }
+            
+            .main-button, .secondary-button, .full-button {
+                font-size: 24px !important;
+                padding: 12px 24px !important;
+            }
+            
+            .button-icon {
+                width: 32px !important;
+                height: 32px !important;
+            }
+            
+            footer {
+                margin-bottom: 80px !important;
+            }
+            
+            .footer-logo {
+                height: 20px !important;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .title {
+                margin-bottom: 40px !important;
+            }
+            
+            .subtitle {
+                margin-bottom: 12px !important;
+            }
+            
+            .description {
+                margin-bottom: 16px !important;
+            }
+            
+            .button-container {
+                gap: 8px !important;
+            }
+            
+            footer {
+                margin-bottom: 60px !important;
+            }
+        }
+
+        @media (max-height: 500px) {
+            .title {
+                margin-bottom: 20px !important;
+            }
+            
+            .subtitle {
+                margin-bottom: 8px !important;
+            }
+            
+            .description {
+                margin-bottom: 12px !important;
+            }
+            
+            .button-container {
+                gap: 6px !important;
+            }
+            
+            footer {
+                margin-bottom: 40px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Orientation Warning Overlay -->
+    <div id="orientationOverlay" class="orientation-overlay hidden">
+        <div class="orientation-content">
+            <div class="orientation-icon">📱</div>
+            <h2>Please Rotate Your Device</h2>
+            <p>Hold your device in portrait mode for the best experience</p>
+        </div>
+    </div>
+
+    <div class="menu-container">
+        <button class="settings-button" onclick="showSettings()" aria-label="Settings">
+            <img src="../assets/Settings.png" alt="Settings">
+        </button>
+
+        <button class="back-button" onclick="window.location.href='../index.html'" aria-label="Back to start">
+            <img src="../assets/Arrow.png" alt="Back">
+        </button>
+
+        <div class="content-wrapper">
+            <div class="content-inner">
+                <h1 class="title">ANIMALS<br>EVERYWHERE!</h1>
+                
+                <h2 class="subtitle">HEY <span id="menuNickname">EXPLORER</span>!<br>THE ANIMALS HAVE GOTTEN LOOSE AT THE HORNIMAN!</h2>
+                
+                <p class="description">Locate the creatures and complete mini-games to earn badges and climb the leaderboard!</p>
+
+                <div class="button-container">
+                    <button class="main-button" onclick="window.location.href='wayfinding/wayfinding.html'">
+                        <img src="../assets/search.svg" alt="" class="button-icon">
+                        Find the animals
+                    </button>
+
+                    <div class="button-grid">
+                        <button class="secondary-button" onclick="window.location.href='map.html'">
+                            <img src="../assets/Map.png" alt="" class="button-icon">
+                            Map
+                        </button>
+                        <button class="secondary-button" onclick="window.location.href='badges.html'">
+                            <img src="../assets/Badge1.png" alt="" class="button-icon">
+                            Badges
+                        </button>
+                    </div>
+
+                    <button class="full-button" onclick="window.location.href='animals.html'">
+                        <img src="../assets/Animals.svg" alt="" class="button-icon">
+                        Animals
+                    </button>
+
+                    <button class="full-button" onclick="window.location.href='leaderboard.html'">
+                        <img src="../assets/Leaderboard.png" alt="" class="button-icon">
+                        Leaderboards
+                    </button>
+                </div>
+            </div>
+
+            <footer>
+                <img src="../assets/HMGLogo-Header.png" alt="Horniman Museum & Gardens" class="footer-logo">
+            </footer>
+        </div>
+    </div>
+
+    <!-- Settings Overlay -->
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-dialog">
+            <button class="close-button" onclick="hideSettings()" aria-label="Close settings">
+                <img src="../assets/close_button.png" alt="Close">
+            </button>
+            <h2>Settings</h2>
+            <h3>Hello, <span id="userNickname">Guest</span>!</h3>
+            <div class="settings-controls">
+                <button id="hapticsToggle" class="settings-icon-button" onclick="toggleHapticsSetting()" aria-label="Toggle Haptics">
+                    <img src="../assets/Haptics.png" alt="Haptics" class="settings-icon-img">
+                </button>
+                <button id="audioToggle" class="settings-icon-button" onclick="toggleAudioSetting()" aria-label="Toggle Audio">
+                    <img src="../assets/Unmute.png" alt="Sound" class="settings-icon-img">
+                </button>
+                <button id="musicToggle" class="settings-icon-button" onclick="toggleMusicSetting()" aria-label="Toggle Music">
+                    <img src="../assets/Note.png" alt="Music" class="settings-icon-img">
+                </button>
+            </div>
+            <button class="how-to-play-button" onclick="window.location.href=''">
+                <span>?</span>
+                How to play
+            </button>
+        </div>
+    </div>
+
+    <script src="../scripts/audio-manager-main.js"></script>
+    <script>
+        // Sync badges between collectedBadges and userData.progress.badges
+        function syncBadges() {
+            const userData = JSON.parse(localStorage.getItem('userData') || 'null');
+            const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+            
+            if (userData) {
+                // Ensure progress object exists
+                if (!userData.progress) {
+                    userData.progress = { gamesCompleted: [], badges: [], highScores: {} };
+                }
+                if (!userData.progress.badges) {
+                    userData.progress.badges = [];
+                }
+                
+                // Merge badges: combine both arrays and remove duplicates
+                const allBadges = [...new Set([...collectedBadges, ...userData.progress.badges])];
+                
+                // Update both storages with merged badges
+                localStorage.setItem('collectedBadges', JSON.stringify(allBadges));
+                userData.progress.badges = allBadges;
+                localStorage.setItem('userData', JSON.stringify(userData));
+            } else if (collectedBadges.length > 0) {
+                // If userData doesn't exist but badges do, keep collectedBadges for when user creates account
+                // This maintains backward compatibility
+            }
+        }
+
+        function updateNickname() {
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            const settingsNickname = document.getElementById('userNickname');
+            const menuNickname = document.getElementById('menuNickname');
+            
+            if (userData && userData.nickname) {
+                settingsNickname.textContent = userData.nickname;
+                menuNickname.textContent = userData.nickname;
+            } else {
+                settingsNickname.textContent = 'Guest';
+                menuNickname.textContent = 'EXPLORER';
+            }
+        }
+
+        // Orientation Detection
+        class OrientationManager {
+            constructor() {
+                this.orientationOverlay = document.getElementById('orientationOverlay');
+                
+                // Ensure overlay starts hidden
+                if (this.orientationOverlay) {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+                
+                this.init();
+            }
+            
+            init() {
+                // Check initial orientation
+                this.checkOrientation();
+                
+                // Listen for orientation changes
+                window.addEventListener('orientationchange', () => {
+                    // Small delay to ensure the orientation change is complete
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+                
+                // Also listen for resize events as a backup
+                window.addEventListener('resize', () => {
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+            }
+            
+            checkOrientation() {
+                // Use screen orientation API if available, fallback to window dimensions
+                let isLandscape = false;
+                
+                if (screen.orientation) {
+                    // Use screen orientation API for more accurate detection
+                    isLandscape = screen.orientation.angle === 90 || screen.orientation.angle === 270;
+                } else {
+                    // Fallback to window dimensions with a small tolerance
+                    isLandscape = window.innerWidth > window.innerHeight + 50;
+                }
+                
+                if (isLandscape) {
+                    this.orientationOverlay.classList.remove('hidden');
+                } else {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+            }
+        }
+
+        // Call updateNickname, sync badges, and initialize orientation manager when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            syncBadges();
+            updateNickname();
+            new OrientationManager();
+            // Add haptic feedback to all buttons - wait a bit to ensure haptic system is initialized
+            setTimeout(() => {
+                addHapticToButtons();
+            }, 100);
+        });
+
+        function showSettings() {
+            // Trigger haptic feedback
+            if (typeof triggerHaptic === 'function') {
+                triggerHaptic('single');
+            }
+            document.getElementById('settingsOverlay').style.display = 'flex';
+            updateNickname();
+            updateSettingsToggles();
+        }
+
+        function hideSettings() {
+            // Trigger haptic feedback
+            if (typeof triggerHaptic === 'function') {
+                triggerHaptic('single');
+            }
+            document.getElementById('settingsOverlay').style.display = 'none';
+        }
+
+        function updateSettingsToggles() {
+            // Wait a moment for haptic system to initialize
+            setTimeout(() => {
+                // Update haptics toggle
+                const hapticsToggle = document.getElementById('hapticsToggle');
+                if (hapticsToggle) {
+                    let enabled = true; // default
+                    // First try to get from haptic system directly
+                    if (window.hapticSystem && window.hapticSystem.hapticsEnabled !== undefined) {
+                        enabled = window.hapticSystem.hapticsEnabled;
+                    } else if (typeof isHapticsEnabled === 'function') {
+                        enabled = isHapticsEnabled();
+                    } else {
+                        // Fallback: check localStorage directly
+                        try {
+                            const stored = localStorage.getItem('haptic_hapticsEnabled');
+                            enabled = stored === null ? true : stored === 'true';
+                        } catch (e) {
+                            enabled = true;
+                        }
+                    }
+                    // Remove disabled class first, then add it if needed
+                    hapticsToggle.classList.remove('disabled');
+                    if (!enabled) {
+                        hapticsToggle.classList.add('disabled');
+                    }
+                }
+
+                // Update audio toggle
+                const audioToggle = document.getElementById('audioToggle');
+                if (audioToggle) {
+                    let enabled = true; // default
+                    // Priority 1: Check localStorage directly (most reliable source of truth)
+                    try {
+                        const stored = localStorage.getItem('haptic_audioEnabled');
+                        if (stored !== null) {
+                            enabled = stored === 'true';
+                        } else {
+                            // If not in localStorage, check haptic system
+                            if (window.hapticSystem && window.hapticSystem.audioEnabled !== undefined) {
+                                enabled = window.hapticSystem.audioEnabled;
+                            } else if (typeof isAudioEnabled === 'function') {
+                                enabled = isAudioEnabled();
+                            }
+                        }
+                    } catch (e) {
+                        // Fallback: check haptic system
+                        if (window.hapticSystem && window.hapticSystem.audioEnabled !== undefined) {
+                            enabled = window.hapticSystem.audioEnabled;
+                        } else if (typeof isAudioEnabled === 'function') {
+                            enabled = isAudioEnabled();
+                        }
+                    }
+                    // Remove disabled class first, then add it if needed
+                    audioToggle.classList.remove('disabled');
+                    if (!enabled) {
+                        audioToggle.classList.add('disabled');
+                    }
+                }
+            }, 150); // Slightly longer delay to ensure haptic system is ready
+        }
+
+        function toggleHapticsSetting() {
+            if (typeof toggleHaptics === 'function') {
+                const enabled = toggleHaptics();
+                const hapticsToggle = document.getElementById('hapticsToggle');
+                if (hapticsToggle) {
+                    hapticsToggle.classList.toggle('disabled', !enabled);
+                }
+                // Trigger haptic feedback to show it's working (if enabled)
+                if (enabled && typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
+            } else {
+                // Fallback: toggle localStorage directly
+                try {
+                    const stored = localStorage.getItem('haptic_hapticsEnabled');
+                    const current = stored === null ? true : stored === 'true';
+                    const newValue = !current;
+                    localStorage.setItem('haptic_hapticsEnabled', newValue.toString());
+                    const hapticsToggle = document.getElementById('hapticsToggle');
+                    if (hapticsToggle) {
+                        hapticsToggle.classList.toggle('disabled', !newValue);
+                    }
+                    // Try to update haptic system if available
+                    if (window.hapticSystem) {
+                        window.hapticSystem.hapticsEnabled = newValue;
+                    }
+                } catch (e) {
+                    console.warn('Failed to toggle haptics:', e);
+                }
+            }
+        }
+
+        function toggleAudioSetting() {
+            // Always read current state from localStorage first (source of truth)
+            let currentValue = true;
+            try {
+                const stored = localStorage.getItem('haptic_audioEnabled');
+                currentValue = stored === null ? true : stored === 'true';
+            } catch (e) {
+                // Fallback to haptic system
+                if (window.hapticSystem && window.hapticSystem.audioEnabled !== undefined) {
+                    currentValue = window.hapticSystem.audioEnabled;
+                } else if (typeof isAudioEnabled === 'function') {
+                    currentValue = isAudioEnabled();
+                }
+            }
+            
+            const newValue = !currentValue;
+            
+            // Update localStorage first (source of truth)
+            try {
+                localStorage.setItem('haptic_audioEnabled', newValue.toString());
+            } catch (e) {
+                console.warn('Failed to save audio preference:', e);
+            }
+            
+            // Update haptic system if available
+            if (window.hapticSystem) {
+                window.hapticSystem.audioEnabled = newValue;
+                if (typeof window.hapticSystem.savePreference === 'function') {
+                    window.hapticSystem.savePreference('audioEnabled', newValue);
+                }
+            }
+            
+            // Update global audio manager
+            if (window.globalAudioManager) {
+                window.globalAudioManager.audioEnabled = newValue;
+                window.globalAudioManager.muted = !newValue;
+                window.globalAudioManager.audioElements.forEach(audio => {
+                    window.globalAudioManager.updateAudioElement(audio);
+                });
+            }
+            
+            // Update UI
+            const audioToggle = document.getElementById('audioToggle');
+            if (audioToggle) {
+                audioToggle.classList.remove('disabled');
+                if (!newValue) {
+                    audioToggle.classList.add('disabled');
+                }
+            }
+            
+            // Play a test sound if audio was enabled
+            if (newValue && typeof triggerHaptic === 'function') {
+                triggerHaptic('single');
+            }
+        }
+
+        function toggleMusicSetting() {
+            // Always read current state from localStorage first (source of truth)
+            let currentValue = true;
+            try {
+                const stored = localStorage.getItem('haptic_musicEnabled');
+                currentValue = stored === null ? true : stored === 'true';
+            } catch (e) {
+                // Fallback to haptic system
+                if (window.hapticSystem && window.hapticSystem.musicEnabled !== undefined) {
+                    currentValue = window.hapticSystem.musicEnabled;
+                } else if (typeof isMusicEnabled === 'function') {
+                    currentValue = isMusicEnabled();
+                }
+            }
+            
+            const newValue = !currentValue;
+            
+            // Update localStorage first (source of truth)
+            try {
+                localStorage.setItem('haptic_musicEnabled', newValue.toString());
+            } catch (e) {
+                console.warn('Failed to save music preference:', e);
+            }
+            
+            // Update haptic system if available
+            if (window.hapticSystem) {
+                window.hapticSystem.musicEnabled = newValue;
+                if (typeof window.hapticSystem.savePreference === 'function') {
+                    window.hapticSystem.savePreference('musicEnabled', newValue);
+                }
+            }
+            
+            // Update global music manager
+            if (window.globalMusicManager) {
+                window.globalMusicManager.musicEnabled = newValue;
+                window.globalMusicManager.muted = !newValue;
+                window.globalMusicManager.musicElements.forEach(music => {
+                    window.globalMusicManager.updateMusicElement(music);
+                });
+            }
+            
+            // Update UI
+            const musicToggle = document.getElementById('musicToggle');
+            if (musicToggle) {
+                musicToggle.classList.remove('disabled');
+                if (!newValue) {
+                    musicToggle.classList.add('disabled');
+                }
+            }
+        }
+
+        // Helper function to add haptic feedback to button clicks
+        function addHapticToButtons() {
+            // Add haptic to all buttons with onclick handlers
+            const buttons = document.querySelectorAll('button[onclick]');
+            
+            buttons.forEach((button) => {
+                const originalOnclick = button.getAttribute('onclick');
+                if (originalOnclick && !originalOnclick.includes('triggerHaptic')) {
+                    // Remove onclick attribute and use addEventListener instead for better control
+                    button.removeAttribute('onclick');
+                    
+                    button.addEventListener('click', function(e) {
+                        // Trigger haptic feedback and sound immediately
+                        if (typeof triggerHaptic === 'function') {
+                            triggerHaptic('single');
+                        }
+                        
+                        // For navigation buttons, add small delay to ensure audio plays
+                        if (originalOnclick.includes('window.location.href')) {
+                            // Small delay to let audio start before navigation
+                            setTimeout(() => {
+                                eval(originalOnclick);
+                            }, 100);
+                        } else {
+                            // For other buttons, execute immediately
+                            eval(originalOnclick);
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

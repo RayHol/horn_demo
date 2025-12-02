@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animals Everywhere! - Map</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles/menu.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Dynamic viewport height support */
+        @supports (height: 100dvh) {
+            body {
+                height: 100dvh;
+            }
+        }
+
+        /* Fix for mobile Safari */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                min-height: -webkit-fill-available;
+            }
+        }
+
+        body {
+            background-color: #FCF6EF !important;
+            background-image: none !important;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        .map-container:active {
+            cursor: grabbing;
+        }
+
+        .map-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.2);
+            max-width: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            pointer-events: none;
+            transition: transform 0.1s ease-out;
+        }
+
+        .map-image.dragging {
+            transition: none;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 12px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0px 4px 0px 0px var(--button-shadow);
+        }
+
+        .back-button:hover {
+            transform: translateY(2px);
+            box-shadow: 0px 2px 0px 0px var(--button-shadow);
+        }
+
+        .back-button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* Orientation Warning Overlay */
+        .orientation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .orientation-content {
+            background-color: #FCF6EF;
+            border: 3px solid #E7D4A3;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            max-width: 300px;
+            margin: 1rem;
+            box-shadow: 0px 4px 0px 0px #E7D4A3;
+        }
+
+        .orientation-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: rotateToPortrait 2.5s ease-in-out infinite;
+            transform-origin: 0 100%;
+            display: inline-block;
+        }
+
+        .orientation-content h2 {
+            color: #C14400;
+            font-family: "Amatic SC", sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            margin: 0 0 1rem 0;
+        }
+
+        .orientation-content p {
+            color: #333;
+            font-size: 1.1rem;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        @keyframes rotateToPortrait {
+            0% { transform: rotate(-90deg); opacity: 1; }
+            40% { transform: rotate(0deg); opacity: 1; }
+            60% { transform: rotate(0deg); opacity: 1; }
+            70% { transform: rotate(0deg); opacity: 0; }
+            71% { transform: rotate(-90deg); opacity: 0; }
+            80% { transform: rotate(-90deg); opacity: 1; }
+            100% { transform: rotate(-90deg); opacity: 1; }
+        }
+
+        /* Hidden class for orientation overlay */
+        .hidden {
+            display: none !important;
+        }
+
+        .back-button img {
+            width: 24px;
+            height: 24px;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.location.href='menu.html'" aria-label="Back to menu">
+        <img src="../assets/Arrow2.png" alt="Back">
+    </button>
+    
+    <!-- Orientation Warning Overlay -->
+    <div id="orientationOverlay" class="orientation-overlay hidden">
+        <div class="orientation-content">
+            <div class="orientation-icon">📱</div>
+            <h2>Please Rotate Your Device</h2>
+            <p>Hold your device in portrait mode for the best experience</p>
+        </div>
+    </div>
+
+    <div class="map-container" id="mapContainer">
+        <img src="../assets/Map-image.png" alt="Interactive Map" class="map-image" id="mapImage">
+    </div>
+
+    <script>
+        class InteractiveMap {
+            constructor() {
+                this.mapContainer = document.getElementById('mapContainer');
+                this.mapImage = document.getElementById('mapImage');
+                
+                // Map state
+                this.scale = 0.35;
+                this.minScale = 0.15;
+                this.maxScale = 1;
+                this.translateX = 0;
+                this.translateY = 0;
+                
+                // Animation state
+                this.targetScale = this.scale;
+                this.targetTranslateX = this.translateX;
+                this.targetTranslateY = this.translateY;
+                this.animationSpeed = 0.15; // Higher = faster animation
+                
+                // Touch/Drag state
+                this.isDragging = false;
+                this.lastTouchX = 0;
+                this.lastTouchY = 0;
+                this.lastTouchDistance = 0;
+                this.startTouchX = 0;
+                this.startTouchY = 0;
+                
+                this.init();
+                this.updateTransform(); // Ensure initial transform is applied
+                this.startAnimationLoop();
+            }
+            
+            init() {
+                // Mouse events
+                this.mapContainer.addEventListener('mousedown', this.handleMouseDown.bind(this));
+                document.addEventListener('mousemove', this.handleMouseMove.bind(this));
+                document.addEventListener('mouseup', this.handleMouseUp.bind(this));
+                this.mapContainer.addEventListener('wheel', this.handleWheel.bind(this));
+                
+                // Touch events
+                this.mapContainer.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
+                this.mapContainer.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+                this.mapContainer.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
+                
+                // Prevent context menu on long press
+                this.mapContainer.addEventListener('contextmenu', (e) => e.preventDefault());
+            }
+            
+            handleMouseDown(e) {
+                this.isDragging = true;
+                this.lastTouchX = e.clientX;
+                this.lastTouchY = e.clientY;
+                this.mapImage.classList.add('dragging');
+                e.preventDefault();
+            }
+            
+            handleMouseMove(e) {
+                if (!this.isDragging) return;
+                
+                const deltaX = e.clientX - this.lastTouchX;
+                const deltaY = e.clientY - this.lastTouchY;
+                
+                this.targetTranslateX += deltaX;
+                this.targetTranslateY += deltaY;
+                
+                this.lastTouchX = e.clientX;
+                this.lastTouchY = e.clientY;
+                
+                e.preventDefault();
+            }
+            
+            handleMouseUp(e) {
+                this.isDragging = false;
+                this.mapImage.classList.remove('dragging');
+            }
+            
+            handleWheel(e) {
+                e.preventDefault();
+                
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                const newScale = Math.max(this.minScale, Math.min(this.maxScale, this.targetScale + delta));
+                
+                if (newScale !== this.targetScale) {
+                    // Calculate zoom point relative to image center
+                    const rect = this.mapContainer.getBoundingClientRect();
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+                    
+                    // Adjust translation to zoom towards mouse position
+                    const scaleDiff = newScale - this.targetScale;
+                    this.targetTranslateX -= (mouseX - centerX) * scaleDiff;
+                    this.targetTranslateY -= (mouseY - centerY) * scaleDiff;
+                    
+                    this.targetScale = newScale;
+                }
+            }
+            
+            handleTouchStart(e) {
+                if (e.touches.length === 1) {
+                    // Single touch - drag
+                    this.isDragging = true;
+                    this.lastTouchX = e.touches[0].clientX;
+                    this.lastTouchY = e.touches[0].clientY;
+                    this.mapImage.classList.add('dragging');
+                } else if (e.touches.length === 2) {
+                    // Two touches - pinch zoom
+                    this.isDragging = false;
+                    this.mapImage.classList.remove('dragging');
+                    
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    
+                    this.lastTouchDistance = Math.sqrt(
+                        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+                        Math.pow(touch2.clientY - touch1.clientY, 2)
+                    );
+                    
+                    this.startTouchX = (touch1.clientX + touch2.clientX) / 2;
+                    this.startTouchY = (touch1.clientY + touch2.clientY) / 2;
+                }
+                
+                e.preventDefault();
+            }
+            
+            handleTouchMove(e) {
+                if (e.touches.length === 1 && this.isDragging) {
+                    // Single touch drag
+                    const deltaX = e.touches[0].clientX - this.lastTouchX;
+                    const deltaY = e.touches[0].clientY - this.lastTouchY;
+                    
+                    this.targetTranslateX += deltaX;
+                    this.targetTranslateY += deltaY;
+                    
+                    this.lastTouchX = e.touches[0].clientX;
+                    this.lastTouchY = e.touches[0].clientY;
+                } else if (e.touches.length === 2) {
+                    // Two touch pinch zoom
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    
+                    const currentDistance = Math.sqrt(
+                        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+                        Math.pow(touch2.clientY - touch1.clientY, 2)
+                    );
+                    
+                    if (this.lastTouchDistance > 0) {
+                        const scaleChange = currentDistance / this.lastTouchDistance;
+                        const newScale = Math.max(this.minScale, Math.min(this.maxScale, this.targetScale * scaleChange));
+                        
+                        if (newScale !== this.targetScale) {
+                            // Calculate zoom center
+                            const rect = this.mapContainer.getBoundingClientRect();
+                            const centerX = rect.width / 2;
+                            const centerY = rect.height / 2;
+                            
+                            const touchCenterX = (touch1.clientX + touch2.clientX) / 2 - rect.left;
+                            const touchCenterY = (touch1.clientY + touch2.clientY) / 2 - rect.top;
+                            
+                            // Adjust translation to zoom towards touch center
+                            const scaleDiff = newScale - this.targetScale;
+                            this.targetTranslateX -= (touchCenterX - centerX) * scaleDiff;
+                            this.targetTranslateY -= (touchCenterY - centerY) * scaleDiff;
+                            
+                            this.targetScale = newScale;
+                        }
+                    }
+                    
+                    this.lastTouchDistance = currentDistance;
+                }
+                
+                e.preventDefault();
+            }
+            
+            handleTouchEnd(e) {
+                this.isDragging = false;
+                this.mapImage.classList.remove('dragging');
+                this.lastTouchDistance = 0;
+            }
+            
+            updateTransform() {
+                // Smooth interpolation towards target values
+                this.scale += (this.targetScale - this.scale) * this.animationSpeed;
+                this.translateX += (this.targetTranslateX - this.translateX) * this.animationSpeed;
+                this.translateY += (this.targetTranslateY - this.translateY) * this.animationSpeed;
+                
+                // Calculate boundaries based on current scale
+                const containerRect = this.mapContainer.getBoundingClientRect();
+                const imageRect = this.mapImage.getBoundingClientRect();
+                
+                // Calculate the scaled image dimensions
+                const scaledWidth = imageRect.width * this.scale;
+                const scaledHeight = imageRect.height * this.scale;
+                
+                // Calculate maximum translation to allow panning to image edges
+                const maxTranslateX = Math.max(0, (scaledWidth - containerRect.width) / 2 + 250);
+                const maxTranslateY = Math.max(0, (scaledHeight - containerRect.height) / 2 + 250);
+                
+                // Apply boundaries to target values
+                if (Math.abs(this.targetTranslateX) > maxTranslateX) {
+                    this.targetTranslateX = this.targetTranslateX > 0 ? maxTranslateX : -maxTranslateX;
+                }
+                
+                if (Math.abs(this.targetTranslateY) > maxTranslateY) {
+                    this.targetTranslateY = this.targetTranslateY > 0 ? maxTranslateY : -maxTranslateY;
+                }
+                
+                // Apply boundaries to current values
+                if (Math.abs(this.translateX) > maxTranslateX) {
+                    this.translateX = this.translateX > 0 ? maxTranslateX : -maxTranslateX;
+                }
+                
+                if (Math.abs(this.translateY) > maxTranslateY) {
+                    this.translateY = this.translateY > 0 ? maxTranslateY : -maxTranslateY;
+                }
+                
+                this.mapImage.style.transform = `translate(-50%, -50%) translate(${this.translateX}px, ${this.translateY}px) scale(${this.scale})`;
+            }
+            
+            startAnimationLoop() {
+                const animate = () => {
+                    this.updateTransform();
+                    requestAnimationFrame(animate);
+                };
+                requestAnimationFrame(animate);
+            }
+            
+        }
+        
+        // Orientation Detection
+        class OrientationManager {
+            constructor() {
+                this.orientationOverlay = document.getElementById('orientationOverlay');
+                
+                // Ensure overlay starts hidden
+                if (this.orientationOverlay) {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+                
+                this.init();
+            }
+            
+            init() {
+                // Check initial orientation
+                this.checkOrientation();
+                
+                // Listen for orientation changes
+                window.addEventListener('orientationchange', () => {
+                    // Small delay to ensure the orientation change is complete
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+                
+                // Also listen for resize events as a backup
+                window.addEventListener('resize', () => {
+                    setTimeout(() => this.checkOrientation(), 100);
+                });
+            }
+            
+            checkOrientation() {
+                // Multiple detection methods for better accuracy
+                let isLandscape = false;
+                
+                // Method 1: Screen orientation API (most accurate)
+                if (screen.orientation && typeof screen.orientation.angle === 'number') {
+                    isLandscape = screen.orientation.angle === 90 || screen.orientation.angle === 270;
+                }
+                // Method 2: Window dimensions with strict tolerance
+                else if (window.innerWidth > window.innerHeight + 100) {
+                    isLandscape = true;
+                }
+                // Method 3: Media query check
+                else if (window.matchMedia && window.matchMedia('(orientation: landscape)').matches) {
+                    isLandscape = true;
+                }
+                // Method 4: Fallback - only if width is significantly larger
+                else {
+                    isLandscape = window.innerWidth > window.innerHeight + 200;
+                }
+                
+                // Debug logging (remove in production)
+                console.log('Orientation check:', {
+                    screenAngle: screen.orientation ? screen.orientation.angle : 'N/A',
+                    windowSize: `${window.innerWidth}x${window.innerHeight}`,
+                    isLandscape: isLandscape
+                });
+                
+                if (isLandscape) {
+                    this.orientationOverlay.classList.remove('hidden');
+                } else {
+                    this.orientationOverlay.classList.add('hidden');
+                }
+            }
+        }
+
+        // Initialize the interactive map and orientation manager when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new InteractiveMap();
+            new OrientationManager();
+            
+            // Ensure orientation overlay starts hidden
+            const orientationOverlay = document.getElementById('orientationOverlay');
+            if (orientationOverlay) {
+                orientationOverlay.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html> 

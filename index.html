@@ -21,11 +21,11 @@
       <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
       <link href="https://fonts.googleapis.com/css2?family=BentonSans+Book:wght@400;700&display=swap" rel="stylesheet">
     </noscript>
-    <link rel="stylesheet" href="style.css" media="print" onload="this.media='all'">
-    <noscript><link rel="stylesheet" href="style.css"></noscript>
+    <link rel="stylesheet" href="styles/style.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="styles/style.css"></noscript>
 
     <!-- Customer.io Helper (loads before Customer.io snippet) -->
-    <script src="customer-io-helper.js"></script>
+    <script src="scripts/customer-io-helper.js"></script>
     <!-- Customer.io snippet will go here when available -->
 
     <style>
@@ -504,8 +504,8 @@
       <main class="onboarding-content">
         <h1 class="onboarding-title" id="welcomeTitle">Animals Everywhere!</h1>
         <p id="welcomeMessage" class="description" style="display: none;">Welcome back,<br><span id="welcomeNickname"></span>!</p>
-        <button id="startButton" onclick="handleStartClick('nickname.html')" class="button" aria-label="Start the game" style="display: block;">Start</button>
-        <button id="continueButton" onclick="handleStartClick('menu.html')" class="button" style="display: none;" aria-label="Continue to menu">Continue</button>
+        <button id="startButton" onclick="handleStartClick('pages/nickname.html')" class="button" aria-label="Start the game" style="display: block;">Start</button>
+        <button id="continueButton" onclick="handleStartClick('pages/menu.html')" class="button" style="display: none;" aria-label="Continue to menu">Continue</button>
       </main>
     </div>
 
@@ -766,7 +766,7 @@
     <!-- Adobe Animate/CreateJS Animation Scripts -->
     <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
     <script src="https://code.createjs.com/1.0.0/tweenjs.min.js"></script>
-    <script src="landing-ani.js"></script>
+    <script src="scripts/landing-ani.js"></script>
     <script>
       var canvas, stage, exportRoot, anim_container, dom_overlay_container, fnStartAnimation;
       var animationLib, isReversing = false, pendingNavigation = null;
