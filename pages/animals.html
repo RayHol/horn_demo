@@ -1413,8 +1413,8 @@
                             // Store icon paths if available
                             if (animal.icon && animal.icon.shadow && animal.icon.found) {
                                 animalIconMap[badgeId] = {
-                                    shadow: animal.icon.shadow.replace('../assets/', '../assets/'),
-                                    found: animal.icon.found.replace('../assets/', '../assets/')
+                                    shadow: normalizeAssetPath(animal.icon.shadow),
+                                    found: normalizeAssetPath(animal.icon.found)
                                 };
                             }
                             // Store description if available
@@ -1708,7 +1708,18 @@
 
             try {
                 // Load animal data from JSON
-                const res = await fetch('../data/animals.json', { cache: 'no-cache' });
+                let environment = 'production';
+                try {
+                    const saved = localStorage.getItem('wayfinding-environment');
+                    if (saved === 'testing' || saved === 'production') {
+                        environment = saved;
+                    }
+                } catch (_) {
+                    // localStorage not available, use default
+                }
+                
+                const jsonFile = environment === 'testing' ? '../data/testing.json' : '../data/animals.json';
+                const res = await fetch(jsonFile, { cache: 'no-cache' });
                 const cfg = await res.json();
                 const animals = Array.isArray(cfg.animals) ? cfg.animals : [];
                 
@@ -1728,13 +1739,13 @@
                 overlay.classList.add('show');
 
                 // Initialize model viewer
-                const modelUrl = animal.model.url.replace('../assets/', '../assets/');
+                const modelUrl = normalizeAssetPath(animal.model.url);
                 
                 // Check for iOS-specific USDZ file (for AR animations on iOS)
                 // iOS Quick Look doesn't preserve animations from auto-converted GLB files
                 // So we need pre-converted USDZ files with animations
                 const iosSrc = animal.model.usdz || animal.model.iosSrc || '';
-                const iosModelUrl = iosSrc ? iosSrc.replace('../assets/', '../assets/') : '';
+                const iosModelUrl = iosSrc ? normalizeAssetPath(iosSrc) : '';
                 
                 // Destroy existing viewer if any
                 if (currentModelViewer) {
