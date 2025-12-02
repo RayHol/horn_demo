@@ -1,5 +1,5 @@
 // Minimal proximity watcher that pings when user is near any configured animal
-// Data source: ./data/animals.json
+// Data source: ../../data/animals.json
 (function () {
     const statusEl = document.getElementById('status');
     const enableBtn = document.getElementById('enableBtn');
@@ -87,15 +87,15 @@
 
     async function loadAnimals() {
         // Switch between testing and production data by commenting/uncommenting the appropriate line:
-        const res = await fetch('./data/animals.json', { cache: 'no-cache' }); // Production/Onsite
-        // const res = await fetch('./data/testing.json', { cache: 'no-cache' }); // Testing/Home
+        const res = await fetch('../../data/animals.json', { cache: 'no-cache' }); // Production/Onsite
+        // const res = await fetch('../../data/testing.json', { cache: 'no-cache' }); // Testing/Home
         const cfg = await res.json();
         animals = Array.isArray(cfg.animals) ? cfg.animals : [];
     }
 
     function ensureAudio() {
         if (!audio) {
-            audio = new Audio('../assets/audio/bell.mp3');
+            audio = new Audio('../../assets/wayfinding/audio/bell.mp3');
             audio.volume = 0.5;
             audio._originalVolume = 0.5; // Store original volume for global audio manager
             // Register with global audio manager so it respects the audio toggle

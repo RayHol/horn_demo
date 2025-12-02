@@ -393,7 +393,7 @@
     // Load animals from JSON based on current environment
     async function loadAnimals(environment = null) {
         const env = environment || currentEnvironment;
-        const jsonFile = env === 'testing' ? './data/testing.json' : './data/animals.json';
+        const jsonFile = env === 'testing' ? '../../data/testing.json' : '../../data/animals.json';
         try {
             const res = await fetch(jsonFile, { cache: 'no-cache' });
             const cfg = await res.json();
@@ -441,7 +441,7 @@
     // Audio and haptics
     function ensureAudio() {
         if (!audio) {
-            audio = new Audio('../assets/audio/bell.mp3');
+            audio = new Audio('../../assets/wayfinding/audio/bell.mp3');
             audio.volume = 0.5;
             audio._originalVolume = 0.5; // Store original volume for global audio manager
             
@@ -462,7 +462,7 @@
 
     function ensureDetectToneAudio() {
         if (!detectToneAudio) {
-            detectToneAudio = new Audio('../assets/audio/DetectTone.mp3');
+            detectToneAudio = new Audio('../../assets/audio/DetectTone.mp3');
             detectToneAudio.volume = 0.5;
             detectToneAudio._originalVolume = 0.5; // Store original volume for global audio manager
             
@@ -1815,66 +1815,66 @@
         // Animal data - matching animals.html structure
         const animalData = {
             'peacock': {
-                icon: '../assets/animals/found/peacock.svg',
+                icon: '../../assets/animals/found/peacock.svg',
                 name: 'Peacock',
                 description: 'You found the magnificent peacock! A true explorer of the Horniman grounds.',
-                gamePath: '../games/proud-photographer/index.html'
+                gamePath: '../photographer-game.html'
             },
             'walrus-ar': {
-                icon: '../assets/animals/found/walrus.svg',
+                icon: '../../assets/animals/found/walrus.svg',
                 name: 'Walrus',
                 description: 'You discovered the walrus! Great tracking skills on your adventure.',
-                gamePath: '../games/walrus-feeder/index.html'
+                gamePath: '../walrus-game.html'
             },
             'koala': {
-                icon: '../assets/animals/found/koala.svg',
+                icon: '../../assets/animals/found/koala.svg',
                 name: 'Koala',
                 description: 'You found the koala! Your keen eye spotted this hidden treasure.'
             },
             'bee-ar': {
-                icon: '../assets/animals/found/bee.svg',
+                icon: '../../assets/animals/found/bee.svg',
                 name: 'Bee',
                 description: 'You found the bee! A tiny but important discovery on your journey.',
-                gamePath: '../games/sunflower-planter/index.html'
+                gamePath: '../sunflower-game.html'
             },
             'clownfish-ar': {
-                icon: '../assets/animals/found/clownfish.svg',
+                icon: '../../assets/animals/found/clownfish.svg',
                 name: 'Clownfish',
                 description: 'You found the clownfish! A colorful addition to your collection.',
-                gamePath: '../games/anemone-cleaning/index.html'
+                gamePath: '../anemone-game.html'
             },
             'platypus': {
-                icon: '../assets/animals/found/platypus.svg',
+                icon: '../../assets/animals/found/platypus.svg',
                 name: 'Platypus',
                 description: 'You found the platypus! One of nature\'s most unique creatures.'
             },
             'cephalopod': {
-                icon: '../assets/animals/found/Shelled cephalopod.svg',
+                icon: '../../assets/animals/found/Shelled cephalopod.svg',
                 name: 'Cephalopod',
                 description: 'You found the cephalopod! A fascinating marine discovery.'
             },
             'stag-beetle': {
-                icon: '../assets/animals/found/stag beetle.svg',
+                icon: '../../assets/animals/found/stag beetle.svg',
                 name: 'Stag Beetle',
                 description: 'You found the stag beetle! A small but impressive find.'
             },
             'snowy-owl': {
-                icon: '../assets/animals/found/snowy owl.svg',
+                icon: '../../assets/animals/found/snowy owl.svg',
                 name: 'Snowy Owl',
                 description: 'You found the snowy owl! A wise and majestic discovery.'
             },
             'orangutan': {
-                icon: '../assets/animals/found/orangutan.svg',
+                icon: '../../assets/animals/found/orangutan.svg',
                 name: 'Orangutan',
                 description: 'You found the orangutan! A great ape discovery on your adventure.'
             },
             'jellyfish-ar': {
-                icon: '../assets/animals/found/jellyfish.svg',
+                icon: '../../assets/animals/found/jellyfish.svg',
                 name: 'Jellyfish',
                 description: 'You found the jellyfish! A graceful and mesmerizing discovery.'
             },
             'robin': {
-                icon: '../assets/animals/found/robin.svg',
+                icon: '../../assets/animals/found/robin.svg',
                 name: 'Robin',
                 description: 'You found the robin! A cheerful bird to add to your collection.'
             }

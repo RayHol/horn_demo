@@ -697,7 +697,7 @@
     }
     function backHowToPlay() {
       document.querySelector('#click-sfx').emit('startsound')
-      window.top.location.href = '../../menu.html';
+      window.top.location.href = '../../pages/menu.html';
     }
     function openCongratulations() {
       // Stop background music - pause direct audio and mute A-Frame sound
@@ -734,7 +734,7 @@
           // localStorage not available, use default
         }
         
-        const jsonFile = environment === 'testing' ? '../../wayfinding/data/testing.json' : '../../wayfinding/data/animals.json';
+        const jsonFile = environment === 'testing' ? '../../data/testing.json' : '../../data/animals.json';
         const res = await fetch(jsonFile, { cache: 'no-cache' });
         const cfg = await res.json();
         const gameBadges = Array.isArray(cfg.gameBadges) ? cfg.gameBadges : [];
@@ -883,7 +883,7 @@
     }
     
     function goHome() {
-      window.top.location.href = '../../badges.html';
+      window.top.location.href = '../../pages/badges.html';
     }
     
     // Underwater effect control functions

@@ -76,7 +76,7 @@ button[data-action="camera-btn"] {
     height: 64px;
     border-radius: 50%;
     background-color: transparent;
-    background-image: url('../assets/ui/button-tap.svg');
+    background-image: url('../../assets/wayfinding/ui/button-tap.svg');
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
@@ -207,7 +207,7 @@ button[data-action="camera-btn"]:disabled {
     left: 16px;
     width: 50px;
     height: 50px;
-    background-image: url('../assets/ui/back-button.svg');
+    background-image: url('../../assets/wayfinding/ui/back-button.svg');
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;

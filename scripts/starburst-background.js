@@ -42,10 +42,24 @@
         `;
         document.head.appendChild(style);
 
+        // Determine the correct path to starburst image based on current page location
+        const pathname = window.location.pathname;
+        let starburstPath = './assets/Startburst.svg';
+        
+        // If we're in a subdirectory, adjust the path
+        // Count how many levels deep we are
+        const depth = (pathname.match(/\//g) || []).length - 1;
+        // If depth >= 1, we're in a subdirectory (e.g., /pages/leaderboard.html)
+        // and need to go up one level to reach root assets/
+        if (depth >= 1) {
+            // We're in a subdirectory, need to go up
+            starburstPath = '../assets/Startburst.svg';
+        }
+        
         const starburstDiv = document.createElement('div');
         starburstDiv.id = 'starburst-background';
         starburstDiv.className = 'starburst-background';
-        starburstDiv.innerHTML = '<img src="./assets/Startburst.svg" alt="Starburst background">';
+        starburstDiv.innerHTML = `<img src="${starburstPath}" alt="Starburst background">`;
         document.body.appendChild(starburstDiv);
     }
 

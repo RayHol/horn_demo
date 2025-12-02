@@ -5,34 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Animals Everywhere! - Animals</title>
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="menu.css">
+    <link rel="stylesheet" href="../styles/menu.css">
     
     <!-- Custom Fonts -->
     <style>
         @font-face {
             font-family: 'BentonSans';
-            src: url('./assets/fonts/BentonSansCompBlackRegular.otf') format('opentype');
+            src: url('../assets/fonts/BentonSansCompBlackRegular.otf') format('opentype');
             font-weight: 400;
             font-style: normal;
         }
         
         @font-face {
             font-family: 'BentonSans Book';
-            src: url('./assets/fonts/BentonSans Book.otf') format('opentype');
+            src: url('../assets/fonts/BentonSans Book.otf') format('opentype');
             font-weight: 400;
             font-style: normal;
         }
         
         @font-face {
             font-family: 'Amatic SC';
-            src: url('./assets/fonts/Amatic SC Regular.ttf') format('truetype');
+            src: url('../assets/fonts/Amatic SC Regular.ttf') format('truetype');
             font-weight: 400;
             font-style: normal;
         }
         
         @font-face {
             font-family: 'Amatic SC';
-            src: url('./assets/fonts/Amatic-Bold.ttf') format('truetype');
+            src: url('../assets/fonts/Amatic-Bold.ttf') format('truetype');
             font-weight: 700;
             font-style: normal;
         }
@@ -547,7 +547,7 @@
     </style>
     
     <!-- Customer.io Helper (loads before Customer.io snippet) -->
-    <script src="customer-io-helper.js"></script>
+    <script src="../scripts/customer-io-helper.js"></script>
     <!-- Customer.io snippet will go here when available -->
 </head>
 <body>
@@ -561,7 +561,7 @@
     </div>
 
     <button class="back-button" onclick="window.location.href='menu.html'" aria-label="Back to menu">
-        <img src="./assets/Arrow2.png" alt="Back">
+        <img src="../assets/Arrow2.png" alt="Back">
     </button>
     <h1 class="title">Animals</h1>
 
@@ -670,7 +670,7 @@
     <div id="animalDetailPopup" class="badge-detail-popup hidden">
         <div class="starburst-background-overlay"></div>
         <button class="back-button" onclick="closeAnimalDetail()">
-            <img src="./assets/Arrow.png" alt="Back">
+            <img src="../assets/close_button.png" alt="Close">
         </button>
         <h1 class="title">ANIMAL DETAILS</h1>
         
@@ -685,7 +685,7 @@
         </div>
     </div>
 
-    <script src="scripts/audio-manager-main.js"></script>
+    <script src="../scripts/audio-manager-main.js"></script>
     <script>
         // Orientation Detection
         class OrientationManager {
@@ -749,7 +749,7 @@
                     const overlay = popup.querySelector('.starburst-background-overlay');
                     if (overlay && !overlay.querySelector('img')) {
                         const img = document.createElement('img');
-                        img.src = './assets/Startburst.svg';
+                        img.src = '../assets/Startburst.svg';
                         img.alt = 'Starburst background';
                         overlay.appendChild(img);
                     }
@@ -828,7 +828,7 @@
                     // localStorage not available, use default
                 }
                 
-                const jsonFile = environment === 'testing' ? './wayfinding/data/testing.json' : './wayfinding/data/animals.json';
+                const jsonFile = environment === 'testing' ? '../data/testing.json' : '../data/animals.json';
                 const res = await fetch(jsonFile, { cache: 'no-cache' });
                 const cfg = await res.json();
                 const animals = Array.isArray(cfg.animals) ? cfg.animals : [];
@@ -837,10 +837,10 @@
                 const animalIconMap = {};
                 animals.forEach(animal => {
                     if (animal.name && animal.icon && animal.icon.shadow && animal.icon.found) {
-                        // Convert paths from ../assets/ to ./assets/ (since animals.html is at root)
+                        // Convert paths from ../assets/ to ../assets/ (since animals.html is in pages/)
                         animalIconMap[animal.name] = {
-                            shadow: animal.icon.shadow.replace('../assets/', './assets/'),
-                            found: animal.icon.found.replace('../assets/', './assets/')
+                            shadow: animal.icon.shadow.replace('../assets/', '../assets/'),
+                            found: animal.icon.found.replace('../assets/', '../assets/')
                         };
                     }
                 });
@@ -978,7 +978,7 @@
             let animalIconMap = {};
             let animalDescriptionMap = {};
             try {
-                const res = await fetch('./wayfinding/data/animals.json', { cache: 'no-cache' });
+                const res = await fetch('../data/animals.json', { cache: 'no-cache' });
                 const cfg = await res.json();
                 const animals = Array.isArray(cfg.animals) ? cfg.animals : [];
                 animals.forEach(animal => {
@@ -988,8 +988,8 @@
                             // Store icon paths if available
                             if (animal.icon && animal.icon.shadow && animal.icon.found) {
                                 animalIconMap[badgeId] = {
-                                    shadow: animal.icon.shadow.replace('../assets/', './assets/'),
-                                    found: animal.icon.found.replace('../assets/', './assets/')
+                                    shadow: animal.icon.shadow.replace('../assets/', '../assets/'),
+                                    found: animal.icon.found.replace('../assets/', '../assets/')
                                 };
                             }
                             // Store description if available
@@ -1006,111 +1006,111 @@
             // Animal data - matching badge data for consistency
             const animalData = {
                 'peacock': {
-                    icon: './assets/animals/found/peacock.svg',
+                    icon: '../assets/animals/found/peacock.svg',
                     name: 'Peacock',
                     description: 'You found the magnificent peacock! A true explorer of the Horniman grounds.',
-                    gamePath: './games/proud-photographer/index.html'
+                    gamePath: '../games/proud-photographer/index.html'
                 },
                 'walrus-ar': {
-                    icon: './assets/animals/found/walrus.svg',
+                    icon: '../assets/animals/found/walrus.svg',
                     name: 'Walrus',
                     description: 'You discovered the walrus! Great tracking skills on your adventure.',
-                    gamePath: './games/walrus-feeder/index.html'
+                    gamePath: '../games/walrus-feeder/index.html'
                 },
                 'koala': {
-                    icon: './assets/animals/found/koala.svg',
+                    icon: '../assets/animals/found/koala.svg',
                     name: 'Koala',
                     description: 'You found the koala! Your keen eye spotted this hidden treasure.'
                 },
                 'bee-ar': {
-                    icon: './assets/animals/found/bee.svg',
+                    icon: '../assets/animals/found/bee.svg',
                     name: 'Bee',
                     description: 'You found the bee! A tiny but important discovery on your journey.',
-                    gamePath: './games/sunflower-planter/index.html'
+                    gamePath: '../games/sunflower-planter/index.html'
                 },
                 'clownfish-ar': {
-                    icon: './assets/animals/found/clownfish.svg',
+                    icon: '../assets/animals/found/clownfish.svg',
                     name: 'Clownfish',
                     description: 'You found the clownfish! A colorful addition to your collection.',
-                    gamePath: './games/anemone-cleaning/index.html'
+                    gamePath: '../games/anemone-cleaning/index.html'
                 },
                 'platypus': {
-                    icon: './assets/animals/found/platypus.svg',
+                    icon: '../assets/animals/found/platypus.svg',
                     name: 'Platypus',
                     description: 'You found the platypus! One of nature\'s most unique creatures.'
                 },
                 'cephalopod': {
-                    icon: './assets/animals/found/Shelled cephalopod.svg',
+                    icon: '../assets/animals/found/Shelled cephalopod.svg',
                     name: 'Cephalopod',
                     description: 'You found the cephalopod! A fascinating marine discovery.'
                 },
                 'stag-beetle': {
-                    icon: './assets/animals/found/stag beetle.svg',
+                    icon: '../assets/animals/found/stag beetle.svg',
                     name: 'Stag Beetle',
                     description: 'You found the stag beetle! A small but impressive find.'
                 },
                 'snowy-owl': {
-                    icon: './assets/animals/found/snowy owl.svg',
+                    icon: '../assets/animals/found/snowy owl.svg',
                     name: 'Snowy Owl',
                     description: 'You found the snowy owl! A wise and majestic discovery.'
                 },
                 'orangutan': {
-                    icon: './assets/animals/found/orangutan.svg',
+                    icon: '../assets/animals/found/orangutan.svg',
                     name: 'Orangutan',
                     description: 'You found the orangutan! A great ape discovery on your adventure.'
                 },
                 'jellyfish-ar': {
-                    icon: './assets/animals/found/jellyfish.svg',
+                    icon: '../assets/animals/found/jellyfish.svg',
                     name: 'Jellyfish',
                     description: 'You found the jellyfish! A graceful and mesmerizing discovery.'
                 },
                 'robin': {
-                    icon: './assets/animals/found/robin.svg',
+                    icon: '../assets/animals/found/robin.svg',
                     name: 'Robin',
                     description: 'You found the robin! A cheerful bird to add to your collection.'
                 },
                 'butterfly': {
-                    icon: './assets/animals/found/butterfly.svg',
+                    icon: '../assets/animals/found/butterfly.svg',
                     name: 'Butterfly',
                     description: 'You found the butterfly! A beautiful and delicate discovery.'
                 },
                 'crocodile': {
-                    icon: './assets/animals/found/crocodile.svg',
+                    icon: '../assets/animals/found/crocodile.svg',
                     name: 'Crocodile',
                     description: 'You found the crocodile! A powerful and ancient creature.'
                 },
                 'dodo': {
-                    icon: './assets/animals/found/dodo.svg',
+                    icon: '../assets/animals/found/dodo.svg',
                     name: 'Dodo',
                     description: 'You found the dodo! A rare and fascinating discovery from history.'
                 },
                 'fox': {
-                    icon: './assets/animals/found/fox.svg',
+                    icon: '../assets/animals/found/fox.svg',
                     name: 'Fox',
                     description: 'You found the fox! A clever and cunning discovery.'
                 },
                 'grass-snake': {
-                    icon: './assets/animals/found/grass snake.svg',
+                    icon: '../assets/animals/found/grass snake.svg',
                     name: 'Grass Snake',
                     description: 'You found the grass snake! A slithery and fascinating discovery.'
                 },
                 'ostrich': {
-                    icon: './assets/animals/found/ostrich.svg',
+                    icon: '../assets/animals/found/ostrich.svg',
                     name: 'Ostrich',
                     description: 'You found the ostrich! The world\'s largest bird discovery.'
                 },
                 'puffin': {
-                    icon: './assets/animals/found/puffin.svg',
+                    icon: '../assets/animals/found/puffin.svg',
                     name: 'Puffin',
                     description: 'You found the puffin! A colorful seabird discovery.'
                 },
                 'tiger-cub': {
-                    icon: './assets/animals/found/tiger cub.svg',
+                    icon: '../assets/animals/found/tiger cub.svg',
                     name: 'Tiger Cub',
                     description: 'You found the tiger cub! A fierce and adorable discovery.'
                 },
                 'velociraptor': {
-                    icon: './assets/animals/found/velocirapton.svg',
+                    icon: '../assets/animals/found/velocirapton.svg',
                     name: 'Velociraptor',
                     description: 'You found the velociraptor! A prehistoric predator discovery.'
                 }

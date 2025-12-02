@@ -281,7 +281,9 @@
                 // If we're in a subdirectory, adjust the path
                 // Count how many levels deep we are
                 const depth = (pathname.match(/\//g) || []).length - 1;
-                if (depth > 1) {
+                // If depth >= 1, we're in a subdirectory (e.g., /pages/badges.html)
+                // and need to go up one level to reach root assets/
+                if (depth >= 1) {
                     // We're in a subdirectory, need to go up
                     audioPath = '../assets/audio/click.mp3';
                 }

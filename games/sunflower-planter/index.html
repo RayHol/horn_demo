@@ -458,7 +458,7 @@
           console.warn('Failed to play button tap sound:', error);
         });
       }
-      window.top.location.href = '../../badges.html';
+      window.top.location.href = '../../pages/badges.html';
     }
     
     // Load badge data from JSON file
@@ -475,7 +475,7 @@
           // localStorage not available, use default
         }
         
-        const jsonFile = environment === 'testing' ? '../../wayfinding/data/testing.json' : '../../wayfinding/data/animals.json';
+        const jsonFile = environment === 'testing' ? '../../data/testing.json' : '../../data/animals.json';
         const res = await fetch(jsonFile, { cache: 'no-cache' });
         const cfg = await res.json();
         const gameBadges = Array.isArray(cfg.gameBadges) ? cfg.gameBadges : [];
@@ -666,7 +666,7 @@
           console.warn('Failed to play button tap sound:', error);
         });
       }
-      window.top.location.href = '../../menu.html';
+      window.top.location.href = '../../pages/menu.html';
     }
 
     // Add this at the start of your script section

@@ -6,9 +6,9 @@
     <title>Animals Everywhere! - Menu</title>
     
     <!-- Resource Hints -->
-    <link rel="preload" href="./assets/fonts/BentonSansCompBlackRegular.otf" as="font" type="font/otf" crossorigin>
-    <link rel="preload" href="./assets/HMGLogo-Header.png" as="image">
-    <link rel="preload" href="./assets/HTPBG.png" as="image">
+    <link rel="preload" href="../assets/fonts/BentonSansCompBlackRegular.otf" as="font" type="font/otf" crossorigin>
+    <link rel="preload" href="../assets/HMGLogo-Header.png" as="image">
+    <link rel="preload" href="../assets/HTPBG.png" as="image">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,8 +17,8 @@
     <link href="https://fonts.googleapis.com/css2?family=BentonSans:wght@400;700&display=swap" rel="stylesheet">
     
     <!-- Styles -->
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="menu.css">
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/menu.css">
     <style>
         .settings-overlay {
             display: none;
@@ -374,11 +374,11 @@
 
     <div class="menu-container">
         <button class="settings-button" onclick="showSettings()" aria-label="Settings">
-            <img src="./assets/Settings.png" alt="Settings">
+            <img src="../assets/Settings.png" alt="Settings">
         </button>
 
-        <button class="back-button" onclick="window.location.href='index.html'" aria-label="Back to start">
-            <img src="./assets/Arrow.png" alt="Back">
+        <button class="back-button" onclick="window.location.href='../index.html'" aria-label="Back to start">
+            <img src="../assets/Arrow.png" alt="Back">
         </button>
 
         <div class="content-wrapper">
@@ -391,35 +391,35 @@
 
                 <div class="button-container">
                     <button class="main-button" onclick="window.location.href='wayfinding/wayfinding.html'">
-                        <img src="./assets/search.svg" alt="" class="button-icon">
+                        <img src="../assets/search.svg" alt="" class="button-icon">
                         Find the animals
                     </button>
 
                     <div class="button-grid">
                         <button class="secondary-button" onclick="window.location.href='map.html'">
-                            <img src="./assets/Map.png" alt="" class="button-icon">
+                            <img src="../assets/Map.png" alt="" class="button-icon">
                             Map
                         </button>
                         <button class="secondary-button" onclick="window.location.href='badges.html'">
-                            <img src="./assets/Badge1.png" alt="" class="button-icon">
+                            <img src="../assets/Badge1.png" alt="" class="button-icon">
                             Badges
                         </button>
                     </div>
 
                     <button class="full-button" onclick="window.location.href='animals.html'">
-                        <img src="./assets/Animals.svg" alt="" class="button-icon">
+                        <img src="../assets/Animals.svg" alt="" class="button-icon">
                         Animals
                     </button>
 
                     <button class="full-button" onclick="window.location.href='leaderboard.html'">
-                        <img src="./assets/Leaderboard.png" alt="" class="button-icon">
+                        <img src="../assets/Leaderboard.png" alt="" class="button-icon">
                         Leaderboards
                     </button>
                 </div>
             </div>
 
             <footer>
-                <img src="./assets/HMGLogo-Header.png" alt="Horniman Museum & Gardens" class="footer-logo">
+                <img src="../assets/HMGLogo-Header.png" alt="Horniman Museum & Gardens" class="footer-logo">
             </footer>
         </div>
     </div>
@@ -428,19 +428,19 @@
     <div class="settings-overlay" id="settingsOverlay">
         <div class="settings-dialog">
             <button class="close-button" onclick="hideSettings()" aria-label="Close settings">
-                <img src="./assets/close_button.png" alt="Close">
+                <img src="../assets/close_button.png" alt="Close">
             </button>
             <h2>Settings</h2>
             <h3>Hello, <span id="userNickname">Guest</span>!</h3>
             <div class="settings-controls">
                 <button id="hapticsToggle" class="settings-icon-button" onclick="toggleHapticsSetting()" aria-label="Toggle Haptics">
-                    <img src="./assets/Haptics.png" alt="Haptics" class="settings-icon-img">
+                    <img src="../assets/Haptics.png" alt="Haptics" class="settings-icon-img">
                 </button>
                 <button id="audioToggle" class="settings-icon-button" onclick="toggleAudioSetting()" aria-label="Toggle Audio">
-                    <img src="./assets/Unmute.png" alt="Sound" class="settings-icon-img">
+                    <img src="../assets/Unmute.png" alt="Sound" class="settings-icon-img">
                 </button>
                 <button id="musicToggle" class="settings-icon-button" onclick="toggleMusicSetting()" aria-label="Toggle Music">
-                    <img src="./assets/Note.png" alt="Music" class="settings-icon-img">
+                    <img src="../assets/Note.png" alt="Music" class="settings-icon-img">
                 </button>
             </div>
             <button class="how-to-play-button" onclick="window.location.href=''">
@@ -450,7 +450,7 @@
         </div>
     </div>
 
-    <script src="scripts/audio-manager-main.js"></script>
+    <script src="../scripts/audio-manager-main.js"></script>
     <script>
         // Sync badges between collectedBadges and userData.progress.badges
         function syncBadges() {
