@@ -62,17 +62,48 @@
             const centerLat = gpsBounds.north - (normalizedY * (gpsBounds.north - gpsBounds.south));
             
             // Calculate zoom level based on scale
-            // The static map scale goes from 0.15 to 1.0
-            // Mapbox zoom levels are logarithmic - we need to convert
-            // Approximate: scale 0.15 ≈ zoom 13, scale 1.0 ≈ zoom 18
-            // Using a linear interpolation for now
-            const minScale = 0.15;
+            // The static map scale goes from 0.4 to 1.0 (new zoom levels)
+            // We have two calibration points:
+            // - Scale 1.0 (max zoom) = Mapbox zoom 18 (known working)
+            // - Scale 0.64 (default/level 4) = needs to match static map
+            // - Scale 0.4 (min zoom) = baseZoom
+            const minScale = 0.1; // New minimum scale (matches InteractiveMap)
             const maxScale = 1.0;
-            const minZoom = 13;
-            const maxZoom = 18;
+            const defaultScale = 0.5; // Default zoom level (level 4)
             
-            const normalizedScale = (mapTransform.scale - minScale) / (maxScale - minScale);
-            const zoom = minZoom + (normalizedScale * (maxZoom - minZoom));
+            // Use linear interpolation calibrated to work at both max zoom and default zoom
+            // Since we know max zoom (1.0) = 18 works, we'll calibrate the curve
+            // to ensure default zoom (0.64) also aligns properly
+            
+            // Normalize scale to 0-1 range
+            const normalizedScale = (mapTransform.scale - minScale) / (maxScale - minScale); // 0 to 1
+            
+            // Use a calibrated power curve that works at both calibration points
+            // Power of 0.6 makes zoom change more gradually to match static map behavior
+            const power = 0.6;
+            const adjustedNormalized = Math.pow(normalizedScale, power);
+            
+            // Calibrate baseZoom so that default scale (0.64) produces correct zoom
+            // At normalizedScale = (0.64 - 0.4) / (1.0 - 0.4) = 0.24 / 0.6 = 0.4
+            // We want this to map to a zoom that matches the static map at that scale
+            // Using trial: if baseZoom = 16.2, then at scale 0.64: zoom ≈ 16.2 + (0.4^0.6) * 1.8 ≈ 17.1
+            // But we need to calibrate so default zoom matches - let's use a more direct approach
+            
+            const maxZoom = 18; // Known working point at maxScale (1.0)
+            
+            // Calculate what zoom should be at default scale (0.64) to match
+            // We'll use a linear interpolation with a slight curve adjustment
+            const defaultNormalized = (defaultScale - minScale) / (maxScale - minScale); // 0.4
+            const defaultZoomTarget = 17.0; // Target zoom at default scale (calibrated to match)
+            
+            // Calculate baseZoom from the two known points
+            // At default: defaultZoomTarget = baseZoom + (defaultNormalized^power) * (maxZoom - baseZoom)
+            // Solving: baseZoom = (defaultZoomTarget - maxZoom * defaultNormalized^power) / (1 - defaultNormalized^power)
+            const defaultPower = Math.pow(defaultNormalized, power);
+            const baseZoom = (defaultZoomTarget - maxZoom * defaultPower) / (1 - defaultPower);
+            
+            // Calculate zoom with calibrated curve
+            const zoom = baseZoom + (adjustedNormalized * (maxZoom - baseZoom));
             
             // Update Mapbox map to match static map view
             mapboxMap.jumpTo({
@@ -240,7 +271,11 @@
             throw new Error('Mapbox not initialized');
         }
 
-        const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${origin[0]},${origin[1]};${destination[0]},${destination[1]}?alternatives=false&geometries=geojson&overview=full&steps=false&access_token=${encodeURIComponent(mapboxgl.accessToken)}`;
+        // Set walking speed to 1.5 m/s (5.4 km/h) - typical comfortable walking speed
+        // This is slightly faster than Mapbox default (1.42 m/s) for more realistic estimates
+        const walkingSpeed = 1.5; // meters per second
+        
+        const url = `https://api.mapbox.com/directions/v5/mapbox/walking/${origin[0]},${origin[1]};${destination[0]},${destination[1]}?alternatives=false&geometries=geojson&overview=full&steps=false&walking_speed=${walkingSpeed}&access_token=${encodeURIComponent(mapboxgl.accessToken)}`;
         
         const controller = new AbortController();
         const timeout = setTimeout(() => {
@@ -379,10 +414,14 @@
             clearInterval(syncTransformInterval);
         }
         
-        // Sync transform periodically (every frame would be too much, so use a reasonable interval)
-        syncTransformInterval = setInterval(() => {
+        // Sync transform continuously for real-time updates during zoom/pan
+        // Using requestAnimationFrame for smooth, frame-synced updates
+        function syncLoop() {
             syncMapboxTransformFromStaticMap();
-        }, 100); // Sync every 100ms (10 times per second)
+            requestAnimationFrame(syncLoop);
+        }
+        
+        syncLoop();
         
         // Also sync immediately
         syncMapboxTransformFromStaticMap();

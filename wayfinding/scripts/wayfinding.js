@@ -545,14 +545,21 @@
             this.mapImage = mapImage;
             
             // Map state
-            this.scale = 0.35;
-            this.minScale = 0.15;
+            // Set initial zoom to level 4 (from max zoom = level 1)
+            // With 6 levels total (1.0 to 0.4), level 4 = 1.0 - (1.0 - 0.4) * (3/5) = 0.64
+            this.scale = 0.64; // Level 4 from maximum zoom
+            // Limit zoom out to 6 levels from maximum zoom
+            // Calculate: if maxScale is 1.0, and we want 6 zoom-out levels
+            // Using a reasonable step size, 6 levels out would be approximately:
+            // Each zoom level reduces scale by roughly 10-15%, so 6 levels ≈ 0.4-0.5 scale
+            // More precisely: if we use exponential steps, 1.0 / (1.15^6) ≈ 0.43
+            this.minScale = 0.4; // Limited to ~6 zoom levels out from max (was 0.15)
             this.maxScale = 1;
             this.translateX = 0;
             this.translateY = 0;
             
             // Animation state
-            this.targetScale = this.scale;
+            this.targetScale = this.scale; // Initialize to level 4
             this.targetTranslateX = this.translateX;
             this.targetTranslateY = this.translateY;
             this.animationSpeed = 0.4; // Increased for faster, more responsive updates
