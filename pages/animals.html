@@ -1058,6 +1058,23 @@
             return nameToBadgeMap[animalName] || null;
         }
 
+        function normalizeAssetPath(path) {
+            if (!path) return path;
+            if (path.startsWith('/') || path.startsWith('http://') || path.startsWith('https://')) {
+                return path;
+            }
+            if (path.startsWith('../../assets/')) {
+                return path.replace('../../assets/', '../assets/');
+            }
+            if (path.startsWith('../assets/')) {
+                return path;
+            }
+            if (path.startsWith('assets/')) {
+                return '../' + path;
+            }
+            return '../assets/' + path.replace(/^(\.\.\/)*assets\//, '');
+        }
+
         // Load animals from JSON and update icon sources
         async function loadAnimalIconsFromJSON() {
             try {
@@ -1081,10 +1098,9 @@
                 const animalIconMap = {};
                 animals.forEach(animal => {
                     if (animal.name && animal.icon && animal.icon.shadow && animal.icon.found) {
-                        // Convert paths from ../assets/ to ../assets/ (since animals.html is in pages/)
                         animalIconMap[animal.name] = {
-                            shadow: animal.icon.shadow.replace('../assets/', '../assets/'),
-                            found: animal.icon.found.replace('../assets/', '../assets/')
+                            shadow: normalizeAssetPath(animal.icon.shadow),
+                            found: normalizeAssetPath(animal.icon.found)
                         };
                     }
                 });
@@ -1125,48 +1141,90 @@
         let isUnlockAllAnimalsMode = false;
 
         function toggleUnlockAllAnimals() {
-            if (!isUnlockAllAnimalsMode) {
-                // Store original data
-                originalCollectedAnimals = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
-                
-                // Animal badge IDs that correspond to animals
-                const animalBadgeIds = ['peacock', 'walrus-ar', 'koala', 'bee-ar', 'clownfish-ar', 'platypus', 'cephalopod', 'stag-beetle', 'snowy-owl', 'orangutan', 'jellyfish-ar', 'robin', 'butterfly', 'crocodile', 'dodo', 'fox', 'grass-snake', 'ostrich', 'puffin', 'tiger-cub', 'velociraptor'];
-                
-                // Temporarily set all animals as collected (don't save to localStorage)
-                sessionStorage.setItem('tempUnlockAllAnimals', 'true');
-                sessionStorage.setItem('originalCollectedAnimals', JSON.stringify(originalCollectedAnimals));
-                sessionStorage.setItem('tempAllAnimals', JSON.stringify(animalBadgeIds));
-                
-                isUnlockAllAnimalsMode = true;
-                console.log('Unlocked all animals for testing');
-                console.log('sessionStorage tempUnlockAllAnimals:', sessionStorage.getItem('tempUnlockAllAnimals'));
-                console.log('sessionStorage tempAllAnimals:', sessionStorage.getItem('tempAllAnimals'));
-                
-                // Re-initialize to show all animals
-                initializeAnimalCollection();
-                
-                // If detail popup is open, refresh it to show unlocked state
-                const popup = document.getElementById('animalDetailPopup');
-                if (popup && !popup.classList.contains('hidden') && currentAnimalId) {
-                    showAnimalDetail(currentAnimalId);
+            try {
+                if (!isUnlockAllAnimalsMode) {
+                    // Store original data
+                    originalCollectedAnimals = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+                    
+                    // Animal badge IDs that correspond to animals
+                    const animalBadgeIds = ['peacock', 'walrus-ar', 'koala', 'bee-ar', 'clownfish-ar', 'platypus', 'cephalopod', 'stag-beetle', 'snowy-owl', 'orangutan', 'jellyfish-ar', 'robin', 'butterfly', 'crocodile', 'dodo', 'fox', 'grass-snake', 'ostrich', 'puffin', 'tiger-cub', 'velociraptor'];
+                    
+                    // Temporarily set all animals as collected (don't save to localStorage)
+                    sessionStorage.setItem('tempUnlockAllAnimals', 'true');
+                    sessionStorage.setItem('originalCollectedAnimals', JSON.stringify(originalCollectedAnimals));
+                    sessionStorage.setItem('tempAllAnimals', JSON.stringify(animalBadgeIds));
+                    
+                    isUnlockAllAnimalsMode = true;
+                    console.log('Unlocked all animals for testing');
+                    console.log('sessionStorage tempUnlockAllAnimals:', sessionStorage.getItem('tempUnlockAllAnimals'));
+                    console.log('sessionStorage tempAllAnimals:', sessionStorage.getItem('tempAllAnimals'));
+                    
+                    // Re-initialize to show all animals
+                    try {
+                        initializeAnimalCollection();
+                    } catch (e) {
+                        console.error('Error in initializeAnimalCollection:', e);
+                    }
+                    
+                    // Re-add haptic feedback to buttons
+                    setTimeout(() => {
+                        try {
+                            addHapticToButtons();
+                        } catch (e) {
+                            console.error('Error in addHapticToButtons:', e);
+                        }
+                    }, 100);
+                    
+                    // If detail popup is open, refresh it to show unlocked state
+                    try {
+                        const popup = document.getElementById('animalDetailPopup');
+                        if (popup && !popup.classList.contains('hidden') && currentAnimalId) {
+                            showAnimalDetail(currentAnimalId);
+                        }
+                    } catch (e) {
+                        console.error('Error refreshing animal detail:', e);
+                    }
+                } else {
+                    // Restore original data
+                    const original = JSON.parse(sessionStorage.getItem('originalCollectedAnimals') || '[]');
+                    sessionStorage.removeItem('tempUnlockAllAnimals');
+                    sessionStorage.removeItem('originalCollectedAnimals');
+                    sessionStorage.removeItem('tempAllAnimals');
+                    
+                    isUnlockAllAnimalsMode = false;
+                    console.log('Restored original animal collection');
+                    
+                    // Re-initialize to show only original animals
+                    try {
+                        initializeAnimalCollection();
+                    } catch (e) {
+                        console.error('Error in initializeAnimalCollection:', e);
+                    }
+                    
+                    // Re-add haptic feedback to buttons
+                    setTimeout(() => {
+                        try {
+                            addHapticToButtons();
+                        } catch (e) {
+                            console.error('Error in addHapticToButtons:', e);
+                        }
+                    }, 100);
+                    
+                    // If detail popup is open, refresh it to show original state
+                    try {
+                        const popup = document.getElementById('animalDetailPopup');
+                        if (popup && !popup.classList.contains('hidden') && currentAnimalId) {
+                            showAnimalDetail(currentAnimalId);
+                        }
+                    } catch (e) {
+                        console.error('Error refreshing animal detail:', e);
+                    }
                 }
-            } else {
-                // Restore original data
-                const original = JSON.parse(sessionStorage.getItem('originalCollectedAnimals') || '[]');
-                sessionStorage.removeItem('tempUnlockAllAnimals');
-                sessionStorage.removeItem('originalCollectedAnimals');
-                sessionStorage.removeItem('tempAllAnimals');
-                
-                isUnlockAllAnimalsMode = false;
-                console.log('Restored original animal collection');
-                
-                // Re-initialize to show only original animals
-                initializeAnimalCollection();
-                
-                // If detail popup is open, refresh it to show original state
-                const popup = document.getElementById('animalDetailPopup');
-                if (popup && !popup.classList.contains('hidden') && currentAnimalId) {
-                    showAnimalDetail(currentAnimalId);
+            } catch (error) {
+                console.error('Error in toggleUnlockAllAnimals:', error);
+                // Ensure haptic system is still available even if unlock fails
+                if (typeof window.triggerHaptic === 'undefined' && typeof triggerHaptic === 'function') {
+                    window.triggerHaptic = triggerHaptic;
                 }
             }
         }
@@ -1827,17 +1885,29 @@
         
         // Add haptic feedback to buttons with onclick
         function addHapticToButtons() {
-            document.querySelectorAll('button[onclick]').forEach(button => {
-                const originalOnclick = button.getAttribute('onclick');
-                if (originalOnclick && !originalOnclick.includes('triggerHaptic')) {
-                    button.onclick = function(e) {
-                        if (typeof triggerHaptic === 'function') {
-                            triggerHaptic('single');
-                        }
-                        eval(originalOnclick);
-                    };
-                }
-            });
+            try {
+                document.querySelectorAll('button[onclick]').forEach(button => {
+                    const originalOnclick = button.getAttribute('onclick');
+                    if (originalOnclick && !originalOnclick.includes('triggerHaptic')) {
+                        button.onclick = function(e) {
+                            try {
+                                if (typeof triggerHaptic === 'function') {
+                                    triggerHaptic('single');
+                                }
+                            } catch (hapticError) {
+                                console.warn('Haptic feedback error:', hapticError);
+                            }
+                            try {
+                                eval(originalOnclick);
+                            } catch (onclickError) {
+                                console.error('Error executing onclick:', onclickError);
+                            }
+                        };
+                    }
+                });
+            } catch (error) {
+                console.error('Error in addHapticToButtons:', error);
+            }
         }
         
         // Call on page load

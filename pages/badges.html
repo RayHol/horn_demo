@@ -831,6 +831,23 @@
             }
         });
 
+        function normalizeAssetPath(path) {
+            if (!path) return path;
+            if (path.startsWith('/') || path.startsWith('http://') || path.startsWith('https://')) {
+                return path;
+            }
+            if (path.startsWith('../../assets/')) {
+                return path.replace('../../assets/', '../assets/');
+            }
+            if (path.startsWith('../assets/')) {
+                return path;
+            }
+            if (path.startsWith('assets/')) {
+                return '../' + path;
+            }
+            return '../assets/' + path.replace(/^(\.\.\/)*assets\//, '');
+        }
+
         // Load badge icons from JSON
         async function loadBadgeIconsFromJSON() {
             try {
@@ -857,28 +874,14 @@
                 // Load game badge icons
                 gameBadges.forEach(gameBadge => {
                     if (gameBadge.id && gameBadge.icon) {
-                        // JSON paths are relative to wayfinding pages (../../assets/) or already correct (../assets/)
-                        // From pages/badges.html, we need ../assets/ to reach root assets/
-                        let iconPath = gameBadge.icon;
-                        if (iconPath.startsWith('../../assets/')) {
-                            iconPath = iconPath.replace('../../assets/', '../assets/');
-                        }
-                        // ../assets/ is already correct for pages/ directory, so no change needed
-                        badgeIconMap[gameBadge.id] = iconPath;
+                        badgeIconMap[gameBadge.id] = normalizeAssetPath(gameBadge.icon);
                     }
                 });
                 
                 // Load animal badge icons
                 animals.forEach(animal => {
                     if (animal.badge && animal.badge.id && animal.badge.icon) {
-                        // JSON paths are relative to wayfinding pages (../../assets/) or already correct (../assets/)
-                        // From pages/badges.html, we need ../assets/ to reach root assets/
-                        let iconPath = animal.badge.icon;
-                        if (iconPath.startsWith('../../assets/')) {
-                            iconPath = iconPath.replace('../../assets/', '../assets/');
-                        }
-                        // ../assets/ is already correct for pages/ directory, so no change needed
-                        badgeIconMap[animal.badge.id] = iconPath;
+                        badgeIconMap[animal.badge.id] = normalizeAssetPath(animal.badge.icon);
                     }
                 });
                 
@@ -905,42 +908,82 @@
         let isUnlockAllMode = false;
 
         function toggleUnlockAllBadges() {
-            if (!isUnlockAllMode) {
-                // Store original data
-                originalCollectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
-                
-                // Get all badge IDs from the page
-                const allBadgeIds = Array.from(document.querySelectorAll('[data-badge]'))
-                    .map(item => item.getAttribute('data-badge'))
-                    .filter(id => id); // Remove null/undefined
-                
-                // Temporarily set all badges as collected (don't save to localStorage)
-                // We'll use a session variable to track this
-                sessionStorage.setItem('tempUnlockAllBadges', 'true');
-                sessionStorage.setItem('originalCollectedBadges', JSON.stringify(originalCollectedBadges));
-                sessionStorage.setItem('tempAllBadges', JSON.stringify(allBadgeIds));
-                
-                isUnlockAllMode = true;
-                console.log('Unlocked all badges for testing');
-                
-                // Re-initialize to show all badges
-                initializeBadgeCollection();
-                // Re-add click listeners for newly visible badges
-                addBadgeClickListeners();
-            } else {
-                // Restore original data
-                const original = JSON.parse(sessionStorage.getItem('originalCollectedBadges') || '[]');
-                sessionStorage.removeItem('tempUnlockAllBadges');
-                sessionStorage.removeItem('originalCollectedBadges');
-                sessionStorage.removeItem('tempAllBadges');
-                
-                isUnlockAllMode = false;
-                console.log('Restored original badge collection');
-                
-                // Re-initialize to show only original badges
-                initializeBadgeCollection();
-                // Re-add click listeners
-                addBadgeClickListeners();
+            try {
+                if (!isUnlockAllMode) {
+                    // Store original data
+                    originalCollectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+                    
+                    // Get all badge IDs from the page
+                    const allBadgeIds = Array.from(document.querySelectorAll('[data-badge]'))
+                        .map(item => item.getAttribute('data-badge'))
+                        .filter(id => id); // Remove null/undefined
+                    
+                    // Temporarily set all badges as collected (don't save to localStorage)
+                    // We'll use a session variable to track this
+                    sessionStorage.setItem('tempUnlockAllBadges', 'true');
+                    sessionStorage.setItem('originalCollectedBadges', JSON.stringify(originalCollectedBadges));
+                    sessionStorage.setItem('tempAllBadges', JSON.stringify(allBadgeIds));
+                    
+                    isUnlockAllMode = true;
+                    console.log('Unlocked all badges for testing');
+                    
+                    // Re-initialize to show all badges
+                    try {
+                        initializeBadgeCollection();
+                    } catch (e) {
+                        console.error('Error in initializeBadgeCollection:', e);
+                    }
+                    // Re-add click listeners for newly visible badges
+                    try {
+                        addBadgeClickListeners();
+                    } catch (e) {
+                        console.error('Error in addBadgeClickListeners:', e);
+                    }
+                    // Re-add haptic feedback to buttons
+                    setTimeout(() => {
+                        try {
+                            addHapticToButtons();
+                        } catch (e) {
+                            console.error('Error in addHapticToButtons:', e);
+                        }
+                    }, 100);
+                } else {
+                    // Restore original data
+                    const original = JSON.parse(sessionStorage.getItem('originalCollectedBadges') || '[]');
+                    sessionStorage.removeItem('tempUnlockAllBadges');
+                    sessionStorage.removeItem('originalCollectedBadges');
+                    sessionStorage.removeItem('tempAllBadges');
+                    
+                    isUnlockAllMode = false;
+                    console.log('Restored original badge collection');
+                    
+                    // Re-initialize to show only original badges
+                    try {
+                        initializeBadgeCollection();
+                    } catch (e) {
+                        console.error('Error in initializeBadgeCollection:', e);
+                    }
+                    // Re-add click listeners
+                    try {
+                        addBadgeClickListeners();
+                    } catch (e) {
+                        console.error('Error in addBadgeClickListeners:', e);
+                    }
+                    // Re-add haptic feedback to buttons
+                    setTimeout(() => {
+                        try {
+                            addHapticToButtons();
+                        } catch (e) {
+                            console.error('Error in addHapticToButtons:', e);
+                        }
+                    }, 100);
+                }
+            } catch (error) {
+                console.error('Error in toggleUnlockAllBadges:', error);
+                // Ensure haptic system is still available even if unlock fails
+                if (typeof window.triggerHaptic === 'undefined' && typeof triggerHaptic === 'function') {
+                    window.triggerHaptic = triggerHaptic;
+                }
             }
         }
 
@@ -1101,13 +1144,6 @@
                 // Load game badge data
                 gameBadges.forEach(gameBadge => {
                     if (gameBadge.id) {
-                        // Convert icon path from ../../assets/ to ../assets/ for pages/ directory
-                        let iconPath = gameBadge.icon;
-                        if (iconPath && iconPath.startsWith('../../assets/')) {
-                            iconPath = iconPath.replace('../../assets/', '../assets/');
-                        }
-                        
-                        // Convert gamePath from ../../games/ to ../games/ for pages/ directory
                         let gamePath = gameBadge.gamePath;
                         if (gamePath && gamePath.startsWith('../../games/')) {
                             gamePath = gamePath.replace('../../games/', '../games/');
@@ -1116,7 +1152,7 @@
                         gameBadgeDataMap[gameBadge.id] = {
                             name: gameBadge.name,
                             description: gameBadge.description,
-                            icon: iconPath,
+                            icon: normalizeAssetPath(gameBadge.icon),
                             gamePath: gamePath
                         };
                     }
@@ -1125,13 +1161,6 @@
                 // Load animal badge data
                 animals.forEach(animal => {
                     if (animal.badge && animal.badge.id) {
-                        // Convert icon path from ../../assets/ to ../assets/ for pages/ directory
-                        let iconPath = animal.badge.icon;
-                        if (iconPath && iconPath.startsWith('../../assets/')) {
-                            iconPath = iconPath.replace('../../assets/', '../assets/');
-                        }
-                        
-                        // Convert gamePath from ../../games/ to ../games/ for pages/ directory
                         let gamePath = animal.badge.gamePath;
                         if (gamePath && gamePath.startsWith('../../games/')) {
                             gamePath = gamePath.replace('../../games/', '../games/');
@@ -1140,7 +1169,7 @@
                         animalBadgeDataMap[animal.badge.id] = {
                             name: animal.badge.name,
                             description: animal.badgeDescription || animal.badge.description,
-                            icon: iconPath,
+                            icon: normalizeAssetPath(animal.badge.icon),
                             gamePath: gamePath
                         };
                     }
@@ -1254,13 +1283,10 @@
                 // Get icon path from JSON or fallback to badgeData
                 let iconPath = '';
                 if (badgeFromJson && badgeFromJson.icon) {
-                    // JSON paths are already correct for pages/ directory (../assets/)
-                    // or may need conversion from ../../assets/ (from wayfinding)
                     iconPath = badgeFromJson.icon;
                     if (iconPath.startsWith('../../assets/')) {
                         iconPath = iconPath.replace('../../assets/', '../assets/');
                     }
-                    // ../assets/ is already correct for pages/ directory
                 } else {
                     iconPath = badgeInfo.icon || '';
                 }
@@ -1304,11 +1330,8 @@
                 const playGameButton = document.getElementById('badgePlayGameButton');
                 let gamePath = badgeInfo.gamePath;
                 
-                // Convert relative paths from JSON (../../games/) to paths relative to badges.html (../games/)
                 if (gamePath && gamePath.startsWith('../../games/')) {
                     gamePath = gamePath.replace('../../games/', '../games/');
-                } else if (gamePath && gamePath.startsWith('../games/')) {
-                    // Already correct for pages/ directory
                 } else if (gamePath && gamePath.startsWith('./games/')) {
                     gamePath = gamePath.replace('./games/', '../games/');
                 }
@@ -1387,17 +1410,29 @@
         
         // Add haptic feedback to buttons with onclick
         function addHapticToButtons() {
-            document.querySelectorAll('button[onclick]').forEach(button => {
-                const originalOnclick = button.getAttribute('onclick');
-                if (originalOnclick && !originalOnclick.includes('triggerHaptic')) {
-                    button.onclick = function(e) {
-                        if (typeof triggerHaptic === 'function') {
-                            triggerHaptic('single');
-                        }
-                        eval(originalOnclick);
-                    };
-                }
-            });
+            try {
+                document.querySelectorAll('button[onclick]').forEach(button => {
+                    const originalOnclick = button.getAttribute('onclick');
+                    if (originalOnclick && !originalOnclick.includes('triggerHaptic')) {
+                        button.onclick = function(e) {
+                            try {
+                                if (typeof triggerHaptic === 'function') {
+                                    triggerHaptic('single');
+                                }
+                            } catch (hapticError) {
+                                console.warn('Haptic feedback error:', hapticError);
+                            }
+                            try {
+                                eval(originalOnclick);
+                            } catch (onclickError) {
+                                console.error('Error executing onclick:', onclickError);
+                            }
+                        };
+                    }
+                });
+            } catch (error) {
+                console.error('Error in addHapticToButtons:', error);
+            }
         }
         
         // Call on page load
