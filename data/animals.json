@@ -416,7 +416,7 @@
       "badge": {
         "id": "tiger-cub",
         "name": "Tiger Cub Finder",
-        "icon": "../../assets/badges/icons/tiger_cub-badge.svg",
+        "icon": "../../assets/badges/icons/tiger_cub.svg",
         "description": "You found the tiger cub! Playful and curious, this little cub is learning the ways of the jungle."
       }
     },
@@ -442,7 +442,7 @@
       "badge": {
         "id": "grass-snake",
         "name": "Snake Spotter",
-        "icon": "../../assets/badges/icons/grass snake-badge.svg",
+        "icon": "../../assets/badges/icons/Grass Snake.svg",
         "description": "You found the grass snake! Experts at slithering and sliding around, grass snakes are also great swimmers."
       }
     },
@@ -494,7 +494,7 @@
       "badge": {
         "id": "ostrich",
         "name": "Ostrich Watcher",
-        "icon": "../../assets/badges/icons/ostrich-badge.svg",
+        "icon": "../../assets/badges/icons/ostrich.svg",
         "description": "You found the ostrich! The fastest bird on land, ostriches are always ready to dash across the plains."
       }
     },
@@ -520,7 +520,7 @@
       "badge": {
         "id": "crocodile",
         "name": "Crocodile Finder",
-        "icon": "../../assets/badges/icons/crocodile-badge.svg",
+        "icon": "../../assets/badges/icons/Nile Crocodile.svg",
         "description": "You found the Nile Crocodile! Just don't get in the way of its strong bite - one of the strongest bites in the animal kingdom!"
       }
     },
@@ -546,7 +546,7 @@
       "badge": {
         "id": "butterfly",
         "name": "Butterfly Spotter",
-        "icon": "../../assets/badges/icons/butterfly-badge.svg",
+        "icon": "../../assets/badges/icons/placeholder.svg",
         "description": "You found the butterfly! A beautiful and delicate discovery."
       }
     }
@@ -556,41 +556,41 @@
       "id": "sunflower",
       "name": "Garden Grower",
       "description": "A true green finger! You planted a beautiful garden for the bees.",
-      "icon": "../assets/badges/icons/feeding-badge.svg",
+      "icon": "../../assets/badges/icons/feeding-badge.svg",
       "gamePath": "../../games/sunflower-planter/index.html"
     },
     {
       "id": "walrus",
       "name": "Fancy Feeder",
       "description": "Top marks for tossing molluscs! You're the Walrus' favourite feeder.",
-      "icon": "../assets/badges/icons/walrusFeeding-badge.svg",
+      "icon": "../../assets/badges/icons/walrusFeeding-badge.svg",
       "gamePath": "../../games/walrus-feeder/index.html"
     },
     {
       "id": "anemone",
       "name": "Careful Cleaner",
       "description": "Great work, you've left the anemones sparkling and created a healthy home for the clownfish.",
-      "icon": "../assets/badges/icons/clownfish-game-badge.svg",
+      "icon": "../../assets/badges/icons/clownfish-game-badge.svg",
       "gamePath": "../../games/anemone-cleaning/index.html"
     },
     {
       "id": "photographer",
       "name": "Peacock Paparazzi",
       "description": "Perfect timing! You took a photo of the peacock's proudest moment.",
-      "icon": "../assets/badges/icons/peacock-game-badge.svg",
+      "icon": "../../assets/badges/icons/peacock-game-badge.svg",
       "gamePath": "../../games/proud-photographer/index.html"
     },
     {
       "id": "streak",
       "name": "Streak Master",
       "description": "Earn this badge by playing three days in a row!",
-      "icon": "../assets/badges/Badge.png"
+      "icon": "../../assets/badges/icons/Streak-Master.svg"
     },
     {
       "id": "jellyfish-juggler",
       "name": "Jellyfish Juggler",
       "description": "Nice shot! You spotted the Moon Jellyfish in the crowd and took a fabulous photo!",
-      "icon": "../assets/badges/icons/jellyfish-badge.svg"
+      "icon": "../../assets/badges/icons/jellyfish-badge.svg"
     }
   ]
 }

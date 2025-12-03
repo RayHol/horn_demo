@@ -748,104 +748,8 @@
     <button class="title-unlock-button" id="titleUnlockButton" aria-label="Unlock all animals"></button>
 
     <!-- Animal Grid Container -->
-    <div class="animal-grid">
-        <!-- Row 1 - Animal AR Animals -->
-        <div class="animal-item" data-animal="peacock">
-            <img src="" alt="Peacock" class="animal-image">
-            <img src="" alt="Peacock" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="walrus-ar">
-            <img src="" alt="Walrus" class="animal-image">
-            <img src="" alt="Walrus" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="koala">
-            <img src="" alt="Koala" class="animal-image">
-            <img src="" alt="Koala" class="animal-image collected-animal" style="display: none;">
-        </div>
-
-        <!-- Row 2 - Animal AR Animals -->
-        <div class="animal-item" data-animal="bee-ar">
-            <img src="" alt="Bee" class="animal-image">
-            <img src="" alt="Bee" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="clownfish-ar">
-            <img src="" alt="Clownfish" class="animal-image">
-            <img src="" alt="Clownfish" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="platypus">
-            <img src="" alt="Platypus" class="animal-image">
-            <img src="" alt="Platypus" class="animal-image collected-animal" style="display: none;">
-        </div>
-
-        <!-- Row 3 - Animal AR Animals -->
-        <div class="animal-item" data-animal="cephalopod">
-            <img src="" alt="Cephalopod" class="animal-image">
-            <img src="" alt="Cephalopod" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="stag-beetle">
-            <img src="" alt="Stag Beetle" class="animal-image">
-            <img src="" alt="Stag Beetle" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="snowy-owl">
-            <img src="" alt="Snowy Owl" class="animal-image">
-            <img src="" alt="Snowy Owl" class="animal-image collected-animal" style="display: none;">
-        </div>
-
-        <!-- Row 4 - Animal AR Animals -->
-        <div class="animal-item" data-animal="orangutan">
-            <img src="" alt="Orangutan" class="animal-image">
-            <img src="" alt="Orangutan" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="jellyfish-ar">
-            <img src="" alt="Jellyfish" class="animal-image">
-            <img src="" alt="Jellyfish" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="robin">
-            <img src="" alt="Robin" class="animal-image">
-            <img src="" alt="Robin" class="animal-image collected-animal" style="display: none;">
-        </div>
-
-        <!-- Row 5 - Additional Animals -->
-        <div class="animal-item" data-animal="butterfly">
-            <img src="" alt="Butterfly" class="animal-image">
-            <img src="" alt="Butterfly" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="crocodile">
-            <img src="" alt="Crocodile" class="animal-image">
-            <img src="" alt="Crocodile" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="dodo">
-            <img src="" alt="Dodo" class="animal-image">
-            <img src="" alt="Dodo" class="animal-image collected-animal" style="display: none;">
-        </div>
-
-        <!-- Row 6 - Additional Animals -->
-        <div class="animal-item" data-animal="fox">
-            <img src="" alt="Fox" class="animal-image">
-            <img src="" alt="Fox" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="grass-snake">
-            <img src="" alt="Grass Snake" class="animal-image">
-            <img src="" alt="Grass Snake" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="ostrich">
-            <img src="" alt="Ostrich" class="animal-image">
-            <img src="" alt="Ostrich" class="animal-image collected-animal" style="display: none;">
-        </div>
-
-        <!-- Row 7 - Additional Animals -->
-        <div class="animal-item" data-animal="puffin">
-            <img src="" alt="Puffin" class="animal-image">
-            <img src="" alt="Puffin" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="tiger-cub">
-            <img src="" alt="Tiger Cub" class="animal-image">
-            <img src="" alt="Tiger Cub" class="animal-image collected-animal" style="display: none;">
-        </div>
-        <div class="animal-item" data-animal="velociraptor">
-            <img src="" alt="Velociraptor" class="animal-image">
-            <img src="" alt="Velociraptor" class="animal-image collected-animal" style="display: none;">
-        </div>
+    <div class="animal-grid" id="animalGrid">
+        <!-- Animals will be dynamically generated from JSON -->
     </div>
 
     <!-- Animal Detail Popup -->
@@ -1011,50 +915,30 @@
             initStarburstOverlay();
         });
 
+        // Dynamic mapping functions - built from JSON data
+        let badgeToNameMap = {};
+        let nameToBadgeMap = {};
+        
+        // Build mapping functions from JSON data
+        function buildAnimalMappings(animals) {
+            badgeToNameMap = {};
+            nameToBadgeMap = {};
+            
+            animals.forEach(animal => {
+                if (animal.badge && animal.badge.id && animal.name) {
+                    badgeToNameMap[animal.badge.id] = animal.name;
+                    nameToBadgeMap[animal.name] = animal.badge.id;
+                }
+            });
+        }
+
         // Map badge ID to animal name (for looking up in JSON)
         function getAnimalNameFromBadgeId(badgeId) {
-            const badgeToNameMap = {
-                'peacock': 'Peacock',
-                'walrus-ar': 'Walrus',
-                'koala': 'Koala',
-                'bee-ar': 'Bee',
-                'clownfish-ar': 'Clown Fish',
-                'platypus': 'Platypus',
-                'cephalopod': 'Cephalopod',
-                'stag-beetle': 'Stag Beetle',
-                'snowy-owl': 'Snowy Owl',
-                'orangutan': 'Orangutan',
-                'jellyfish-ar': 'Jellyfish',
-                'robin': 'Robin',
-                'butterfly': 'Butterfly',
-                'crocodile': 'Crocodile',
-                'dodo': 'Dodo',
-                'fox': 'Fox',
-                'grass-snake': 'Grass Snake',
-                'ostrich': 'Ostrich',
-                'puffin': 'Puffin',
-                'tiger-cub': 'Tiger Cub',
-                'velociraptor': 'Velociraptor'
-            };
             return badgeToNameMap[badgeId] || null;
         }
 
         // Map animal name to badge ID (reverse lookup)
         function getBadgeIdFromAnimalName(animalName) {
-            const nameToBadgeMap = {
-                'Peacock': 'peacock',
-                'Walrus': 'walrus-ar',
-                'Koala': 'koala',
-                'Bee': 'bee-ar',
-                'Clown Fish': 'clownfish-ar',
-                'Platypus': 'platypus',
-                'Cephalopod': 'cephalopod',
-                'Stag Beetle': 'stag-beetle',
-                'Snowy Owl': 'snowy-owl',
-                'Orangutan': 'orangutan',
-                'Jellyfish': 'jellyfish-ar',
-                'Robin': 'robin'
-            };
             return nameToBadgeMap[animalName] || null;
         }
 
@@ -1075,8 +959,8 @@
             return '../assets/' + path.replace(/^(\.\.\/)*assets\//, '');
         }
 
-        // Load animals from JSON and update icon sources
-        async function loadAnimalIconsFromJSON() {
+        // Generate animal items dynamically from JSON
+        async function generateAnimalItemsFromJSON() {
             try {
                 // Get environment from localStorage (set by wayfinding page)
                 let environment = 'production';
@@ -1094,45 +978,86 @@
                 const cfg = await res.json();
                 const animals = Array.isArray(cfg.animals) ? cfg.animals : [];
                 
+                // Build mapping functions from JSON
+                buildAnimalMappings(animals);
+                
+                const animalGrid = document.getElementById('animalGrid');
+                if (!animalGrid) {
+                    console.error('Animal grid container not found');
+                    return {};
+                }
+                
+                // Clear existing animals
+                animalGrid.innerHTML = '';
+                
                 // Create a map of animal name to icon paths
                 const animalIconMap = {};
-                animals.forEach(animal => {
-                    if (animal.name && animal.icon && animal.icon.shadow && animal.icon.found) {
-                        animalIconMap[animal.name] = {
-                            shadow: normalizeAssetPath(animal.icon.shadow),
-                            found: normalizeAssetPath(animal.icon.found)
-                        };
-                    }
-                });
                 
-                // Update all animal items with icons from JSON
-                document.querySelectorAll('.animal-item[data-animal]').forEach(animalItem => {
-                    const badgeId = animalItem.getAttribute('data-animal');
-                    const animalName = getAnimalNameFromBadgeId(badgeId);
+                // Helper function to create and append an animal item
+                function createAnimalItem(badgeId, animalName, shadowIcon, foundIcon) {
+                    const animalItem = document.createElement('div');
+                    animalItem.className = 'animal-item';
+                    animalItem.setAttribute('data-animal', badgeId);
                     
-                    if (animalName && animalIconMap[animalName]) {
-                        const placeholder = animalItem.querySelector('.animal-image:not(.collected-animal)');
-                        const collectedAnimal = animalItem.querySelector('.collected-animal');
+                    // Placeholder (shadow) image
+                    const placeholder = document.createElement('img');
+                    placeholder.src = shadowIcon;
+                    placeholder.alt = animalName;
+                    placeholder.className = 'animal-image';
+                    
+                    // Collected (found) image
+                    const collectedAnimal = document.createElement('img');
+                    collectedAnimal.src = foundIcon;
+                    collectedAnimal.alt = animalName;
+                    collectedAnimal.className = 'animal-image collected-animal';
+                    collectedAnimal.style.display = 'none';
+                    
+                    animalItem.appendChild(placeholder);
+                    animalItem.appendChild(collectedAnimal);
+                    animalGrid.appendChild(animalItem);
+                }
+                
+                // Generate animal items from JSON
+                animals.forEach(animal => {
+                    if (animal.badge && animal.badge.id && animal.name && animal.icon && animal.icon.shadow && animal.icon.found) {
+                        const badgeId = animal.badge.id;
+                        const shadowIcon = normalizeAssetPath(animal.icon.shadow);
+                        const foundIcon = normalizeAssetPath(animal.icon.found);
                         
-                        // Update placeholder (shadow) icon
-                        if (placeholder) {
-                            placeholder.src = animalIconMap[animalName].shadow;
-                            placeholder.alt = animalName;
-                        }
+                        animalIconMap[animal.name] = {
+                            shadow: shadowIcon,
+                            found: foundIcon
+                        };
                         
-                        // Update collected (found) icon
-                        if (collectedAnimal) {
-                            collectedAnimal.src = animalIconMap[animalName].found;
-                            collectedAnimal.alt = animalName;
-                        }
+                        createAnimalItem(badgeId, animal.name, shadowIcon, foundIcon);
                     }
                 });
                 
                 return animalIconMap;
             } catch (err) {
-                console.error('Failed to load animal icons from JSON:', err);
+                console.error('Failed to generate animal items from JSON:', err);
                 return {};
             }
+        }
+
+        // Load animals from JSON and update icon sources (kept for backwards compatibility)
+        async function loadAnimalIconsFromJSON() {
+            // Animal items are now generated dynamically, so this just needs to return the icon map
+            const animalIconMap = {};
+            document.querySelectorAll('.animal-item[data-animal]').forEach(animalItem => {
+                const badgeId = animalItem.getAttribute('data-animal');
+                const animalName = getAnimalNameFromBadgeId(badgeId);
+                const placeholder = animalItem.querySelector('.animal-image:not(.collected-animal)');
+                const collectedAnimal = animalItem.querySelector('.collected-animal');
+                
+                if (animalName && placeholder && collectedAnimal) {
+                    animalIconMap[animalName] = {
+                        shadow: placeholder.src,
+                        found: collectedAnimal.src
+                    };
+                }
+            });
+            return animalIconMap;
         }
 
         // Animal Collection System
@@ -1140,14 +1065,16 @@
         let originalCollectedAnimals = null;
         let isUnlockAllAnimalsMode = false;
 
-        function toggleUnlockAllAnimals() {
+        async function toggleUnlockAllAnimals() {
             try {
                 if (!isUnlockAllAnimalsMode) {
                     // Store original data
                     originalCollectedAnimals = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
                     
-                    // Animal badge IDs that correspond to animals
-                    const animalBadgeIds = ['peacock', 'walrus-ar', 'koala', 'bee-ar', 'clownfish-ar', 'platypus', 'cephalopod', 'stag-beetle', 'snowy-owl', 'orangutan', 'jellyfish-ar', 'robin', 'butterfly', 'crocodile', 'dodo', 'fox', 'grass-snake', 'ostrich', 'puffin', 'tiger-cub', 'velociraptor'];
+                    // Get all animal badge IDs dynamically from the page (after animals are generated)
+                    const animalBadgeIds = Array.from(document.querySelectorAll('.animal-item[data-animal]'))
+                        .map(item => item.getAttribute('data-animal'))
+                        .filter(id => id); // Remove null/undefined
                     
                     // Temporarily set all animals as collected (don't save to localStorage)
                     sessionStorage.setItem('tempUnlockAllAnimals', 'true');
@@ -1159,11 +1086,12 @@
                     console.log('sessionStorage tempUnlockAllAnimals:', sessionStorage.getItem('tempUnlockAllAnimals'));
                     console.log('sessionStorage tempAllAnimals:', sessionStorage.getItem('tempAllAnimals'));
                     
-                    // Re-initialize to show all animals
+                    // Re-generate animals and re-initialize to show all animals
                     try {
-                        initializeAnimalCollection();
+                        await generateAnimalItemsFromJSON();
+                        await initializeAnimalCollection();
                     } catch (e) {
-                        console.error('Error in initializeAnimalCollection:', e);
+                        console.error('Error in generateAnimalItemsFromJSON or initializeAnimalCollection:', e);
                     }
                     
                     // Re-add haptic feedback to buttons
@@ -1194,11 +1122,12 @@
                     isUnlockAllAnimalsMode = false;
                     console.log('Restored original animal collection');
                     
-                    // Re-initialize to show only original animals
+                    // Re-generate animals and re-initialize to show only original animals
                     try {
-                        initializeAnimalCollection();
+                        await generateAnimalItemsFromJSON();
+                        await initializeAnimalCollection();
                     } catch (e) {
-                        console.error('Error in initializeAnimalCollection:', e);
+                        console.error('Error in generateAnimalItemsFromJSON or initializeAnimalCollection:', e);
                     }
                     
                     // Re-add haptic feedback to buttons
@@ -1230,8 +1159,13 @@
         }
 
         async function initializeAnimalCollection() {
-            // Load icons from JSON first
-            await loadAnimalIconsFromJSON();
+            // Generate animal items from JSON first
+            await generateAnimalItemsFromJSON();
+            
+            // Get all animal badge IDs dynamically from the generated items
+            const animalBadgeIds = Array.from(document.querySelectorAll('.animal-item[data-animal]'))
+                .map(item => item.getAttribute('data-animal'))
+                .filter(id => id); // Remove null/undefined
             
             // Check if we're in unlock-all mode
             const tempUnlock = sessionStorage.getItem('tempUnlockAllAnimals') === 'true';
@@ -1246,9 +1180,6 @@
                 collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
                 isUnlockAllAnimalsMode = false;
             }
-            
-            // Animal badge IDs that correspond to animals (including future animals)
-            const animalBadgeIds = ['peacock', 'walrus-ar', 'koala', 'bee-ar', 'clownfish-ar', 'platypus', 'cephalopod', 'stag-beetle', 'snowy-owl', 'orangutan', 'jellyfish-ar', 'robin', 'butterfly', 'crocodile', 'dodo', 'fox', 'grass-snake', 'ostrich', 'puffin', 'tiger-cub', 'velociraptor'];
             
             // Show collected animals and hide placeholder animals
             collectedBadges.forEach(badgeId => {

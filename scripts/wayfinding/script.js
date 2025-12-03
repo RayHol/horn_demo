@@ -37,98 +37,63 @@ async function loadAnimalConfig() {
     }
 }
 
-// Animal to Badge Mapping
-function getBadgeDataForAnimal(animalName) {
-    const badgeMap = {
-        'Peacock': {
-            badgeId: 'peacock',
-            iconPath: '../../assets/badges/icons/peacock-badge.svg',
-            badgeName: 'Peacock Spotter',
-            description: 'You found the magnificent peacock! A true explorer of the Horniman grounds.',
-            gamePath: '../photographer-game.html'
-        },
-        'Walrus': {
-            badgeId: 'walrus-ar',
-            iconPath: '../../assets/badges/icons/walrus-badge.svg',
-            badgeName: 'Walrus Finder',
-            description: 'You discovered the walrus! Great tracking skills on your adventure.',
-            gamePath: '../walrus-game.html'
-        },
-        'Koala': {
-            badgeId: 'koala',
-            iconPath: '../../assets/badges/icons/Koala.svg',
-            badgeName: 'Koala Discoverer',
-            description: 'You found the koala! Your keen eye spotted this hidden treasure.'
-        },
-        'Bee': {
-            badgeId: 'bee-ar',
-            iconPath: '../../assets/badges/icons/bee-badge.svg',
-            badgeName: 'Bee Hunter',
-            description: 'You found the bee! A tiny but important discovery on your journey.',
-            gamePath: '../sunflower-game.html'
-        },
-        'Clown Fish': {
-            badgeId: 'clownfish-ar',
-            iconPath: '../../assets/badges/icons/clownfish-badge.svg',
-            badgeName: 'Clownfish Seeker',
-            description: 'You found the clownfish! A colorful addition to your collection.',
-            gamePath: '../anemone-game.html'
-        },
-        'Platypus': {
-            badgeId: 'platypus',
-            iconPath: '../../assets/badges/icons/platypus.svg',
-            badgeName: 'Platypus Explorer',
-            description: 'You found the platypus! One of nature\'s most unique creatures.'
-        },
-        'Cephalopod': {
-            badgeId: 'cephalopod',
-            iconPath: '../../assets/badges/icons/Shelled Cephalopod.svg',
-            badgeName: 'Cephalopod Collector',
-            description: 'You found the cephalopod! A fascinating marine discovery.'
-        },
-        'Stag Beetle': {
-            badgeId: 'stag-beetle',
-            iconPath: '../../assets/badges/icons/Stag Beetle.svg',
-            badgeName: 'Beetle Spotter',
-            description: 'You found the stag beetle! A small but impressive find.'
-        },
-        'Snowy Owl': {
-            badgeId: 'snowy-owl',
-            iconPath: '../../assets/badges/icons/snowy owl.svg',
-            badgeName: 'Owl Watcher',
-            description: 'You found the snowy owl! A wise and majestic discovery.'
-        },
-        'Orangutan': {
-            badgeId: 'orangutan',
-            iconPath: '../../assets/badges/icons/orangutan.svg',
-            badgeName: 'Orangutan Tracker',
-            description: 'You found the orangutan! A great ape discovery on your adventure.'
-        },
-        'Jellyfish': {
-            badgeId: 'jellyfish-ar',
-            iconPath: '../../assets/badges/icons/jellyfish-badge.svg',
-            badgeName: 'Jellyfish Finder',
-            description: 'You found the jellyfish! A graceful and mesmerizing discovery.'
-        },
-        'Robin': {
-            badgeId: 'robin',
-            iconPath: '../../assets/badges/icons/Robin.svg',
-            badgeName: 'Robin Seeker',
-            description: 'You found the robin! A cheerful bird to add to your collection.'
+// Dynamic animal to badge mapping - built from JSON data
+let animalBadgeDataMap = {};
+
+// Build badge data mapping from JSON
+async function buildBadgeDataMapping() {
+    try {
+        // Get environment from localStorage (set by wayfinding page)
+        let environment = 'production';
+        try {
+            const saved = localStorage.getItem('wayfinding-environment');
+            if (saved === 'testing' || saved === 'production') {
+                environment = saved;
+            }
+        } catch (_) {
+            // localStorage not available, use default
         }
-    };
-    
-    // Return badge data or use placeholder
-    const badgeData = badgeMap[animalName];
-    if (badgeData) {
-        // Use description from currentAnimalConfig (loaded from JSON) if available, otherwise use fallback
-        if (currentAnimalConfig && currentAnimalConfig.name === animalName && currentAnimalConfig.description) {
-            badgeData.description = currentAnimalConfig.description;
+        
+        const jsonFile = environment === 'testing' ? '../../data/testing.json' : '../../data/animals.json';
+        const res = await fetch(jsonFile, { cache: 'no-cache' });
+        const cfg = await res.json();
+        const animals = Array.isArray(cfg.animals) ? cfg.animals : [];
+        
+        animalBadgeDataMap = {};
+        animals.forEach(animal => {
+            if (animal.badge && animal.badge.id && animal.name) {
+                let gamePath = animal.badge.gamePath;
+                if (gamePath && gamePath.startsWith('../../games/')) {
+                    gamePath = gamePath.replace('../../games/', '../games/');
+                }
+                
+                animalBadgeDataMap[animal.name] = {
+                    badgeId: animal.badge.id,
+                    iconPath: animal.badge.icon,
+                    badgeName: animal.badge.name,
+                    description: animal.badgeDescription || animal.badge.description || '',
+                    gamePath: gamePath
+                };
+            }
+        });
+    } catch (e) {
+        console.warn('Error building badge data mapping:', e);
+    }
+}
+
+// Animal to Badge Mapping (now dynamic from JSON)
+function getBadgeDataForAnimal(animalName) {
+    // Try to get from dynamic mapping
+    if (animalBadgeDataMap[animalName]) {
+        const badgeData = { ...animalBadgeDataMap[animalName] };
+        // Use description from currentAnimalConfig (loaded from JSON) if available, otherwise use badge description
+        if (currentAnimalConfig && currentAnimalConfig.name === animalName && currentAnimalConfig.badgeDescription) {
+            badgeData.description = currentAnimalConfig.badgeDescription;
         }
         return badgeData;
     }
     
-    // Fallback to placeholder
+    // Fallback to placeholder if not found in mapping
     const fallback = {
         badgeId: animalName.toLowerCase().replace(/\s+/g, '-'),
         iconPath: '../../assets/badges/icons/placeholder.svg',
@@ -137,8 +102,12 @@ function getBadgeDataForAnimal(animalName) {
     };
     
     // Use description from currentAnimalConfig if available
-    if (currentAnimalConfig && currentAnimalConfig.name === animalName && currentAnimalConfig.description) {
-        fallback.description = currentAnimalConfig.description;
+    if (currentAnimalConfig && currentAnimalConfig.name === animalName) {
+        if (currentAnimalConfig.badgeDescription) {
+            fallback.description = currentAnimalConfig.badgeDescription;
+        } else if (currentAnimalConfig.description) {
+            fallback.description = currentAnimalConfig.description;
+        }
     }
     
     return fallback;
@@ -177,6 +146,9 @@ window.onload = async () => {
         button.disabled = true; // disabled until animal is found
     }
 
+    // Build dynamic badge data mapping from JSON first
+    await buildBadgeDataMapping();
+    
     // Load animal config (by id) and render
     const animal = await loadAnimalConfig();
     if (!animal) {

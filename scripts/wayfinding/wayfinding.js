@@ -90,6 +90,7 @@
     let audioPrimed = false; // Track if audio has been primed with user interaction
     let detectToneAudio = null; // Audio for nearby detection tone
     let instructionsDismissed = false; // Track if instructions overlay has been dismissed
+    let currentRouteAnimalId = null; // Track which animal the current route is for
     
     // Message buffer for heading debug (stores messages even when debug UI isn't visible)
     const headingDebugMessages = [];
@@ -398,30 +399,35 @@
             const res = await fetch(jsonFile, { cache: 'no-cache' });
             const cfg = await res.json();
             animals = Array.isArray(cfg.animals) ? cfg.animals : [];
+            // Build dynamic badge ID mapping from loaded animals
+            buildBadgeIdMapping(animals);
             renderAnimalHotspots();
         } catch (err) {
             console.error(`Failed to load ${jsonFile}:`, err);
         }
     }
 
-    // Get badge ID for an animal (matching getBadgeDataForAnimal from script.js)
+    // Dynamic badge ID mapping - built from JSON data
+    let animalNameToBadgeIdMap = {};
+    
+    // Build badge ID mapping from JSON data
+    function buildBadgeIdMapping(animals) {
+        animalNameToBadgeIdMap = {};
+        animals.forEach(animal => {
+            if (animal.badge && animal.badge.id && animal.name) {
+                animalNameToBadgeIdMap[animal.name] = animal.badge.id;
+            }
+        });
+    }
+
+    // Get badge ID for an animal (dynamically from JSON)
     function getBadgeIdForAnimal(animalName) {
-        const badgeMap = {
-            'Peacock': 'peacock',
-            'Walrus': 'walrus-ar',
-            'Koala': 'koala',
-            'Bee': 'bee-ar',
-            'Clown Fish': 'clownfish-ar',
-            'Platypus': 'platypus',
-            'Cephalopod': 'cephalopod',
-            'Stag Beetle': 'stag-beetle',
-            'Snowy Owl': 'snowy-owl',
-            'Orangutan': 'orangutan',
-            'Jellyfish': 'jellyfish-ar',
-            'Robin': 'robin'
-        };
-        
-        return badgeMap[animalName] || animalName.toLowerCase().replace(/\s+/g, '-');
+        // First try the dynamic mapping
+        if (animalNameToBadgeIdMap[animalName]) {
+            return animalNameToBadgeIdMap[animalName];
+        }
+        // Fallback: generate from name if not in mapping
+        return animalName.toLowerCase().replace(/\s+/g, '-');
     }
 
     // Check if an animal has been found (collected)
@@ -1586,9 +1592,10 @@
     function showAnimalDetailPopup(animal) {
         if (!animal || !animalDetailPopup) return;
         
-        // Clear any existing route when showing a new animal
+        // Clear any existing route when showing a new animal (user is selecting a different destination)
         if (window.MapboxDirections && window.MapboxDirections.isInitialized()) {
             window.MapboxDirections.clearRoute();
+            currentRouteAnimalId = null; // Clear the tracked route animal
         }
         
         const isFound = isAnimalFound(animal);
@@ -1695,6 +1702,9 @@
         // Close detail popup first
         hideAnimalDetailPopup();
         
+        // Store which animal this route is for
+        currentRouteAnimalId = animal.id;
+        
         // Try to fetch route from Mapbox if user location is available
         let routeFetched = false;
         if (currentUserLocation && currentUserLocation.lat && currentUserLocation.lng && 
@@ -1776,10 +1786,10 @@
             if (directionsPopup.classList.contains('show')) return; // If shown again, don't hide
             directionsPopup.classList.add('hidden');
             
-            // Auto-clear route when popup is closed
-            if (window.MapboxDirections && window.MapboxDirections.isInitialized()) {
-                window.MapboxDirections.clearRoute();
-            }
+            // Don't clear route when popup is closed - route stays visible
+            // Route will only be cleared by:
+            // 1. User pressing the Clear Route button
+            // 2. User getting near the animal the route is for
         }, 300); // Match CSS transition duration
         
         // Trigger haptic feedback
@@ -2152,6 +2162,14 @@
         const isFirstTime = proximityState !== 'in-range' || currentAnimal?.id !== animal.id;
         proximityState = 'in-range';
         currentAnimal = animal;
+        
+        // Clear route if user is near the animal the route is for
+        if (currentRouteAnimalId && currentRouteAnimalId === animal.id) {
+            if (window.MapboxDirections && window.MapboxDirections.isInitialized()) {
+                window.MapboxDirections.clearRoute();
+            }
+            currentRouteAnimalId = null; // Clear the tracked route animal
+        }
         
         // Only show notifications if instructions have been dismissed
         if (!instructionsDismissed) {
@@ -3345,6 +3363,7 @@
             directionsClearRoute.addEventListener('click', () => {
                 if (window.MapboxDirections && window.MapboxDirections.isInitialized()) {
                     window.MapboxDirections.clearRoute();
+                    currentRouteAnimalId = null; // Clear the tracked route animal
                     // Update message to indicate route cleared
                     if (directionsMessage) {
                         directionsMessage.textContent = "Route cleared. Tap Directions again to get a new route.";

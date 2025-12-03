@@ -600,89 +600,8 @@
     <button class="title-unlock-button" id="titleUnlockButton" aria-label="Unlock all badges"></button>
 
     <!-- Badge Grid Container -->
-    <div class="badge-grid">
-        <!-- Row 1 - Game Badges -->
-        <div class="badge-item" data-badge="sunflower">
-            <img src="../assets/badges/Badge.png" alt="Badge 1" class="badge-image">
-            <img src="" alt="Bee Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-        <div class="badge-item" data-badge="walrus">
-            <img src="../assets/badges/Badge.png" alt="Badge 2" class="badge-image">
-            <img src="" alt="Walrus Feeding Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-        <div class="badge-item" data-badge="anemone">
-            <img src="../assets/badges/Badge.png" alt="Badge 3" class="badge-image">
-            <img src="" alt="Clownfish Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-
-        <!-- Row 2 - Game Badges -->
-        <div class="badge-item" data-badge="photographer">
-            <img src="../assets/badges/Badge.png" alt="Badge 4" class="badge-image">
-            <img src="" alt="Proud Photographer Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-        <!-- Animal AR Badges -->
-        <div class="badge-item" data-badge="peacock">
-            <img src="../assets/badges/Badge.png" alt="Peacock Badge" class="badge-image">
-            <img src="" alt="Peacock Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-        <div class="badge-item" data-badge="walrus-ar">
-            <img src="../assets/badges/Badge.png" alt="Walrus AR Badge" class="badge-image">
-            <img src="" alt="Walrus Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-
-        <!-- Row 3 - Animal AR Badges -->
-        <div class="badge-item" data-badge="koala">
-            <img src="../assets/badges/Badge.png" alt="Koala Badge" class="badge-image">
-            <img src="" alt="Koala Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-        <div class="badge-item" data-badge="bee-ar">
-            <img src="../assets/badges/Badge.png" alt="Bee AR Badge" class="badge-image">
-            <img src="" alt="Bee Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-        <div class="badge-item" data-badge="clownfish-ar">
-            <img src="../assets/badges/Badge.png" alt="Clownfish AR Badge" class="badge-image">
-            <img src="" alt="Clownfish Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-
-        <!-- Row 4 - Animal AR Badges -->
-        <div class="badge-item" data-badge="platypus">
-            <img src="../assets/badges/Badge.png" alt="Platypus Badge" class="badge-image">
-            <img src="" alt="Platypus Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-        <div class="badge-item" data-badge="cephalopod">
-            <img src="../assets/badges/Badge.png" alt="Cephalopod Badge" class="badge-image">
-            <img src="" alt="Cephalopod Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-        <div class="badge-item" data-badge="stag-beetle">
-            <img src="../assets/badges/Badge.png" alt="Stag Beetle Badge" class="badge-image">
-            <img src="" alt="Stag Beetle Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-
-        <!-- Row 5 - Animal AR Badges -->
-        <div class="badge-item" data-badge="snowy-owl">
-            <img src="../assets/badges/Badge.png" alt="Snowy Owl Badge" class="badge-image">
-            <img src="" alt="Snowy Owl Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-        <div class="badge-item" data-badge="orangutan">
-            <img src="../assets/badges/Badge.png" alt="Orangutan Badge" class="badge-image">
-            <img src="" alt="Orangutan Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-        <div class="badge-item" data-badge="jellyfish-ar">
-            <img src="../assets/badges/Badge.png" alt="Jellyfish AR Badge" class="badge-image">
-            <img src="" alt="Jellyfish Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-
-        <!-- Row 6 - Animal AR Badges -->
-        <div class="badge-item" data-badge="robin">
-            <img src="../assets/badges/Badge.png" alt="Robin Badge" class="badge-image">
-            <img src="" alt="Robin Badge" class="badge-image collected-badge" style="display: none;">
-        </div>
-        <div class="badge-item">
-            <img src="../assets/badges/Badge.png" alt="Badge Placeholder" class="badge-image">
-        </div>
-        <div class="badge-item">
-            <img src="../assets/badges/Badge.png" alt="Badge Placeholder" class="badge-image">
-        </div>
+    <div class="badge-grid" id="badgeGrid">
+        <!-- Badges will be dynamically generated from JSON -->
     </div>
 
     <!-- Badge Detail Popup -->
@@ -796,10 +715,10 @@
         }
 
         // Initialize orientation manager when page loads
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             new OrientationManager();
             setupTitleUnlockButton();
-            initializeBadgeCollection();
+            await initializeBadgeCollection();
             addBadgeClickListeners();
             
             // Initialize starburst background in badge detail popup
@@ -848,8 +767,8 @@
             return '../assets/' + path.replace(/^(\.\.\/)*assets\//, '');
         }
 
-        // Load badge icons from JSON
-        async function loadBadgeIconsFromJSON() {
+        // Generate badge items dynamically from JSON
+        async function generateBadgeItemsFromJSON() {
             try {
                 // Get environment from localStorage (set by wayfinding page)
                 let environment = 'production';
@@ -868,52 +787,100 @@
                 const animals = Array.isArray(cfg.animals) ? cfg.animals : [];
                 const gameBadges = Array.isArray(cfg.gameBadges) ? cfg.gameBadges : [];
                 
+                const badgeGrid = document.getElementById('badgeGrid');
+                if (!badgeGrid) {
+                    console.error('Badge grid container not found');
+                    return {};
+                }
+                
+                // Clear existing badges
+                badgeGrid.innerHTML = '';
+                
                 // Create a map of badge ID to icon path
                 const badgeIconMap = {};
                 
-                // Load game badge icons
+                // Helper function to create and append a badge item
+                function createBadgeItem(badgeId, badgeName, iconPath) {
+                    badgeIconMap[badgeId] = normalizeAssetPath(iconPath);
+                    
+                    const badgeItem = document.createElement('div');
+                    badgeItem.className = 'badge-item';
+                    badgeItem.setAttribute('data-badge', badgeId);
+                    
+                    // Placeholder image
+                    const placeholder = document.createElement('img');
+                    placeholder.src = '../assets/badges/Badge.png';
+                    placeholder.alt = badgeName || 'Badge';
+                    placeholder.className = 'badge-image';
+                    
+                    // Collected badge image
+                    const collectedBadge = document.createElement('img');
+                    collectedBadge.src = badgeIconMap[badgeId];
+                    collectedBadge.alt = badgeName || 'Badge';
+                    collectedBadge.className = 'badge-image collected-badge';
+                    collectedBadge.style.display = 'none';
+                    
+                    badgeItem.appendChild(placeholder);
+                    badgeItem.appendChild(collectedBadge);
+                    return badgeItem;
+                }
+                
+                // First, add game badges (except streak, which goes last)
                 gameBadges.forEach(gameBadge => {
-                    if (gameBadge.id && gameBadge.icon) {
-                        badgeIconMap[gameBadge.id] = normalizeAssetPath(gameBadge.icon);
+                    if (gameBadge.id && gameBadge.icon && gameBadge.id !== 'streak') {
+                        const badgeItem = createBadgeItem(gameBadge.id, gameBadge.name, gameBadge.icon);
+                        badgeGrid.appendChild(badgeItem);
                     }
                 });
                 
-                // Load animal badge icons
+                // Then, add animal badges
                 animals.forEach(animal => {
                     if (animal.badge && animal.badge.id && animal.badge.icon) {
-                        badgeIconMap[animal.badge.id] = normalizeAssetPath(animal.badge.icon);
+                        const badgeItem = createBadgeItem(animal.badge.id, animal.badge.name || animal.name, animal.badge.icon);
+                        badgeGrid.appendChild(badgeItem);
                     }
                 });
                 
-                // Update all badge items with icons from JSON
-                document.querySelectorAll('.badge-item[data-badge]').forEach(badgeItem => {
-                    const badgeId = badgeItem.getAttribute('data-badge');
-                    const collectedBadge = badgeItem.querySelector('.collected-badge');
-                    
-                    if (collectedBadge && badgeIconMap[badgeId]) {
-                        collectedBadge.src = badgeIconMap[badgeId];
-                        collectedBadge.alt = badgeId + ' Badge';
-                    }
-                });
+                // Finally, add the Streak Master badge last
+                const streakBadge = gameBadges.find(gb => gb.id === 'streak');
+                if (streakBadge && streakBadge.icon) {
+                    const badgeItem = createBadgeItem(streakBadge.id, streakBadge.name, streakBadge.icon);
+                    badgeGrid.appendChild(badgeItem);
+                }
                 
                 return badgeIconMap;
             } catch (err) {
-                console.error('Failed to load badge icons from JSON:', err);
+                console.error('Failed to generate badge items from JSON:', err);
                 return {};
             }
+        }
+
+        // Load badge icons from JSON (kept for backwards compatibility, but now just returns the map)
+        async function loadBadgeIconsFromJSON() {
+            // Badge items are now generated dynamically, so this just needs to return the icon map
+            // The icons are already set during badge generation
+            const badgeIconMap = {};
+            document.querySelectorAll('.badge-item[data-badge]').forEach(badgeItem => {
+                const badgeId = badgeItem.getAttribute('data-badge');
+                const collectedBadge = badgeItem.querySelector('.collected-badge');
+                if (collectedBadge && collectedBadge.src) {
+                    badgeIconMap[badgeId] = collectedBadge.src;
+                }
+            });
+            return badgeIconMap;
         }
 
         // Testing mode: unlock all badges temporarily
         let originalCollectedBadges = null;
         let isUnlockAllMode = false;
 
-        function toggleUnlockAllBadges() {
+        async function toggleUnlockAllBadges() {
             try {
                 if (!isUnlockAllMode) {
                     // Store original data
                     originalCollectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
                     
-                    // Get all badge IDs from the page
+                    // Get all badge IDs from the page (after badges are generated)
                     const allBadgeIds = Array.from(document.querySelectorAll('[data-badge]'))
                         .map(item => item.getAttribute('data-badge'))
                         .filter(id => id); // Remove null/undefined
@@ -927,11 +894,12 @@
                     isUnlockAllMode = true;
                     console.log('Unlocked all badges for testing');
                     
-                    // Re-initialize to show all badges
+                    // Re-generate badges and re-initialize to show all badges
                     try {
-                        initializeBadgeCollection();
+                        await generateBadgeItemsFromJSON();
+                        await initializeBadgeCollection();
                     } catch (e) {
-                        console.error('Error in initializeBadgeCollection:', e);
+                        console.error('Error in generateBadgeItemsFromJSON or initializeBadgeCollection:', e);
                     }
                     // Re-add click listeners for newly visible badges
                     try {
@@ -957,11 +925,12 @@
                     isUnlockAllMode = false;
                     console.log('Restored original badge collection');
                     
-                    // Re-initialize to show only original badges
+                    // Re-generate badges and re-initialize to show only original badges
                     try {
-                        initializeBadgeCollection();
+                        await generateBadgeItemsFromJSON();
+                        await initializeBadgeCollection();
                     } catch (e) {
-                        console.error('Error in initializeBadgeCollection:', e);
+                        console.error('Error in generateBadgeItemsFromJSON or initializeBadgeCollection:', e);
                     }
                     // Re-add click listeners
                     try {
@@ -989,8 +958,11 @@
 
         // Badge Collection System
         async function initializeBadgeCollection() {
-            // Load badge icons from JSON first
-            await loadBadgeIconsFromJSON();
+            // Badge items should already be generated, but if not, generate them
+            const existingBadges = document.querySelectorAll('.badge-item[data-badge]');
+            if (existingBadges.length === 0) {
+                await generateBadgeItemsFromJSON();
+            }
             
             // Check if we're in unlock-all mode
             const tempUnlock = sessionStorage.getItem('tempUnlockAllBadges') === 'true';
@@ -1269,6 +1241,51 @@
                     icon: '../assets/badges/icons/Robin.svg',
                     name: 'Robin Seeker',
                     description: 'You found the robin! A cheerful bird to add to your collection.'
+                },
+                'butterfly': {
+                    icon: '../assets/badges/icons/butterfly-badge.svg',
+                    name: 'Butterfly Spotter',
+                    description: 'You found the butterfly! A beautiful and delicate discovery.'
+                },
+                'crocodile': {
+                    icon: '../assets/badges/icons/crocodile-badge.svg',
+                    name: 'Crocodile Finder',
+                    description: 'You found the Nile Crocodile! Just don\'t get in the way of its strong bite - one of the strongest bites in the animal kingdom!'
+                },
+                'dodo': {
+                    icon: '../assets/badges/icons/Dodo.svg',
+                    name: 'Dodo Discoverer',
+                    description: 'You found the dodo! Large and flightless, this extinct bird is related to pigeons.'
+                },
+                'fox': {
+                    icon: '../assets/badges/icons/fox-badge.svg',
+                    name: 'Fox Finder',
+                    description: 'You found the fox! This clever creature enjoys sneaking through gardens at night.'
+                },
+                'grass-snake': {
+                    icon: '../assets/badges/icons/grass snake-badge.svg',
+                    name: 'Snake Spotter',
+                    description: 'You found the grass snake! Experts at slithering and sliding around, grass snakes are also great swimmers.'
+                },
+                'ostrich': {
+                    icon: '../assets/badges/icons/ostrich-badge.svg',
+                    name: 'Ostrich Watcher',
+                    description: 'You found the ostrich! The fastest bird on land, ostriches are always ready to dash across the plains.'
+                },
+                'puffin': {
+                    icon: '../assets/badges/icons/Puffin.svg',
+                    name: 'Puffin Spotter',
+                    description: 'You found the puffin! These seabirds spend much of their life hunting for fish at sea.'
+                },
+                'tiger-cub': {
+                    icon: '../assets/badges/icons/tiger_cub-badge.svg',
+                    name: 'Tiger Cub Finder',
+                    description: 'You found the tiger cub! Playful and curious, this little cub is learning the ways of the jungle.'
+                },
+                'velociraptor': {
+                    icon: '../assets/badges/icons/velociraptor.svg',
+                    name: 'Velociraptor Hunter',
+                    description: 'You found the velociraptor! A prehistoric predator discovery.'
                 }
             };
             
