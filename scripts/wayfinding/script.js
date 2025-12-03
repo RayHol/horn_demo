@@ -184,10 +184,34 @@ window.onload = async () => {
         return;
     }
 
+    // Helper function to normalize asset paths for wayfinding pages
+    function normalizeWayfindingPath(path) {
+        if (!path) return path;
+        // If already absolute or external, return as-is
+        if (path.startsWith('/') || path.startsWith('http://') || path.startsWith('https://')) {
+            return path;
+        }
+        // From pages/wayfinding/, we need ../../assets/ to reach root assets/
+        // If path already starts with ../../assets/, it's correct
+        if (path.startsWith('../../assets/')) {
+            return path;
+        }
+        // If path starts with ../assets/, convert to ../../assets/
+        if (path.startsWith('../assets/')) {
+            return '../' + path;
+        }
+        // If path starts with assets/, add ../../
+        if (path.startsWith('assets/')) {
+            return '../../' + path;
+        }
+        // Default: assume it needs ../../assets/ prefix
+        return '../../assets/' + path.replace(/^(\.\.\/)*assets\//, '');
+    }
+
     // Build model descriptor from animal.model
     models = [
         {
-            url: animal.model && animal.model.url ? animal.model.url : '../../assets/wayfinding/model/scene.glb',
+            url: animal.model && animal.model.url ? normalizeWayfindingPath(animal.model.url) : '../../assets/wayfinding/model/scene.glb',
             scale: animal.model && animal.model.scale ? animal.model.scale : '1 1 1',
             info: animal.name || 'Asset',
             rotation: animal.model && animal.model.rotation ? animal.model.rotation : '0 180 0',
