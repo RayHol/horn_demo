@@ -999,15 +999,23 @@
     }
 
     // Add this at the start of your script section
+    let howToCloseReady = false
+    let gameLoadedReady = false
     window.onload = function() {
       // Skip directly to how-to-play like sunflower game
       openHowToPlay();
       setTimeout(() => {
         const button = document.getElementById('closehowto');
-        if (button) {
+        howToCloseReady = true
+        if (button && gameLoadedReady) {
           button.disabled = false;
+          button.innerHTML = "Let's Go!"
           button.classList.add('button-enabled');
           console.log('Let\'s go button enabled');
+          document.getElementById('loadingOverlay').style.opacity = 0;
+          setTimeout(() => {
+            document.getElementById('loadingOverlay').classList.add('hidden')
+          }, 2000)
         } else {
           console.error('Button with ID "closehowto" not found');
         }
@@ -1123,6 +1131,9 @@
     
     <!-- Bubble Container -->
     <div id="bubbleContainer" class="bubble-container"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay"></div>
     
     <!-- How to Play Overlay -->
     <div id="howToPlay" class="overlay hidden">
@@ -1165,7 +1176,7 @@
         </main>
 
         <footer>
-          <button id="closehowto" class="main-button" onclick="closeHowToPlay()" disabled>Let's Go</button>
+          <button id="closehowto" class="main-button" onclick="closeHowToPlay()" disabled>Loading...</button>
         </footer>
       </div>
     </div>
@@ -1242,7 +1253,7 @@
       <a-entity id="camera" position="0 1.15 0" rotation="0 0 0" camera="near: 0.0001; far: 1000;" look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false; reverseMouseDrag: false; reverseTouchDrag: false;">
       </a-entity>
 
-      <a-assets>
+      <a-assets timeout="20000">
         <a-asset-item
           id="anemone-glb"
           src="assets/ClownfishAnemoneGame.glb"
@@ -1269,6 +1280,7 @@
         <img id="dirt2-texture" src="assets/dirt2.png" crossorigin="anonymous">
         <img id="dirt3-texture" src="assets/dirt3.png" crossorigin="anonymous">
         <img id="bubble-texture" src="assets/bubble.png" crossorigin="anonymous">
+        <img id="hand-png" src="assets/Hand.png" crossorigin="anonymous">
       </a-assets>
 
       
@@ -1329,7 +1341,7 @@
       <!-- Hand scrubbing animation for zone 2 -->
       <a-entity id="hand-guide" position="-0.2 0.5 -1.0" visible="true">
         <a-plane id="hand-image" 
-          src="assets/Hand.png" 
+          src="#hand-png" 
           width="0.4" 
           height="0.4" 
           position="0 0 0.2"

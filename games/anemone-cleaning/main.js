@@ -54,7 +54,6 @@ function playRandomCleaned() {
 }
 
 //Game
-
 let cleanCount = 0;
 
 const anemone = document.querySelector('#anemone')
@@ -648,4 +647,22 @@ window.addEventListener('load', () => {
   setTimeout(lockCameraRotation, 100);
   setTimeout(lockCameraRotation, 500);
   setTimeout(lockCameraRotation, 1000);
+});
+
+document.getElementById('scene').addEventListener('loaded', () => {
+  console.log('assets loaded')
+  const button = document.getElementById('closehowto');
+  gameLoadedReady = true
+  if (button && howToCloseReady) {
+    button.disabled = false;
+    button.innerHTML = "Let's Go!"
+    button.classList.add('button-enabled');
+    console.log('Let\'s go button enabled');
+    document.getElementById('loadingOverlay').style.opacity = 0;
+    setTimeout(() => {
+      document.getElementById('loadingOverlay').classList.add('hidden')
+    }, 2000)
+  } else {
+    console.error('Button with ID "closehowto" not found');
+  }
 });
