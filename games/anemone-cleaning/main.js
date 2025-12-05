@@ -649,3 +649,114 @@ window.addEventListener('load', () => {
   setTimeout(lockCameraRotation, 500);
   setTimeout(lockCameraRotation, 1000);
 });
+<<<<<<< Updated upstream
+=======
+
+document.getElementById('scene').addEventListener('loaded', () => {
+  console.log('assets loaded')
+  const button = document.getElementById('closehowto');
+  gameLoadedReady = true
+  if (button && howToCloseReady) {
+    button.disabled = false;
+    button.innerHTML = "Let's Go!"
+    button.classList.add('button-enabled');
+    console.log('Let\'s go button enabled');
+    document.getElementById('loadingOverlay').style.opacity = 0;
+    setTimeout(() => {
+      document.getElementById('loadingOverlay').classList.add('hidden')
+    }, 2000)
+  } else {
+    console.error('Button with ID "closehowto" not found');
+  }
+});
+
+// Ensure clownfish animation starts after model loads
+const anemoneEl = document.querySelector('#anemone');
+if (anemoneEl) {
+  function ensureAnimationPlaying() {
+    console.log('=== Ensuring animation is playing ===');
+    
+    const mixerComponent = anemoneEl.components['animation-mixer'];
+    console.log('Animation-mixer component exists:', !!mixerComponent);
+    
+    if (mixerComponent) {
+      if (mixerComponent.mixer) {
+        console.log('Mixer found');
+        console.log('Mixer timeScale:', mixerComponent.mixer.timeScale);
+        
+        // Ensure timeScale is 1 (not paused)
+        mixerComponent.mixer.timeScale = 1;
+        
+        // Check and start all actions
+        if (mixerComponent.mixer._actions && mixerComponent.mixer._actions.length > 0) {
+          const actions = mixerComponent.mixer._actions;
+          console.log('Found', actions.length, 'action(s)');
+          
+          actions.forEach((action, index) => {
+            const clipName = action._clip ? action._clip.name : 'unnamed';
+            console.log(`Action ${index} (${clipName}): paused=${action.paused}, enabled=${action.enabled}, weight=${action.weight}`);
+            
+            if (action.paused) {
+              console.log(`Unpausing action ${index}`);
+              action.paused = false;
+            }
+            
+            if (!action.enabled) {
+              console.log(`Enabling action ${index}`);
+              action.enabled = true;
+            }
+            
+            // Force play
+            action.play();
+          });
+          
+          // Force mixer update
+          mixerComponent.mixer.update(0.016);
+          console.log('Mixer updated');
+        } else {
+          console.warn('No actions found in mixer');
+          
+          // Try to re-initialize by updating the attribute
+          console.log('Re-applying animation-mixer attribute');
+          anemoneEl.setAttribute('animation-mixer', {
+            clip: '*',
+            loop: 'repeat',
+            timeScale: 1
+          });
+        }
+      } else {
+        console.warn('Mixer not initialized, re-applying animation-mixer');
+        anemoneEl.setAttribute('animation-mixer', {
+          clip: '*',
+          loop: 'repeat',
+          timeScale: 1
+        });
+      }
+    } else {
+      console.warn('Animation-mixer component not found, adding it');
+      anemoneEl.setAttribute('animation-mixer', {
+        clip: '*',
+        loop: 'repeat',
+        timeScale: 1
+      });
+    }
+  }
+  
+  // Wait for model-loaded event
+  anemoneEl.addEventListener('model-loaded', () => {
+    console.log('=== Anemone model-loaded event fired ===');
+    setTimeout(ensureAnimationPlaying, 300);
+  });
+  
+  // Also listen to object3dset
+  anemoneEl.addEventListener('object3dset', () => {
+    console.log('=== Anemone object3dset event fired ===');
+    setTimeout(ensureAnimationPlaying, 400);
+  });
+  
+  // Multiple fallback checks
+  setTimeout(ensureAnimationPlaying, 1000);
+  setTimeout(ensureAnimationPlaying, 2000);
+  setTimeout(ensureAnimationPlaying, 3000);
+}
+>>>>>>> Stashed changes
