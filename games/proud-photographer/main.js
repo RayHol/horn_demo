@@ -86,21 +86,31 @@ function saveCanvas(canvas, imagename) {
 let peacock = document.querySelector('#peacock')
 let looped = false
 
+// Helper function to safely emit A-Frame sounds only if audio is enabled
+function emitSoundIfEnabled(soundId) {
+  if (typeof window.isAudioEnabled === 'function' && window.isAudioEnabled()) {
+    const soundEntity = document.querySelector(soundId);
+    if (soundEntity) {
+      soundEntity.emit('startsound');
+    }
+  }
+}
+
 // Init game when peacock placed
 peacock.addEventListener('placed', () => {
   gameStarted = true
   cameraReady = true
-  document.querySelector('#peacock-call-sfx').emit('startsound')
+  emitSoundIfEnabled('#peacock-call-sfx');
   document.querySelector('#hint').innerHTML = "Snap a pic of the peacock displaying its full plumage."
   document.querySelector('#placezone').setAttribute('visible', false)
   document.querySelector('#peacock').setAttribute('ar-place', {
     enabled: false,
   })
   window.setTimeout(() => {
-    document.querySelector('#peacock-call-sfx').emit('startsound')
+    emitSoundIfEnabled('#peacock-call-sfx');
   }, 7500)
   window.setTimeout(() => {
-    document.querySelector('#peacock-call-sfx').emit('startsound')
+    emitSoundIfEnabled('#peacock-call-sfx');
     console.log('now posing')
     peacock.components.photographersubject.posing = true
   }, 8500)
@@ -119,11 +129,11 @@ peacock.addEventListener('animation-loop', () => {
     looped = true
     if(gameStarted) {
       window.setTimeout(() => {
-        document.querySelector('#peacock-call-sfx').emit('startsound')
+        emitSoundIfEnabled('#peacock-call-sfx');
       }, 7500)
       window.setTimeout(() => {
         if(gameStarted) {
-          document.querySelector('#peacock-call-sfx').emit('startsound')
+          emitSoundIfEnabled('#peacock-call-sfx');
           console.log('now posing')
           peacock.components.photographersubject.posing = true
         }
@@ -141,13 +151,13 @@ peacock.addEventListener('animation-loop', () => {
 function cameraButton() {
   if(cameraReady) {
     cameraReady = false
-    document.querySelector('#polaroid-snap-sfx').emit('startsound')
+    emitSoundIfEnabled('#polaroid-snap-sfx');
     setTimeout(() => {
       document.querySelector('#flashfilter').classList.add('flash')
       document.querySelector('#camera').emit('shutter')
     }, 250)
     setTimeout(() => {
-      document.querySelector('#polaroid-print-sfx').emit('startsound')
+      emitSoundIfEnabled('#polaroid-print-sfx');
       document.querySelector('#darkfilter').style.opacity = 1   
       document.querySelector('#flashfilter').classList.remove('flash')
     }, 1000)

@@ -27,6 +27,19 @@
             closeButton.addEventListener('click', hideSettings);
         }
 
+        // Setup home button
+        const homeButton = document.querySelector('#settingsOverlay .home-button');
+        if (homeButton) {
+            homeButton.addEventListener('click', function() {
+                // Trigger haptic feedback
+                if (typeof triggerHaptic === 'function') {
+                    triggerHaptic('single');
+                }
+                // Navigate to menu page
+                navigateToMenu();
+            });
+        }
+
         // Setup how to play button
         const howToPlayButton = document.querySelector('#settingsOverlay .how-to-play-button');
         if (howToPlayButton) {
@@ -355,6 +368,43 @@
         }
     }
 
+    /**
+     * Navigate to menu page
+     * Determines the correct path based on current location
+     */
+    function navigateToMenu() {
+        const pathname = window.location.pathname;
+        const pathParts = pathname.split('/').filter(part => part);
+        
+        // Determine relative path to menu.html
+        let menuPath = 'menu.html';
+        
+        // If we're in a game directory (games/*/index.html)
+        if (pathParts.includes('games')) {
+            menuPath = '../../pages/menu.html';
+        }
+        // If we're in pages subdirectory (pages/wayfinding/wayfinding.html)
+        else if (pathParts.includes('pages') && pathParts.length > 1) {
+            menuPath = '../menu.html';
+        }
+        // If we're already in pages root (pages/menu.html)
+        else if (pathParts.includes('pages') && pathParts.length === 1) {
+            menuPath = 'menu.html';
+        }
+        // If we're in root or index
+        else if (pathParts.length === 0 || pathParts[pathParts.length - 1] === 'index.html') {
+            menuPath = 'pages/menu.html';
+        }
+        
+        // Navigate to menu
+        if (window.top && window.top !== window) {
+            // If in iframe, navigate parent
+            window.top.location.href = menuPath;
+        } else {
+            window.location.href = menuPath;
+        }
+    }
+
     // Export functions to global scope
     window.initSettings = initSettings;
     window.showSettings = showSettings;
@@ -363,6 +413,7 @@
     window.toggleHapticsSetting = toggleHapticsSetting;
     window.toggleAudioSetting = toggleAudioSetting;
     window.toggleMusicSetting = toggleMusicSetting;
+    window.navigateToMenu = navigateToMenu;
 
 })();
 

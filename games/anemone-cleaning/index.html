@@ -698,9 +698,19 @@
   
   <!--  Overlay functions  -->
   <script>
+    // Helper function to safely emit A-Frame sounds only if audio is enabled
+    function emitSoundIfEnabled(soundId) {
+      if (typeof window.isAudioEnabled === 'function' && window.isAudioEnabled()) {
+        const soundEntity = document.querySelector(soundId);
+        if (soundEntity) {
+          soundEntity.emit('startsound');
+        }
+      }
+    }
+    
     let firstStart = false
     function openHowToPlay() {
-      document.querySelector('#click-sfx').emit('startsound')
+      emitSoundIfEnabled('#click-sfx');
       document.getElementById('howToPlay').classList.remove('hidden');
       // Hide instructions when opening how-to-play
       hideInstructions();
@@ -721,7 +731,7 @@
       }
     }
     function closeHowToPlay() {
-      document.querySelector('#click-sfx').emit('startsound')
+      emitSoundIfEnabled('#click-sfx');
       document.getElementById('howToPlay').classList.add('hidden');
       if(!firstStart) {
         startAudio()
@@ -731,7 +741,7 @@
       setTimeout(showInstructions, 500);
     }
     function backHowToPlay() {
-      document.querySelector('#click-sfx').emit('startsound')
+      emitSoundIfEnabled('#click-sfx');
       window.top.location.href = '../../pages/menu.html';
     }
     function openCongratulations() {
@@ -752,7 +762,7 @@
     }
     function closeCongratulations() {
       document.getElementById('gamecomplete').classList.add('hidden')
-      document.querySelector('#click-sfx').emit('startsound')
+      emitSoundIfEnabled('#click-sfx');
     }
     
     // Load badge data from JSON file
@@ -846,7 +856,7 @@
       
       // Play TaDA celebration sound
       const tadaAudio = document.getElementById('tada-wav');
-      if (tadaAudio) {
+      if (tadaAudio && typeof window.isAudioEnabled === 'function' && window.isAudioEnabled()) {
         tadaAudio.play().catch(e => console.log('TaDA audio play failed:', e));
       }
       
@@ -863,7 +873,7 @@
     
     function restartGame() {
       // Play button tap sound
-      document.querySelector('#click-sfx').emit('startsound');
+      emitSoundIfEnabled('#click-sfx');
       // Close congratulations popup
       document.getElementById('gamecomplete').classList.add('hidden');
       // Close badge collection
@@ -1387,13 +1397,16 @@
       
     </a-scene>
 
-    <!-- Settings Overlay -->
-    <div class="settings-overlay" id="settingsOverlay">
-        <div class="settings-dialog">
-            <button class="close-button" aria-label="Close settings">
-                <img src="../../assets/close_button.png" alt="Close">
-            </button>
-            <h2>Settings</h2>
+  <!-- Settings Overlay -->
+  <div class="settings-overlay" id="settingsOverlay">
+      <div class="settings-dialog">
+          <button class="home-button" aria-label="Home">
+              Home
+          </button>
+          <button class="close-button" aria-label="Close settings">
+              <img src="../../assets/close_button.png" alt="Close">
+          </button>
+          <h2>Settings</h2>
             <h3>Hello, <span id="userNickname">Guest</span>!</h3>
             <div class="settings-controls">
                 <button id="hapticsToggle" class="settings-icon-button" aria-label="Toggle Haptics">
@@ -1430,6 +1443,98 @@
     const settingsButton = document.getElementById('settingsButton');
     if (settingsButton && typeof showSettings === 'function') {
         settingsButton.addEventListener('click', showSettings);
+    }
+    
+    // Update A-Frame sound volumes when audio/music settings change
+    function updateAFrameSoundVolumes() {
+      const audioEnabled = (typeof window.isAudioEnabled === 'function') ? window.isAudioEnabled() : true;
+      const musicEnabled = (typeof window.isMusicEnabled === 'function') ? window.isMusicEnabled() : true;
+      
+      // Update background music A-Frame component volume (controlled by MUSIC toggle)
+      const backgroundSfx = document.querySelector('#background-sfx');
+      if (backgroundSfx && backgroundSfx.components.sound) {
+        const originalVolume = 0.75; // Original volume from HTML
+        backgroundSfx.setAttribute('sound', 'volume', musicEnabled ? originalVolume : 0);
+      }
+      
+      // Update background HTML5 audio element (controlled by MUSIC toggle)
+      const backgroundAudio = document.getElementById('background-mp3');
+      if (backgroundAudio) {
+        // Store original volume if not already stored
+        if (!backgroundAudio._originalVolume) {
+          backgroundAudio._originalVolume = 0.5;
+        }
+        backgroundAudio.volume = musicEnabled ? backgroundAudio._originalVolume : 0;
+        // Pause/play based on music setting
+        if (musicEnabled && backgroundAudio.paused) {
+          backgroundAudio.play().catch(e => console.log('Background audio play failed:', e));
+        } else if (!musicEnabled && !backgroundAudio.paused) {
+          backgroundAudio.pause();
+        }
+      }
+      
+      // Update all sound effect A-Frame components (controlled by AUDIO toggle)
+      // Exclude background music which is handled above
+      const soundEffectIds = ['#click-sfx', '#tada-sfx', '#cleaning-sfx-1', '#cleaning-sfx-2', '#cleaning-sfx-3', 
+                              '#cleaned-sfx-1', '#cleaned-sfx-2', '#cleaned-sfx-3'];
+      soundEffectIds.forEach(soundId => {
+        const soundEntity = document.querySelector(soundId);
+        if (soundEntity && soundEntity.components.sound) {
+          const soundData = soundEntity.getAttribute('sound');
+          const originalVolume = soundData.volume || 1.0;
+          // Store original volume if not already stored
+          if (!soundEntity._originalVolume) {
+            soundEntity._originalVolume = originalVolume;
+          }
+          soundEntity.setAttribute('sound', 'volume', audioEnabled ? soundEntity._originalVolume : 0);
+        }
+      });
+    }
+    
+    // Register background music with global music manager
+    function registerBackgroundMusic() {
+      const backgroundAudio = document.getElementById('background-mp3');
+      if (backgroundAudio && typeof window.registerMusic === 'function') {
+        // Store original volume before registering
+        if (!backgroundAudio._originalVolume) {
+          backgroundAudio._originalVolume = 0.5;
+        }
+        window.registerMusic(backgroundAudio);
+      }
+    }
+    
+    // Listen for music setting changes via global music manager
+    if (window.globalMusicManager) {
+      const originalUpdate = window.globalMusicManager.updateMusicElement;
+      window.globalMusicManager.updateMusicElement = function(musicElement) {
+        originalUpdate.call(this, musicElement);
+        // Also update A-Frame background sound component
+        updateAFrameSoundVolumes();
+      };
+    }
+    
+    // Register and update volumes on page load
+    setTimeout(() => {
+      registerBackgroundMusic();
+      updateAFrameSoundVolumes();
+    }, 500);
+    
+    // Update when music settings are toggled
+    const originalToggleMusic = window.toggleMusicSetting;
+    if (originalToggleMusic) {
+      window.toggleMusicSetting = function() {
+        originalToggleMusic();
+        setTimeout(updateAFrameSoundVolumes, 100);
+      };
+    }
+    
+    // Also update when audio settings are toggled (for sound effects)
+    const originalToggleAudio = window.toggleAudioSetting;
+    if (originalToggleAudio) {
+      window.toggleAudioSetting = function() {
+        originalToggleAudio();
+        setTimeout(updateAFrameSoundVolumes, 100);
+      };
     }
   </script>
 </html>

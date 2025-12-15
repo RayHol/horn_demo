@@ -21,11 +21,19 @@ function startAudio() {
   }
 
   // Also try to play audio directly as fallback for iOS
+  // Only play if music is enabled
   const backgroundAudio = document.getElementById('background-mp3');
   if (backgroundAudio) {
     backgroundAudio.loop = true;
-    backgroundAudio.volume = 0.5;
-    backgroundAudio.play().catch(e => console.log('Direct background audio play failed:', e));
+    const musicEnabled = (typeof window.isMusicEnabled === 'function') ? window.isMusicEnabled() : true;
+    backgroundAudio.volume = musicEnabled ? 0.5 : 0;
+    if (musicEnabled) {
+      backgroundAudio.play().catch(e => console.log('Direct background audio play failed:', e));
+    }
+    // Register with global music manager
+    if (typeof window.registerMusic === 'function') {
+      window.registerMusic(backgroundAudio);
+    }
   }
 }
 
@@ -44,13 +52,23 @@ setInterval(() => {
   }
 }, 1250)
 
+// Helper function to safely emit A-Frame sounds only if audio is enabled
+function emitSoundIfEnabled(soundId) {
+  if (typeof window.isAudioEnabled === 'function' && window.isAudioEnabled()) {
+    const soundEntity = document.querySelector(soundId);
+    if (soundEntity) {
+      soundEntity.emit('startsound');
+    }
+  }
+}
+
 function playRandomCleaning() {
   let rand = randomInt(1, 3)
-  document.querySelector('#cleaning-sfx-' + rand.toString()).emit('startsound')
+  emitSoundIfEnabled('#cleaning-sfx-' + rand.toString())
 }
 function playRandomCleaned() {
   let rand = randomInt(1, 3)
-  document.querySelector('#cleaned-sfx-' + rand.toString()).emit('startsound')
+  emitSoundIfEnabled('#cleaned-sfx-' + rand.toString())
 }
 
 //Game

@@ -390,9 +390,19 @@
 
   <!--  Overlay functions  -->
   <script>
+    // Helper function to safely emit A-Frame sounds only if audio is enabled
+    function emitSoundIfEnabled(soundId) {
+      if (typeof window.isAudioEnabled === 'function' && window.isAudioEnabled()) {
+        const soundEntity = document.querySelector(soundId);
+        if (soundEntity) {
+          soundEntity.emit('startsound');
+        }
+      }
+    }
+    
     let firstStart = false
     function openHowToPlay() {
-      document.querySelector('#click-sfx').emit('startsound')
+      emitSoundIfEnabled('#click-sfx');
       document.getElementById('howToPlay').classList.remove('hidden');
       // Hide instructions when opening how-to-play
       hideInstructions();
@@ -413,7 +423,7 @@
       }
     }
     function closeHowToPlay() {
-      document.querySelector('#click-sfx').emit('startsound')
+      emitSoundIfEnabled('#click-sfx');
       document.getElementById('howToPlay').classList.add('hidden');
       if(!firstStart) {
         startAudio()
@@ -423,7 +433,7 @@
       setTimeout(showInstructions, 500);
     }
     function backHowToPlay() {
-      document.querySelector('#click-sfx').emit('startsound')
+      emitSoundIfEnabled('#click-sfx');
       window.top.location.href = '../../pages/menu.html';
     }
     function openCongratulations() {
@@ -444,7 +454,7 @@
     }
     function closeCongratulations() {
       document.getElementById('gamecomplete').classList.add('hidden')
-      document.querySelector('#click-sfx').emit('startsound')
+      emitSoundIfEnabled('#click-sfx');
     }
     
     // Load badge data from JSON file
@@ -556,7 +566,7 @@
 
     function restartGame() {
       // Play button tap sound
-      document.querySelector('#click-sfx').emit('startsound');
+      emitSoundIfEnabled('#click-sfx');
       // Close congratulations popup
       document.getElementById('gamecomplete').classList.add('hidden');
       // Close badge collection
@@ -896,6 +906,9 @@
   <!-- Settings Overlay -->
   <div class="settings-overlay" id="settingsOverlay">
       <div class="settings-dialog">
+          <button class="home-button" aria-label="Home">
+              Home
+          </button>
           <button class="close-button" aria-label="Close settings">
               <img src="../../assets/close_button.png" alt="Close">
           </button>
@@ -934,6 +947,42 @@
     const settingsButton = document.getElementById('settingsButton');
     if (settingsButton && typeof showSettings === 'function') {
         settingsButton.addEventListener('click', showSettings);
+    }
+    
+    // Update A-Frame sound volumes when audio settings change
+    function updateAFrameSoundVolumes() {
+      const audioEnabled = (typeof window.isAudioEnabled === 'function') ? window.isAudioEnabled() : true;
+      
+      // Update all A-Frame sound components
+      const soundEntities = document.querySelectorAll('[sound]');
+      soundEntities.forEach(entity => {
+        if (entity.components.sound) {
+          const soundData = entity.getAttribute('sound');
+          const originalVolume = soundData.volume || 1.0;
+          entity.setAttribute('sound', 'volume', audioEnabled ? originalVolume : 0);
+        }
+      });
+    }
+    
+    // Listen for audio setting changes
+    if (window.globalAudioManager) {
+      const originalUpdate = window.globalAudioManager.updateAudioElement;
+      window.globalAudioManager.updateAudioElement = function(audioElement) {
+        originalUpdate.call(this, audioElement);
+        updateAFrameSoundVolumes();
+      };
+    }
+    
+    // Update volumes on page load
+    setTimeout(updateAFrameSoundVolumes, 500);
+    
+    // Also update when settings are toggled
+    const originalToggleAudio = window.toggleAudioSetting;
+    if (originalToggleAudio) {
+      window.toggleAudioSetting = function() {
+        originalToggleAudio();
+        setTimeout(updateAFrameSoundVolumes, 100);
+      };
     }
   </script>
 </html>
