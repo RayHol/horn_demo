@@ -162,3 +162,21 @@ function cameraButton() {
 // function zoomOutButton() {
 //   document.querySelector('#camera').emit('zoomOut')
 // }
+
+document.getElementById('scene').addEventListener('loaded', () => {
+  console.log('assets loaded')
+  const button = document.getElementById('closehowto');
+  gameLoadedReady = true
+  if (button && howToCloseReady) {
+    button.disabled = false;
+    button.innerHTML = "Let's Go!"
+    button.classList.add('button-enabled');
+    console.log('Let\'s go button enabled');
+    document.getElementById('loadingOverlay').style.opacity = 0;
+    setTimeout(() => {
+      document.getElementById('loadingOverlay').classList.add('hidden')
+    }, 2000)
+  } else {
+    console.error('Button with ID "closehowto" not found');
+  }
+});

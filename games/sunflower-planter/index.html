@@ -18,6 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../styles/settings.css">
   <script src="../../starburst-background.js"></script>
   <style>
     .a-enter-vr-button{
@@ -25,6 +26,40 @@
     }
     .a-enter-ar-button{
       display: none;
+    }
+    
+    /* Settings Button */
+    .settings-button {
+      position: absolute;
+      right: 4%;
+      top: 2%;
+      background: var(--primary-color, #BD3B00);
+      border: none;
+      border-radius: 12px;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0px 4px 0px 0px var(--button-shadow, #962F00);
+    }
+
+    .settings-button:hover {
+      transform: translateY(2px);
+      box-shadow: 0px 2px 0px 0px var(--button-shadow, #962F00);
+    }
+
+    .settings-button:active {
+      transform: translateY(4px);
+      box-shadow: none;
+    }
+
+    .settings-button img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
     }
     .overlay {
       position: fixed;
@@ -43,9 +78,9 @@
       display: none;
     }
     .popup-content {
-      width: 85%;
+      width: 90%;
       max-width: 550px;
-      height: 75%;
+      height: 80%;
       max-height: 650px;
       margin: -10vh auto 0;
       background-color: #FFF5E9;
@@ -85,11 +120,11 @@
     .instruction-icon {
       display: flex;
       align-items: flex-start;
-      gap: 8px;
+      gap: 4px;
       margin-bottom: 4px;
     }
     .instruction img.number-icon {
-      width: 40px;
+      width: 25px;
       height: auto;
     }
     .instruction-text {
@@ -670,14 +705,28 @@
     }
 
     // Add this at the start of your script section
+    // const nickname = localStorage.getItem('nickname');
+    // document.getElementById('nickname').textContent = nickname;
+    let howToCloseReady = false
+    let gameLoadedReady = false
     window.onload = function() {
-      const nickname = localStorage.getItem('nickname');
-      document.getElementById('nickname').textContent = nickname;
-      // Hide onboarding and show how-to-play directly
-      document.getElementById('onboarding').style.display = "none";
+      // Skip directly to how-to-play like sunflower game
       openHowToPlay();
       setTimeout(() => {
-        document.getElementById('closehowto').disabled = false;
+        const button = document.getElementById('closehowto');
+        howToCloseReady = true
+        if (button && gameLoadedReady) {
+          button.disabled = false;
+          button.innerHTML = "Let's Go!"
+          button.classList.add('button-enabled');
+          console.log('Let\'s go button enabled');
+          document.getElementById('loadingOverlay').style.opacity = 0;
+          setTimeout(() => {
+            document.getElementById('loadingOverlay').classList.add('hidden')
+          }, 2000)
+        } else {
+          console.error('Button with ID "closehowto" not found');
+        }
       }, 5000);
     }
   </script>
@@ -702,6 +751,10 @@
     </div>
 
     <video autoplay style="width: 100vw; height: 100vh; object-fit: cover;"></video>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay"></div>
+
     <!-- HTML Overlay for AR -->
     <div id="onboarding" class="overlay" style="display: none;">
       <main class="onboarding-content">
@@ -749,7 +802,7 @@
         </main>
 
         <footer>
-          <button id="closehowto" class="main-button" onclick="closeHowToPlay()" disabled>Let's Go</button>
+          <button id="closehowto" class="main-button" onclick="closeHowToPlay()" disabled>Loading...</button>
         </footer>
       </div>
     </div>
@@ -803,8 +856,8 @@
 
     <div id="overlay" style="position: absolute; z-index: 1; ">
       <header>
-        <button id="help" onclick="openHowToPlay()" style="position: absolute; right: 4%; top: 2%; padding: 12px;">
-          <img src="assets/Help.png" alt="Help" style="width: 24px; height: 24px; object-fit: contain;">
+        <button id="settingsButton" class="settings-button" aria-label="Settings">
+          <img src="../../assets/Settings.png" alt="Settings" style="width: 24px; height: 24px; object-fit: contain;">
         </button>
         <p id="hint">Tap the screen to use the shovel to dig a hole</p>       
         <div style="padding: 5px 5px; width: 30%; height: 15%; position: absolute; bottom: max(60px, 10vh); left: 50%; transform:translate(-50%); display: block; text-align: center;">
@@ -1013,6 +1066,50 @@
             initStarburstOverlay('badgeSplash');
             initStarburstOverlay('badgeCollection');
         });
+    </script>
+
+    <!-- Settings Overlay -->
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-dialog">
+            <button class="close-button" aria-label="Close settings">
+                <img src="../../assets/close_button.png" alt="Close">
+            </button>
+            <h2>Settings</h2>
+            <h3>Hello, <span id="userNickname">Guest</span>!</h3>
+            <div class="settings-controls">
+                <button id="hapticsToggle" class="settings-icon-button" aria-label="Toggle Haptics">
+                    <img src="../../assets/Haptics.png" alt="Haptics" class="settings-icon-img">
+                </button>
+                <button id="audioToggle" class="settings-icon-button" aria-label="Toggle Audio">
+                    <img src="../../assets/Unmute.png" alt="Sound" class="settings-icon-img">
+                </button>
+                <button id="musicToggle" class="settings-icon-button" aria-label="Toggle Music">
+                    <img src="../../assets/Note.png" alt="Music" class="settings-icon-img">
+                </button>
+            </div>
+            <button class="how-to-play-button">
+                <span>?</span>
+                How to play
+            </button>
+        </div>
+    </div>
+
+    <script src="../../scripts/audio-manager-main.js"></script>
+    <script src="../../scripts/settings.js"></script>
+    <script>
+      // Initialize settings module with how to play callback
+      if (typeof initSettings === 'function') {
+          initSettings({
+              onHowToPlay: openHowToPlay,
+              nicknameElementId: 'userNickname'
+          });
+      }
+      
+      // Setup settings button
+      const settingsButton = document.getElementById('settingsButton');
+      if (settingsButton && typeof showSettings === 'function') {
+          settingsButton.addEventListener('click', showSettings);
+      }
     </script>
   </body>
 </html>
