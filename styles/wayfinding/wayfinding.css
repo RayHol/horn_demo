@@ -812,25 +812,22 @@ body {
     height: 26px;
 }
 
-/* Help button */
+/* Settings button (formerly help button) - matches menu page styling */
 .help-button {
     position: fixed;
     top: 20px;
     right: 20px;
-    display: flex;
-    width: 53px;
+    background: var(--primary-color, #BD3B00);
+    border: none;
+    border-radius: 12px;
+    width: 48px;
     height: 48px;
-    padding: 10px 13.333px;
-    justify-content: center;
+    display: flex;
     align-items: center;
-    gap: 6.667px;
-    flex-shrink: 0;
-    border-radius: 10px;
-    border: 1px solid var(--UI-border, #E7D4A3);
-    background: var(--UI-buttonWhite, #FCEFE1);
-    box-shadow: 0 3px 0 0 #E7D4A3;
+    justify-content: center;
     cursor: pointer;
     z-index: 1000;
+    box-shadow: 0px 4px 0px 0px var(--button-shadow, #962F00);
     transition: all 0.2s ease;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -842,17 +839,17 @@ body {
 
 .help-button:hover {
     transform: translateY(2px);
-    box-shadow: 0 2px 0 0 #E7D4A3;
+    box-shadow: 0px 2px 0px 0px var(--button-shadow, #962F00);
 }
 
 .help-button:active {
-    transform: translateY(3px);
+    transform: translateY(4px);
     box-shadow: none;
 }
 
 .help-button img {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
 }
 
 /* Instructions overlay */

@@ -51,7 +51,7 @@
     const recenterBtn = document.getElementById('recenterBtn');
     const zoomInBtn = document.getElementById('zoomInBtn');
     const zoomOutBtn = document.getElementById('zoomOutBtn');
-    const helpButton = document.getElementById('helpButton');
+    const settingsButton = document.getElementById('settingsButton');
     const backButton = document.getElementById('backButton');
     const instructionsOverlay = document.getElementById('instructionsOverlay');
     const instructionsClose = document.getElementById('instructionsClose');
@@ -3084,34 +3084,40 @@
         // Load animals and render hotspots (will use currentEnvironment)
         loadAnimals();
         
-        // Setup instructions overlay and long-press detection
-        if (helpButton) {
+        // Initialize settings module with how to play callback
+        if (typeof initSettings === 'function') {
+            initSettings({
+                onHowToPlay: showInstructions,
+                nicknameElementId: 'userNickname'
+            });
+        }
+        
+        // Setup settings button with long-press detection for environment toggle
+        if (settingsButton) {
             let longPressTimer = null;
             let longPressTriggered = false;
             let touchStartTime = 0;
             const LONG_PRESS_DURATION = 800; // 800ms for long press
             
             // Prevent context menu and text selection
-            helpButton.addEventListener('contextmenu', (e) => {
+            settingsButton.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 return false;
             });
             
             // Handle click (short press) - works for both mouse and touch
-            helpButton.addEventListener('click', (e) => {
-                // Only show instructions if it wasn't a long press
+            settingsButton.addEventListener('click', (e) => {
+                // Only show settings if it wasn't a long press
                 if (!longPressTriggered) {
-                    // Trigger short haptic feedback
-                    if (typeof triggerHaptic === 'function') {
-                        triggerHaptic('single');
+                    if (typeof showSettings === 'function') {
+                        showSettings();
                     }
-                    showInstructions();
                 }
                 longPressTriggered = false;
             });
             
             // Handle touch start (for mobile)
-            helpButton.addEventListener('touchstart', (e) => {
+            settingsButton.addEventListener('touchstart', (e) => {
                 touchStartTime = Date.now();
                 longPressTriggered = false;
                 longPressTimer = setTimeout(() => {
@@ -3125,7 +3131,7 @@
             }, { passive: true });
             
             // Handle touch end/cancel (for mobile)
-            helpButton.addEventListener('touchend', (e) => {
+            settingsButton.addEventListener('touchend', (e) => {
                 const touchDuration = Date.now() - touchStartTime;
                 if (longPressTimer) {
                     clearTimeout(longPressTimer);
@@ -3138,7 +3144,7 @@
                 }
             }, { passive: false });
             
-            helpButton.addEventListener('touchcancel', (e) => {
+            settingsButton.addEventListener('touchcancel', (e) => {
                 if (longPressTimer) {
                     clearTimeout(longPressTimer);
                     longPressTimer = null;
@@ -3147,7 +3153,7 @@
             }, { passive: false });
             
             // Handle mouse down (for desktop)
-            helpButton.addEventListener('mousedown', (e) => {
+            settingsButton.addEventListener('mousedown', (e) => {
                 longPressTriggered = false;
                 longPressTimer = setTimeout(() => {
                     longPressTriggered = true;
@@ -3160,14 +3166,14 @@
             });
             
             // Handle mouse up/leave (for desktop)
-            helpButton.addEventListener('mouseup', (e) => {
+            settingsButton.addEventListener('mouseup', (e) => {
                 if (longPressTimer) {
                     clearTimeout(longPressTimer);
                     longPressTimer = null;
                 }
             });
             
-            helpButton.addEventListener('mouseleave', () => {
+            settingsButton.addEventListener('mouseleave', () => {
                 if (longPressTimer) {
                     clearTimeout(longPressTimer);
                     longPressTimer = null;

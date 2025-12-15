@@ -18,6 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../../styles/settings.css">
   <script src="../../starburst-background.js"></script>
   <style>
     .a-enter-vr-button{
@@ -43,9 +44,9 @@
       display: none;
     }
     .popup-content {
-      width: 85%;
+      width: 90%;
       max-width: 550px;
-      height: 75%;
+      height: 80%;
       max-height: 650px;
       margin: -10vh auto 0;
       background-color: #FFF5E9;
@@ -94,7 +95,7 @@
     .instruction-icon {
       display: flex;
       align-items: flex-start;
-      gap: 8px;
+      gap: 4px;
       margin-bottom: 4px;
       flex: 1;
       min-width: 0;
@@ -106,7 +107,7 @@
        object-fit: contain;
      }
      .instruction img.number-icon {
-       width: 30px;
+       width: 25px;
        height: auto;
      }
     .instruction-text {
@@ -999,15 +1000,23 @@
     }
 
     // Add this at the start of your script section
+    let howToCloseReady = false
+    let gameLoadedReady = false
     window.onload = function() {
       // Skip directly to how-to-play like sunflower game
       openHowToPlay();
       setTimeout(() => {
         const button = document.getElementById('closehowto');
-        if (button) {
+        howToCloseReady = true
+        if (button && gameLoadedReady) {
           button.disabled = false;
+          button.innerHTML = "Let's Go!"
           button.classList.add('button-enabled');
           console.log('Let\'s go button enabled');
+          document.getElementById('loadingOverlay').style.opacity = 0;
+          setTimeout(() => {
+            document.getElementById('loadingOverlay').classList.add('hidden')
+          }, 2000)
         } else {
           console.error('Button with ID "closehowto" not found');
         }
@@ -1123,6 +1132,9 @@
     
     <!-- Bubble Container -->
     <div id="bubbleContainer" class="bubble-container"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay"></div>
     
     <!-- How to Play Overlay -->
     <div id="howToPlay" class="overlay hidden">
@@ -1165,7 +1177,7 @@
         </main>
 
         <footer>
-          <button id="closehowto" class="main-button" onclick="closeHowToPlay()" disabled>Let's Go</button>
+          <button id="closehowto" class="main-button" onclick="closeHowToPlay()" disabled>Loading...</button>
         </footer>
       </div>
     </div>
@@ -1219,8 +1231,8 @@
     <!-- HTML Overlay -->
     <div id="overlay" style="position: absolute; z-index: 10; ">
       <header>
-        <button id="help" class="secondaryButton squareButton" onclick="openHowToPlay()" style="position: absolute; right: 4%; top: 2%; padding: 12px;">
-          <img src="assets/Help.png" alt="Help" style="width: 24px; height: 24px; object-fit: contain;">
+        <button id="settingsButton" class="settings-button" style="position: absolute; right: 4%; top: 2%;" aria-label="Settings">
+          <img src="../../assets/Settings.png" alt="Settings" style="width: 24px; height: 24px; object-fit: contain;">
         </button>
         <p id="hint">Rub the anemones with your finger to clean them.</p>  
       </header>
@@ -1242,7 +1254,7 @@
       <a-entity id="camera" position="0 1.15 0" rotation="0 0 0" camera="near: 0.0001; far: 1000;" look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false; reverseMouseDrag: false; reverseTouchDrag: false;">
       </a-entity>
 
-      <a-assets>
+      <a-assets timeout="20000">
         <a-asset-item
           id="anemone-glb"
           src="assets/ClownfishAnemoneGame.glb"
@@ -1269,6 +1281,7 @@
         <img id="dirt2-texture" src="assets/dirt2.png" crossorigin="anonymous">
         <img id="dirt3-texture" src="assets/dirt3.png" crossorigin="anonymous">
         <img id="bubble-texture" src="assets/bubble.png" crossorigin="anonymous">
+        <img id="hand-png" src="assets/Hand.png" crossorigin="anonymous">
       </a-assets>
 
       
@@ -1329,7 +1342,7 @@
       <!-- Hand scrubbing animation for zone 2 -->
       <a-entity id="hand-guide" position="-0.2 0.5 -1.0" visible="true">
         <a-plane id="hand-image" 
-          src="assets/Hand.png" 
+          src="#hand-png" 
           width="0.4" 
           height="0.4" 
           position="0 0 0.2"

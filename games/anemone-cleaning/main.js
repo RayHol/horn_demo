@@ -54,7 +54,6 @@ function playRandomCleaned() {
 }
 
 //Game
-
 let cleanCount = 0;
 
 const anemone = document.querySelector('#anemone')
@@ -649,8 +648,6 @@ window.addEventListener('load', () => {
   setTimeout(lockCameraRotation, 500);
   setTimeout(lockCameraRotation, 1000);
 });
-<<<<<<< Updated upstream
-=======
 
 document.getElementById('scene').addEventListener('loaded', () => {
   console.log('assets loaded')
@@ -759,4 +756,3 @@ if (anemoneEl) {
   setTimeout(ensureAnimationPlaying, 2000);
   setTimeout(ensureAnimationPlaying, 3000);
 }
->>>>>>> Stashed changes
