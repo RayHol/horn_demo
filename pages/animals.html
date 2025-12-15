@@ -569,6 +569,23 @@
             height: calc(100% - 60px);
             position: relative;
             overflow: hidden;
+            touch-action: none;
+        }
+        
+        /* Prevent body scrolling when 3D viewer is open */
+        body.model-viewer-open {
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Prevent touch scrolling on model-viewer element */
+        .model-viewer-container model-viewer,
+        #modelViewerContainer model-viewer,
+        .smartify-model-viewer {
+            touch-action: none;
+            -webkit-overflow-scrolling: none;
         }
 
         /* Hide default AR button from model-viewer */
@@ -1702,6 +1719,9 @@
                     return;
                 }
 
+                // Prevent body scrolling
+                document.body.classList.add('model-viewer-open');
+                
                 // Show overlay
                 overlay.classList.remove('hidden');
                 overlay.offsetHeight; // Force reflow
@@ -1746,6 +1766,27 @@
                 // Check if AR is supported and show AR button
                 const viewer = currentModelViewer.getViewer();
                 if (viewer) {
+                    // Prevent touch events from causing page scroll
+                    const preventScroll = (e) => {
+                        // Only prevent if touching the model-viewer area
+                        if (e.target === viewer || viewer.contains(e.target)) {
+                            e.preventDefault();
+                        }
+                    };
+                    
+                    // Add touch event listeners to prevent scrolling
+                    viewer.addEventListener('touchstart', preventScroll, { passive: false });
+                    viewer.addEventListener('touchmove', preventScroll, { passive: false });
+                    viewer.addEventListener('touchend', preventScroll, { passive: false });
+                    
+                    // Also prevent wheel events from scrolling the page
+                    viewer.addEventListener('wheel', (e) => {
+                        // Let model-viewer handle zoom, but prevent page scroll
+                        if (e.target === viewer || viewer.contains(e.target)) {
+                            e.stopPropagation();
+                        }
+                    }, { passive: false });
+                    
                     viewer.addEventListener('ar-status', (event) => {
                         if (event.detail.status === 'not-presenting') {
                             // AR session ended, check if AR is available
@@ -1781,12 +1822,18 @@
                     if (overlay.classList.contains('show')) return; // If shown again, don't hide
                     overlay.classList.add('hidden');
                     
+                    // Restore body scrolling
+                    document.body.classList.remove('model-viewer-open');
+                    
                     // Destroy viewer
                     if (currentModelViewer) {
                         currentModelViewer.destroy();
                         currentModelViewer = null;
                     }
                 }, 300); // Match CSS transition duration
+            } else {
+                // Fallback: restore body scrolling if overlay not found
+                document.body.classList.remove('model-viewer-open');
             }
         }
 
