@@ -408,6 +408,7 @@
             overflow-x: hidden;
             min-height: 0;
             max-height: 100%;
+            padding-bottom: 40px;
         }
 
         .leaderboard-row.current-user {
@@ -861,7 +862,7 @@
             syncBadgeDates() {
                 if (!this.currentUser) return;
                 
-                const mergedBadges = this.getMergedBadges(this.currentUser);
+                const mergedBadges = this.getMergedBadges(this.currentUser, true);
                 if (!this.currentUser.progress) {
                     this.currentUser.progress = { badges: [], badgeDates: {}, gamesCompleted: [], highScores: {} };
                 }
@@ -870,10 +871,22 @@
                 }
                 
                 let updated = false;
+                const now = new Date();
+                // Use UTC midnight for today to avoid timezone issues
+                const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+                
                 mergedBadges.forEach(badgeId => {
-                    // If badge doesn't have a date, assign current date (for monthly counting)
+                    // If badge doesn't have a date, check if it's in collectedBadges
+                    // If it's in collectedBadges and was collected today, assign today's date
+                    // Otherwise, assign current date (for monthly counting)
                     if (!this.currentUser.progress.badgeDates[badgeId]) {
-                        this.currentUser.progress.badgeDates[badgeId] = new Date().toISOString();
+                        const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+                        // If badge is in collectedBadges, it was likely collected today
+                        if (collectedBadges.includes(badgeId)) {
+                            this.currentUser.progress.badgeDates[badgeId] = todayStart.toISOString();
+                        } else {
+                            this.currentUser.progress.badgeDates[badgeId] = new Date().toISOString();
+                        }
                         updated = true;
                     }
                 });
@@ -887,10 +900,18 @@
             }
 
             // Merge badges from userData.progress.badges and collectedBadges
-            getMergedBadges(userData) {
+            // Only merge collectedBadges for the current user (isCurrentUser = true)
+            getMergedBadges(userData, isCurrentUser = false) {
                 const progressBadges = userData?.progress?.badges || [];
-                const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
-                return [...new Set([...progressBadges, ...collectedBadges])];
+                
+                // Only merge collectedBadges for the current user
+                if (isCurrentUser) {
+                    const collectedBadges = JSON.parse(localStorage.getItem('collectedBadges') || '[]');
+                    return [...new Set([...progressBadges, ...collectedBadges])];
+                }
+                
+                // For test users, only use progress.badges
+                return progressBadges;
             }
 
             // Count badges for a specific period
@@ -898,8 +919,10 @@
                 if (!badges || badges.length === 0) return 0;
                 
                 const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                // Normalize to UTC midnight for today
+                const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+                // Normalize to UTC midnight for month start
+                const monthStartUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
                 
                 // If no badgeDates, count all badges for monthly, none for today
                 if (!badgeDates || Object.keys(badgeDates).length === 0) {
@@ -917,10 +940,12 @@
                     const date = new Date(badgeDate);
                     
                     if (period === 'today') {
-                        const badgeDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                        return badgeDay.getTime() === today.getTime();
+                        // Normalize badge date to UTC midnight for comparison
+                        const badgeDayUTC = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+                        return badgeDayUTC.getTime() === todayUTC.getTime();
                     } else {
-                        return date >= monthStart && date <= now;
+                        // For monthly, compare with UTC dates
+                        return date >= monthStartUTC && date <= now;
                     }
                 }).length;
             }
@@ -932,8 +957,9 @@
                 const testUsers = [];
                 
                 const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                // Use UTC dates to avoid timezone issues
+                const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+                const monthStartUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
                 
                 // Generate 20 test users to ensure we have enough for leaderboard
                 for (let i = 0; i < 20; i++) {
@@ -945,20 +971,20 @@
                     
                     // Generate random badge counts
                     const dailyBadgeCount = Math.floor(Math.random() * 13); // 0-12
-                    const monthlyBadgeCount = Math.floor(Math.random() * 15) + 6; // 6-20
+                    // Monthly count should be at least equal to daily count
+                    const monthlyBadgeCount = Math.max(dailyBadgeCount, Math.floor(Math.random() * 15) + 6); // max(daily, 6-20)
                     
                     // Generate badge dates
                     const badgeDates = {};
                     const allBadges = [];
                     
-                    // Daily badges (today)
+                    // Daily badges (today) - use UTC dates
                     for (let j = 0; j < dailyBadgeCount; j++) {
                         const badgeId = `test_badge_${i}_${j}`;
                         allBadges.push(badgeId);
                         const hours = Math.floor(Math.random() * 24);
                         const minutes = Math.floor(Math.random() * 60);
-                        const badgeDate = new Date(today);
-                        badgeDate.setHours(hours, minutes, 0, 0);
+                        const badgeDate = new Date(Date.UTC(todayUTC.getUTCFullYear(), todayUTC.getUTCMonth(), todayUTC.getUTCDate(), hours, minutes, 0, 0));
                         badgeDates[badgeId] = badgeDate.toISOString();
                     }
                     
@@ -967,9 +993,8 @@
                     for (let j = 0; j < additionalMonthly; j++) {
                         const badgeId = `test_badge_monthly_${i}_${j}`;
                         allBadges.push(badgeId);
-                        const daysAgo = Math.floor(Math.random() * (now - monthStart) / (1000 * 60 * 60 * 24));
-                        const badgeDate = new Date(monthStart);
-                        badgeDate.setDate(badgeDate.getDate() + daysAgo);
+                        const daysAgo = Math.floor(Math.random() * Math.ceil((now - monthStartUTC) / (1000 * 60 * 60 * 24)));
+                        const badgeDate = new Date(Date.UTC(monthStartUTC.getUTCFullYear(), monthStartUTC.getUTCMonth(), monthStartUTC.getUTCDate() + daysAgo));
                         badgeDates[badgeId] = badgeDate.toISOString();
                     }
                     
@@ -992,16 +1017,24 @@
 
             ensureTestData() {
                 let testData = null;
+                let shouldRegenerate = false;
+                
                 try {
                     const testDataStr = localStorage.getItem('leaderboardTestData');
                     if (testDataStr) {
                         testData = JSON.parse(testDataStr);
+                        
+                        // Always regenerate test data to ensure it has today's dates
+                        // This ensures test users show badges for today
+                        shouldRegenerate = true;
                     }
                 } catch (e) {
                     console.warn('Error loading test data:', e);
+                    shouldRegenerate = true;
                 }
                 
-                if (!testData || testData.length < 8) {
+                if (!testData || testData.length < 8 || shouldRegenerate) {
+                    console.log('Regenerating test data with today\'s dates');
                     this.generateTestData();
                 }
             }
@@ -1033,14 +1066,25 @@
                 const currentUserId = this.currentUser?.userId;
                 
                 return this.allUsers.map(user => {
-                    const mergedBadges = this.getMergedBadges(user);
+                    const isCurrentUser = user.userId === currentUserId;
+                    const mergedBadges = this.getMergedBadges(user, isCurrentUser);
                     const badgeDates = user.progress?.badgeDates || {};
                     const count = this.countBadgesForPeriod(mergedBadges, badgeDates, this.currentPeriod);
+                    
+                    // Debug logging for current user
+                    if (isCurrentUser && this.currentPeriod === 'today') {
+                        console.log('Current user badge count debug:', {
+                            mergedBadges: mergedBadges.length,
+                            badgeDatesCount: Object.keys(badgeDates).length,
+                            count: count,
+                            badgeDates: badgeDates
+                        });
+                    }
                     
                     return {
                         ...user,
                         badgeCount: count,
-                        isCurrentUser: user.userId === currentUserId
+                        isCurrentUser: isCurrentUser
                     };
                 }).sort((a, b) => {
                     // Sort by badge count descending
@@ -1058,6 +1102,12 @@
             }
 
             renderLeaderboard() {
+                // Ensure current user's badge dates are synced before ranking
+                // This ensures badges from collectedBadges have proper dates
+                if (this.currentUser) {
+                    this.syncBadgeDates();
+                }
+                
                 const rankedUsers = this.rankUsers();
                 
                 // Render top 3 podiums

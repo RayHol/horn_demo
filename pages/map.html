@@ -164,11 +164,68 @@
             width: 24px;
             height: 24px;
         }
+
+        /* Zoom Buttons */
+        .zoom-btn {
+            position: fixed;
+            right: 24px;
+            display: flex;
+            width: 45px;
+            height: 45px;
+            padding: 10px 13.333px;
+            justify-content: center;
+            align-items: center;
+            gap: 6.667px;
+            border-radius: 10px;
+            border: 1px solid #E7D4A3;
+            background: #FCEFE1;
+            box-shadow: 0 3px 0 0 #E7D4A3;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.2s ease;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #zoomInBtn {
+            bottom: 146px; /* 20px (recenter bottom) + 48px (recenter height) + 20px (gap) + 45px (zoom out height) + 16px (gap) */
+        }
+
+        #zoomOutBtn {
+            bottom: 88px; /* 20px (recenter bottom) + 48px (recenter height) + 20px (gap) */
+        }
+
+        .zoom-btn:hover {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 0 #E7D4A3;
+        }
+
+        .zoom-btn:active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+        .zoom-btn img {
+            width: 26px;
+            height: 26px;
+        }
     </style>
 </head>
 <body>
     <button class="back-button" onclick="window.location.href='menu.html'" aria-label="Back to menu">
         <img src="../assets/Arrow2.png" alt="Back">
+    </button>
+    
+    <!-- Zoom and Recenter Buttons -->
+    <button id="zoomInBtn" class="zoom-btn" aria-label="Zoom in">
+        <img src="../assets/wayfinding/ui/Plus.svg" alt="Zoom in">
+    </button>
+    <button id="zoomOutBtn" class="zoom-btn" aria-label="Zoom out">
+        <img src="../assets/wayfinding/ui/Minus.svg" alt="Zoom out">
     </button>
     
     <!-- Orientation Warning Overlay -->
@@ -181,7 +238,7 @@
     </div>
 
     <div class="map-container" id="mapContainer">
-        <img src="../assets/Map-image.png" alt="Interactive Map" class="map-image" id="mapImage">
+        <img src="../assets/wayfinding/horniman_map_new.png" alt="Interactive Map" class="map-image" id="mapImage">
     </div>
 
     <script>
@@ -191,8 +248,8 @@
                 this.mapImage = document.getElementById('mapImage');
                 
                 // Map state
-                this.scale = 0.35;
-                this.minScale = 0.15;
+                this.scale = 0.64;
+                this.minScale = 0.4;
                 this.maxScale = 1;
                 this.translateX = 0;
                 this.translateY = 0;
@@ -279,6 +336,24 @@
                     const scaleDiff = newScale - this.targetScale;
                     this.targetTranslateX -= (mouseX - centerX) * scaleDiff;
                     this.targetTranslateY -= (mouseY - centerY) * scaleDiff;
+                    
+                    this.targetScale = newScale;
+                }
+            }
+            
+            // Programmatic zoom method for button controls
+            zoom(delta) {
+                const newScale = Math.max(this.minScale, Math.min(this.maxScale, this.targetScale + delta));
+                
+                if (newScale !== this.targetScale) {
+                    const rect = this.mapContainer.getBoundingClientRect();
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    // Use center of map for zoom
+                    const scaleDiff = newScale - this.targetScale;
+                    this.targetTranslateX -= (rect.width / 2 - centerX) * scaleDiff;
+                    this.targetTranslateY -= (rect.height / 2 - centerY) * scaleDiff;
                     
                     this.targetScale = newScale;
                 }
@@ -482,8 +557,24 @@
 
         // Initialize the interactive map and orientation manager when the page loads
         document.addEventListener('DOMContentLoaded', () => {
-            new InteractiveMap();
+            const mapInstance = new InteractiveMap();
             new OrientationManager();
+            
+            // Setup zoom buttons
+            const zoomInBtn = document.getElementById('zoomInBtn');
+            const zoomOutBtn = document.getElementById('zoomOutBtn');
+            
+            if (zoomInBtn) {
+                zoomInBtn.addEventListener('click', () => {
+                    mapInstance.zoom(0.1);
+                });
+            }
+            
+            if (zoomOutBtn) {
+                zoomOutBtn.addEventListener('click', () => {
+                    mapInstance.zoom(-0.1);
+                });
+            }
             
             // Ensure orientation overlay starts hidden
             const orientationOverlay = document.getElementById('orientationOverlay');

@@ -91,6 +91,7 @@
     let detectToneAudio = null; // Audio for nearby detection tone
     let instructionsDismissed = false; // Track if instructions overlay has been dismissed
     let currentRouteAnimalId = null; // Track which animal the current route is for
+    let isUpdatingDotPosition = false; // Flag to prevent concurrent dot position updates
     
     // Message buffer for heading debug (stores messages even when debug UI isn't visible)
     const headingDebugMessages = [];
@@ -683,6 +684,15 @@
                 this.targetTranslateY -= (rect.height / 2 - centerY) * scaleDiff;
                 
                 this.targetScale = newScale;
+                
+                // After zooming, recenter to user location if auto-recenter is enabled
+                // This keeps the blue dot centered during zoom operations (like the recenter button does)
+                if (currentUserLocation && this.keepUserCentered && !this.userHasManuallyMoved) {
+                    // Use requestAnimationFrame to ensure transform is updated before recentering
+                    requestAnimationFrame(() => {
+                        this.recenterToUserLocation(currentUserLocation, false);
+                    });
+                }
             }
         }
         
@@ -840,8 +850,8 @@
                 self.updateTransform();
                 
                 // Always update user location dot position in animation loop for smooth updates
-                // Only update if we have the necessary elements
-                if (userLocationDot && currentUserLocation && self.mapContainer && self.mapImage) {
+                // Only update if we have the necessary elements and not being updated by updateUserLocation()
+                if (userLocationDot && currentUserLocation && self.mapContainer && self.mapImage && !isUpdatingDotPosition) {
                     // Always ensure dot is visible
                     userLocationDot.style.display = 'block';
                     
@@ -1283,87 +1293,96 @@
         // Check if map instance is ready
         if (!mapInstance) return;
         
-        // Check if user has manually moved the map
-        const userHasManuallyMoved = mapInstance.userHasManuallyMoved || false;
-        const keepUserCentered = mapInstance.keepUserCentered !== false;
-        const cannotCenterAtBoundary = mapInstance.cannotCenterAtBoundary || false;
+        // Set flag to prevent animation loop from updating position simultaneously
+        isUpdatingDotPosition = true;
         
-        // Always ensure dot is visible
-        userLocationDot.style.display = 'block';
-        
-        // Determine position for both dot and accuracy circle
-        let dotX, dotY;
-        
-        // If user has manually moved, auto-centering is disabled, or we can't center at boundary, show actual GPS location
-        if (userHasManuallyMoved || !keepUserCentered || cannotCenterAtBoundary) {
-            // Convert GPS coordinates to screen position (actual location on map)
-            try {
-                const coords = gpsToScreenCoordinates(location.lat, location.lng, true);
-                // Ensure coordinates are valid numbers
-                if (coords && isFinite(coords.x) && isFinite(coords.y)) {
-                    dotX = coords.x;
-                    dotY = coords.y;
-                    // Round to nearest pixel to avoid sub-pixel rendering issues
-                    dotX = Math.round(dotX);
-                    dotY = Math.round(dotY);
-                    userLocationDot.style.left = dotX + 'px';
-                    userLocationDot.style.top = dotY + 'px';
+        try {
+            // Check if user has manually moved the map
+            const userHasManuallyMoved = mapInstance.userHasManuallyMoved || false;
+            const keepUserCentered = mapInstance.keepUserCentered !== false;
+            const cannotCenterAtBoundary = mapInstance.cannotCenterAtBoundary || false;
+            
+            // Always ensure dot is visible
+            userLocationDot.style.display = 'block';
+            
+            // Determine position for both dot and accuracy circle
+            let dotX, dotY;
+            
+            // If user has manually moved, auto-centering is disabled, or we can't center at boundary, show actual GPS location
+            if (userHasManuallyMoved || !keepUserCentered || cannotCenterAtBoundary) {
+                // Convert GPS coordinates to screen position (actual location on map)
+                // Pass cached container rect to ensure consistent transform calculation
+                try {
+                    const coords = gpsToScreenCoordinates(location.lat, location.lng, true, containerRect);
+                    // Ensure coordinates are valid numbers
+                    if (coords && isFinite(coords.x) && isFinite(coords.y)) {
+                        dotX = coords.x;
+                        dotY = coords.y;
+                        // Round to nearest pixel to avoid sub-pixel rendering issues
+                        dotX = Math.round(dotX);
+                        dotY = Math.round(dotY);
+                        userLocationDot.style.left = dotX + 'px';
+                        userLocationDot.style.top = dotY + 'px';
+                    }
+                } catch (e) {
+                    console.warn('Failed to convert GPS to screen coordinates:', e);
                 }
-            } catch (e) {
-                console.warn('Failed to convert GPS to screen coordinates:', e);
-            }
-        } else {
-            // Auto-centering mode: position dot at center with jitter
-            const centerX = containerRect.width / 2;
-            const centerY = containerRect.height / 2;
-            dotX = centerX + userLocationJitter.x;
-            dotY = centerY + userLocationJitter.y;
-            // Round to nearest pixel to avoid sub-pixel rendering issues
-            dotX = Math.round(dotX);
-            dotY = Math.round(dotY);
-            userLocationDot.style.left = dotX + 'px';
-            userLocationDot.style.top = dotY + 'px';
-        }
-        
-        // Update accuracy circle position and size
-        if (userLocationAccuracyCircle && dotX !== undefined && dotY !== undefined) {
-            // Round positions for accuracy circle too
-            userLocationAccuracyCircle.style.left = Math.round(dotX) + 'px';
-            userLocationAccuracyCircle.style.top = Math.round(dotY) + 'px';
-            userLocationAccuracyCircle.style.display = 'block';
-            
-            // Convert GPS accuracy (meters) to screen pixels (diameter)
-            const accuracyMeters = location.accuracy || location.acc || 10; // Default to 10m if not provided
-            const diameterPixels = metersToScreenPixels(accuracyMeters, location.lat);
-            
-            if (diameterPixels > 0 && isFinite(diameterPixels)) {
-                // Ensure minimum size for visibility
-                const minSize = 40; // Minimum 40px diameter
-                const size = Math.max(minSize, diameterPixels);
-                userLocationAccuracyCircle.style.width = size + 'px';
-                userLocationAccuracyCircle.style.height = size + 'px';
-            }
-        }
-        
-        // Update heading triangle position to match dot position (it's now a sibling, not a child)
-        // BUT: Only set position, don't show it until we have a valid heading
-        if (userLocationHeading && dotX !== undefined && dotY !== undefined) {
-            // Round positions and only update if changed (avoids unnecessary repaints)
-            const headingX = Math.round(dotX);
-            const headingY = Math.round(dotY);
-            const currentHeadingLeft = userLocationHeading.style.left;
-            const currentHeadingTop = userLocationHeading.style.top;
-            
-            if (currentHeadingLeft !== (headingX + 'px') || currentHeadingTop !== (headingY + 'px')) {
-                userLocationHeading.style.left = headingX + 'px';
-                userLocationHeading.style.top = headingY + 'px';
+            } else {
+                // Auto-centering mode: position dot at center with jitter
+                const centerX = containerRect.width / 2;
+                const centerY = containerRect.height / 2;
+                dotX = centerX + userLocationJitter.x;
+                dotY = centerY + userLocationJitter.y;
+                // Round to nearest pixel to avoid sub-pixel rendering issues
+                dotX = Math.round(dotX);
+                dotY = Math.round(dotY);
+                userLocationDot.style.left = dotX + 'px';
+                userLocationDot.style.top = dotY + 'px';
             }
             
-            // If we don't have a heading yet, make sure indicator stays hidden
-            // even if position is set
-            if (currentHeading === null || currentHeading === undefined) {
-                userLocationHeading.style.display = 'none';
+            // Update accuracy circle position and size
+            if (userLocationAccuracyCircle && dotX !== undefined && dotY !== undefined) {
+                // Round positions for accuracy circle too
+                userLocationAccuracyCircle.style.left = Math.round(dotX) + 'px';
+                userLocationAccuracyCircle.style.top = Math.round(dotY) + 'px';
+                userLocationAccuracyCircle.style.display = 'block';
+                
+                // Convert GPS accuracy (meters) to screen pixels (diameter)
+                const accuracyMeters = location.accuracy || location.acc || 10; // Default to 10m if not provided
+                const diameterPixels = metersToScreenPixels(accuracyMeters, location.lat);
+                
+                if (diameterPixels > 0 && isFinite(diameterPixels)) {
+                    // Ensure minimum size for visibility
+                    const minSize = 40; // Minimum 40px diameter
+                    const size = Math.max(minSize, diameterPixels);
+                    userLocationAccuracyCircle.style.width = size + 'px';
+                    userLocationAccuracyCircle.style.height = size + 'px';
+                }
             }
+            
+            // Update heading triangle position to match dot position (it's now a sibling, not a child)
+            // BUT: Only set position, don't show it until we have a valid heading
+            if (userLocationHeading && dotX !== undefined && dotY !== undefined) {
+                // Round positions and only update if changed (avoids unnecessary repaints)
+                const headingX = Math.round(dotX);
+                const headingY = Math.round(dotY);
+                const currentHeadingLeft = userLocationHeading.style.left;
+                const currentHeadingTop = userLocationHeading.style.top;
+                
+                if (currentHeadingLeft !== (headingX + 'px') || currentHeadingTop !== (headingY + 'px')) {
+                    userLocationHeading.style.left = headingX + 'px';
+                    userLocationHeading.style.top = headingY + 'px';
+                }
+                
+                // If we don't have a heading yet, make sure indicator stays hidden
+                // even if position is set
+                if (currentHeading === null || currentHeading === undefined) {
+                    userLocationHeading.style.display = 'none';
+                }
+            }
+        } finally {
+            // Clear flag to allow animation loop to update position again
+            isUpdatingDotPosition = false;
         }
         
         // Check if user is outside map bounds
