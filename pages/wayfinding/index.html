@@ -22,23 +22,48 @@
         <h1>Animals AR tracking</h1>
         <a id="startBtn" class="btn" href="#">Start</a>
     </div>
+    <script src="../../scripts/settings.js"></script>
     <script>
         (function(){
             var start = document.getElementById('startBtn');
             if (!start) return;
-            start.addEventListener('click', function(e){
+            start.addEventListener('click', async function(e){
                 e.preventDefault();
-                // Request geolocation permission upfront
-                if ('geolocation' in navigator) {
-                    navigator.geolocation.getCurrentPosition(function(){
-                        try { localStorage.setItem('geopin-location-permission', 'granted'); } catch(_) {}
-                        proceed();
-                    }, function(){
-                        proceed();
-                    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
-                } else {
-                    proceed();
+                
+                // Check if location permission is already granted first
+                // Only request if not already granted to avoid OS prompts on iOS
+                let granted = false;
+                if (typeof checkPermission === 'function') {
+                    granted = await checkPermission('location');
                 }
+                
+                // Only request permission if not already granted
+                if (!granted && typeof requestPermission === 'function') {
+                    granted = await requestPermission('location', {
+                        geoOptions: { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+                    });
+                } else if (!granted) {
+                    // Fallback: try to request permission using legacy method
+                    if ('geolocation' in navigator) {
+                        try {
+                            await new Promise((resolve) => {
+                                navigator.geolocation.getCurrentPosition(
+                                    function(){
+                                        try { localStorage.setItem('geopin-location-permission', 'granted'); } catch(_) {}
+                                        resolve(true);
+                                    },
+                                    function(){
+                                        resolve(false);
+                                    },
+                                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+                                );
+                            });
+                        } catch(_) {}
+                    }
+                }
+                
+                // Continue regardless of permission result (user can grant later)
+                proceed();
 
                 // Also request notification permission early (best-effort)
                 if ('Notification' in window && Notification.requestPermission) {

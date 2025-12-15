@@ -386,31 +386,57 @@ window.onload = async () => {
 
                     const pushForDispatch = makeGpsStabilizer({ minAccuracy: 20, alpha: 0.6, minDelta: 0.15, emitIntervalMs: 100 });
 
-                    if ('geolocation' in navigator) {
-                        navigator.geolocation.getCurrentPosition(function (p) {
-                            pushForDispatch({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, function (u) {
-                                dispatchGpsUpdate(u.lat, u.lng, u.acc);
+                    // Check location permission before calling geolocation APIs
+                    (async function() {
+                        let hasPermission = false;
+                        if (typeof checkPermission === 'function') {
+                            hasPermission = await checkPermission('location');
+                        } else {
+                            try {
+                                hasPermission = localStorage.getItem('geopin-location-permission') === 'granted' ||
+                                                localStorage.getItem('permission-location-granted') === 'granted';
+                            } catch (_) {}
+                        }
+                        
+                        if (hasPermission && 'geolocation' in navigator) {
+                            navigator.geolocation.getCurrentPosition(function (p) {
+                                pushForDispatch({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, function (u) {
+                                    dispatchGpsUpdate(u.lat, u.lng, u.acc);
+                                });
                             });
-                        });
-                        navigator.geolocation.watchPosition(function (p) {
-                            pushForDispatch({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, function (u) {
-                                dispatchGpsUpdate(u.lat, u.lng, u.acc);
-                            });
-                        }, function () { }, { enableHighAccuracy: true, maximumAge: 500, timeout: 5000 });
-                    }
+                            navigator.geolocation.watchPosition(function (p) {
+                                pushForDispatch({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, function (u) {
+                                    dispatchGpsUpdate(u.lat, u.lng, u.acc);
+                                });
+                            }, function () { }, { enableHighAccuracy: true, maximumAge: 500, timeout: 5000 });
+                        }
+                    })();
                 } catch (_) { }
             }
             // Fallback: geolocation directly (if permissions granted)
-            if ('geolocation' in navigator) {
-                try {
-                    navigator.geolocation.getCurrentPosition(function(p){
-                        pushStabilized({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, update);
-                    });
-                    navigator.geolocation.watchPosition(function(p){
-                        pushStabilized({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, update);
-                    }, function(){}, { enableHighAccuracy: true, maximumAge: 500, timeout: 5000 });
-                } catch (_) {}
-            }
+            // Check permission before calling geolocation APIs
+            (async function() {
+                let hasPermission = false;
+                if (typeof checkPermission === 'function') {
+                    hasPermission = await checkPermission('location');
+                } else {
+                    try {
+                        hasPermission = localStorage.getItem('geopin-location-permission') === 'granted' ||
+                                        localStorage.getItem('permission-location-granted') === 'granted';
+                    } catch (_) {}
+                }
+                
+                if (hasPermission && 'geolocation' in navigator) {
+                    try {
+                        navigator.geolocation.getCurrentPosition(function(p){
+                            pushStabilized({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, update);
+                        });
+                        navigator.geolocation.watchPosition(function(p){
+                            pushStabilized({ latitude: p.coords.latitude, longitude: p.coords.longitude, accuracy: p.coords.accuracy }, update);
+                        }, function(){}, { enableHighAccuracy: true, maximumAge: 500, timeout: 5000 });
+                    } catch (_) {}
+                }
+            })();
         }
     } catch (_) { /* noop */ }
 };
@@ -692,8 +718,19 @@ function renderPlaces(places) {
             if (!model.object3D) return;
             
             // Try to get current GPS position to check initial distance
-            const checkDistance = function() {
-                if ('geolocation' in navigator) {
+            // Check permission before calling geolocation API
+            const checkDistance = async function() {
+                let hasPermission = false;
+                if (typeof checkPermission === 'function') {
+                    hasPermission = await checkPermission('location');
+                } else {
+                    try {
+                        hasPermission = localStorage.getItem('geopin-location-permission') === 'granted' ||
+                                        localStorage.getItem('permission-location-granted') === 'granted';
+                    } catch (_) {}
+                }
+                
+                if (hasPermission && 'geolocation' in navigator) {
                     navigator.geolocation.getCurrentPosition(function(p) {
                         if (!p || !p.coords) {
                             // No GPS available, hide model

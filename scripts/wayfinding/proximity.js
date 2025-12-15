@@ -142,6 +142,16 @@
     const pushStabilized = makeGpsStabilizer({ minAccuracy: 30, alpha: 0.45, minDelta: 0.2, emitIntervalMs: 120 });
 
     function onPosition(pos) {
+        // Store permission immediately when we successfully get position (means permission was granted)
+        try {
+            if (typeof storePermissionGrant === 'function') {
+                storePermissionGrant('location');
+            } else {
+                localStorage.setItem('geopin-location-permission', 'granted');
+                localStorage.setItem('permission-location-granted', 'granted');
+            }
+        } catch (_) {}
+        
         // Immediate raw UI for responsiveness
         try {
             setStatus(`Lat: ${pos.coords.latitude.toFixed(6)}, Lng: ${pos.coords.longitude.toFixed(6)} (raw ±${Math.round(pos.coords.accuracy||0)}m)`);
@@ -204,11 +214,78 @@
             return;
         }
 
-        // Prime audio on user gesture
-        try { ensureAudio().play().then(function(){ audio.pause(); audio.currentTime = 0; }).catch(function(){}); } catch (_) {}
+        // Check if location permission is already granted before calling watchPosition
+        // This prevents OS-level prompts on iOS when permission was already granted
+        let hasPermission = false;
+        if (typeof checkPermission === 'function') {
+            hasPermission = await checkPermission('location');
+        } else {
+            // Fallback: check localStorage directly - check both keys for compatibility
+            try {
+                hasPermission = localStorage.getItem('geopin-location-permission') === 'granted' ||
+                                localStorage.getItem('permission-location-granted') === 'granted';
+            } catch (_) {}
+        }
 
-        const opts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
-        watchId = navigator.geolocation.watchPosition(onPosition, onError, opts);
+        // If permission not already granted, request it now
+        if (!hasPermission) {
+            setStatus('Requesting location permission...');
+            if (typeof requestPermission === 'function') {
+                hasPermission = await requestPermission('location', {
+                    geoOptions: { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                });
+            } else {
+                // Fallback: request permission directly
+                try {
+                    hasPermission = await new Promise((resolve) => {
+                        navigator.geolocation.getCurrentPosition(
+                            () => {
+                                // Store permission immediately when granted
+                                try {
+                                    localStorage.setItem('geopin-location-permission', 'granted');
+                                    localStorage.setItem('permission-location-granted', 'granted');
+                                    if (typeof storePermissionGrant === 'function') {
+                                        storePermissionGrant('location');
+                                    }
+                                } catch (_) {}
+                                resolve(true);
+                            },
+                            () => {
+                                resolve(false);
+                            },
+                            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                        );
+                    });
+                } catch (_) {
+                    hasPermission = false;
+                }
+            }
+            
+            if (!hasPermission) {
+                setStatus('Location permission denied. Please enable location access in your browser settings.');
+                if (enableBtn) enableBtn.disabled = false;
+                return;
+            }
+        }
+
+        // Only call watchPosition if we have confirmed permission
+        // Store permission again right before calling to ensure it's set
+        if (hasPermission) {
+            try {
+                if (typeof storePermissionGrant === 'function') {
+                    storePermissionGrant('location');
+                } else {
+                    localStorage.setItem('geopin-location-permission', 'granted');
+                    localStorage.setItem('permission-location-granted', 'granted');
+                }
+            } catch (_) {}
+
+            // Prime audio on user gesture
+            try { ensureAudio().play().then(function(){ audio.pause(); audio.currentTime = 0; }).catch(function(){}); } catch (_) {}
+
+            const opts = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+            watchId = navigator.geolocation.watchPosition(onPosition, onError, opts);
+        }
         setStatus('Location tracking active');
         if (enableBtn) enableBtn.disabled = true;
     }
@@ -229,12 +306,25 @@
     }
 
     // Auto-start if permission was previously granted from the Start page
-    try {
-        if (localStorage.getItem('geopin-location-permission') === 'granted') {
-            // Defer to ensure DOM ready
-            setTimeout(function(){ start(); }, 0);
-        }
-    } catch (_) {}
+    // Use centralized permission system if available, fallback to legacy check
+    (async function() {
+        try {
+            let shouldAutoStart = false;
+            
+            if (typeof checkPermission === 'function') {
+                // Use centralized permission system
+                shouldAutoStart = await checkPermission('location');
+            } else {
+                // Fallback to legacy check
+                shouldAutoStart = localStorage.getItem('geopin-location-permission') === 'granted';
+            }
+            
+            if (shouldAutoStart) {
+                // Defer to ensure DOM ready
+                setTimeout(function(){ start(); }, 0);
+            }
+        } catch (_) {}
+    })();
 })();
 
 

@@ -2,23 +2,104 @@
 <html lang="en">
 
 <head>
+    <script src="../../scripts/settings.js"></script>
     <script>
-        (function(){
-            try {
-                var granted = localStorage.getItem('geopin-location-permission') === 'granted';
-                if (!granted) {
-                    // Best-effort: if Permissions API is available and already granted, set flag
-                    if (navigator.permissions && navigator.permissions.query) {
-                        navigator.permissions.query({ name: 'geolocation' }).then(function(p){
-                            if (p.state === 'granted') {
-                                try { localStorage.setItem('geopin-location-permission','granted'); } catch(_) {}
+        // Intercept getUserMedia to detect and store camera permission when AR.js accesses it
+        (function() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+                navigator.mediaDevices.getUserMedia = function(constraints) {
+                    return originalGetUserMedia(constraints)
+                        .then(stream => {
+                            // Camera access successful - store permission
+                            if (typeof storePermissionGrant === 'function') {
+                                storePermissionGrant('camera');
                             } else {
-                                window.location.replace('./index.html');
+                                try {
+                                    localStorage.setItem('permission-camera-granted', 'granted');
+                                } catch(_) {}
                             }
-                        }).catch(function(){ window.location.replace('./index.html'); });
-                    } else {
-                        window.location.replace('./index.html');
+                            return stream;
+                        })
+                        .catch(error => {
+                            // Permission denied or error
+                            throw error;
+                        });
+                };
+            }
+        })();
+        
+        // Pre-activate geolocation if permission is already granted
+        // This prevents AR.js from showing "tap screen to activate geolocation" message
+        (async function() {
+            try {
+                // Check permission immediately (synchronously check localStorage first for speed)
+                let granted = false;
+                try {
+                    granted = localStorage.getItem('geopin-location-permission') === 'granted' ||
+                              localStorage.getItem('permission-location-granted') === 'granted';
+                } catch (_) {}
+                
+                // If not found in localStorage, wait for settings.js and check properly
+                if (!granted) {
+                    // Wait for settings.js to load
+                    if (typeof checkPermission === 'undefined') {
+                        await new Promise(resolve => {
+                            let attempts = 0;
+                            const check = setInterval(() => {
+                                if (typeof checkPermission !== 'undefined' || attempts++ > 20) {
+                                    clearInterval(check);
+                                    resolve();
+                                }
+                            }, 100);
+                        });
                     }
+                    
+                    if (typeof checkPermission === 'function') {
+                        granted = await checkPermission('location');
+                    }
+                }
+                
+                if (!granted) {
+                    window.location.replace('./index.html');
+                    return;
+                }
+                
+                // Permission is granted - pre-activate geolocation immediately
+                // This ensures AR.js's gps-camera component sees geolocation as active
+                // We need to call this BEFORE AR.js initializes
+                if ('geolocation' in navigator) {
+                    // Start geolocation immediately to activate it for AR.js
+                    // Use a very short timeout to activate quickly
+                    navigator.geolocation.getCurrentPosition(
+                        function() {
+                            // Geolocation activated - store permission again to be sure
+                            if (typeof storePermissionGrant === 'function') {
+                                storePermissionGrant('location');
+                            } else {
+                                try {
+                                    localStorage.setItem('geopin-location-permission', 'granted');
+                                    localStorage.setItem('permission-location-granted', 'granted');
+                                } catch(_) {}
+                            }
+                        },
+                        function() {
+                            // Error - but continue anyway
+                        },
+                        { enableHighAccuracy: true, timeout: 1000, maximumAge: 0 }
+                    );
+                    
+                    // Also start watchPosition to keep geolocation active
+                    // This ensures AR.js sees it as continuously active
+                    navigator.geolocation.watchPosition(
+                        function() {
+                            // Position received - geolocation is active
+                        },
+                        function() {
+                            // Error
+                        },
+                        { enableHighAccuracy: true, timeout: 1000, maximumAge: 0 }
+                    );
                 }
             } catch (_) { /* if storage blocked, just continue */ }
         })();
@@ -40,6 +121,11 @@
     <script src="../../scripts/customer-io-helper.js"></script>
     <script src="../../scripts/wayfinding/script.js"></script>
     <link rel="stylesheet" type="text/css" href="../../styles/wayfinding/style.css"/>
+    <script>
+        // Camera permission is handled by the getUserMedia interceptor above
+        // AR.js will initialize normally, and the interceptor will store permission when camera is accessed
+        // No need to delay scene initialization - A-Frame/AR.js can handle permission requests
+    </script>
     <style>
         .hidden {
             display: none !important;
@@ -63,6 +149,7 @@
         <div class="centered instructions"></div>
     </div>
     <a-scene 
+        id="arScene"
         xr-mode-ui='enabled: false' 
         embedded
         arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false;'>

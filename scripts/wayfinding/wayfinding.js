@@ -2746,27 +2746,56 @@
         // Check if DeviceOrientationEvent is supported
         if (typeof DeviceOrientationEvent !== 'undefined' && 
             typeof DeviceOrientationEvent.requestPermission === 'function') {
-            // iOS 13+ requires permission
-            logToHapticDebug('iOS: Requesting...');
-            DeviceOrientationEvent.requestPermission()
-                .then(response => {
-                    if (response === 'granted') {
-                        // Add listener - should fire immediately with current orientation
-                        window.addEventListener('deviceorientation', handleDeviceOrientation, { passive: true });
-                        logToHapticDebug('iOS: Granted');
-                    } else {
-                        logToHapticDebug('iOS: Denied');
-                        if (userLocationHeading) {
-                            userLocationHeading.style.display = 'none';
-                        }
-                    }
-                })
-                .catch(err => {
-                    logToHapticDebug(`iOS: Error ${err.message || ''}`);
-                    if (userLocationHeading) {
-                        userLocationHeading.style.display = 'none';
-                    }
-                });
+            // iOS 13+ requires permission - check if already granted first
+            (async function() {
+                let permissionGranted = false;
+                
+                // Check stored permission using centralized system if available
+                if (typeof checkPermission === 'function') {
+                    permissionGranted = await checkPermission('motion');
+                } else {
+                    // Fallback: check localStorage directly
+                    try {
+                        permissionGranted = localStorage.getItem('permission-motion-granted') === 'granted';
+                    } catch (_) {}
+                }
+                
+                if (permissionGranted) {
+                    // Permission already granted - add listener immediately
+                    window.addEventListener('deviceorientation', handleDeviceOrientation, { passive: true });
+                    logToHapticDebug('iOS: Already granted');
+                } else {
+                    // Request permission
+                    logToHapticDebug('iOS: Requesting...');
+                    DeviceOrientationEvent.requestPermission()
+                        .then(response => {
+                            if (response === 'granted') {
+                                // Store permission grant
+                                if (typeof storePermissionGrant === 'function') {
+                                    storePermissionGrant('motion');
+                                } else {
+                                    try {
+                                        localStorage.setItem('permission-motion-granted', 'granted');
+                                    } catch (_) {}
+                                }
+                                // Add listener - should fire immediately with current orientation
+                                window.addEventListener('deviceorientation', handleDeviceOrientation, { passive: true });
+                                logToHapticDebug('iOS: Granted');
+                            } else {
+                                logToHapticDebug('iOS: Denied');
+                                if (userLocationHeading) {
+                                    userLocationHeading.style.display = 'none';
+                                }
+                            }
+                        })
+                        .catch(err => {
+                            logToHapticDebug(`iOS: Error ${err.message || ''}`);
+                            if (userLocationHeading) {
+                                userLocationHeading.style.display = 'none';
+                            }
+                        });
+                }
+            })();
         } else if ('DeviceOrientationEvent' in window) {
             // Android/other browsers - add listener (but won't use alpha, will use GPS heading)
             window.addEventListener('deviceorientation', handleDeviceOrientation, { passive: true });
@@ -2801,9 +2830,16 @@
     });
 
     function onPosition(pos) {
-        // Set location permission flag for animalsAR.html
+        // Store permission immediately when we successfully get position (means permission was granted)
+        // Store in both keys for compatibility
         try {
-            localStorage.setItem('geopin-location-permission', 'granted');
+            if (typeof storePermissionGrant === 'function') {
+                storePermissionGrant('location');
+            } else {
+                // Fallback to legacy storage - store in both keys
+                localStorage.setItem('geopin-location-permission', 'granted');
+                localStorage.setItem('permission-location-granted', 'granted');
+            }
         } catch (_) {}
         
         // Extract GPS heading if available (works on Android when device is moving)
@@ -2845,7 +2881,7 @@
     }
 
     // Start GPS tracking
-    function startTracking() {
+    async function startTracking() {
         // Stop any existing tracking first
         stopTracking();
 
@@ -2854,11 +2890,76 @@
             return;
         }
 
-        // Use real geolocation API with faster update frequency
-        // maximumAge: 0 means always use fresh GPS data (no cache)
-        // timeout: 3000 means wait up to 3 seconds for GPS fix (faster timeout for responsiveness)
-        const opts = { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 };
-        watchId = navigator.geolocation.watchPosition(onPosition, onError, opts);
+        // Check if location permission is already granted before calling watchPosition
+        // This prevents OS-level prompts on iOS when permission was already granted
+        let hasPermission = false;
+        if (typeof checkPermission === 'function') {
+            hasPermission = await checkPermission('location');
+        } else {
+            // Fallback: check localStorage directly - check both keys for compatibility
+            try {
+                hasPermission = localStorage.getItem('geopin-location-permission') === 'granted' ||
+                                localStorage.getItem('permission-location-granted') === 'granted';
+            } catch (_) {}
+        }
+
+        // If permission not already granted, request it now
+        if (!hasPermission) {
+            if (typeof requestPermission === 'function') {
+                hasPermission = await requestPermission('location', {
+                    geoOptions: { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 }
+                });
+            } else {
+                // Fallback: request permission directly
+                try {
+                    hasPermission = await new Promise((resolve) => {
+                        navigator.geolocation.getCurrentPosition(
+                            () => {
+                                // Store permission immediately when granted
+                                try {
+                                    localStorage.setItem('geopin-location-permission', 'granted');
+                                    localStorage.setItem('permission-location-granted', 'granted');
+                                    if (typeof storePermissionGrant === 'function') {
+                                        storePermissionGrant('location');
+                                    }
+                                } catch (_) {}
+                                resolve(true);
+                            },
+                            () => {
+                                resolve(false);
+                            },
+                            { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 }
+                        );
+                    });
+                } catch (_) {
+                    hasPermission = false;
+                }
+            }
+            
+            if (!hasPermission) {
+                console.warn('Location permission denied. Please enable location access in your browser settings.');
+                return;
+            }
+        }
+
+        // Only call watchPosition if we have confirmed permission
+        // Store permission again right before calling to ensure it's set
+        if (hasPermission) {
+            try {
+                if (typeof storePermissionGrant === 'function') {
+                    storePermissionGrant('location');
+                } else {
+                    localStorage.setItem('geopin-location-permission', 'granted');
+                    localStorage.setItem('permission-location-granted', 'granted');
+                }
+            } catch (_) {}
+
+            // Use real geolocation API with faster update frequency
+            // maximumAge: 0 means always use fresh GPS data (no cache)
+            // timeout: 3000 means wait up to 3 seconds for GPS fix (faster timeout for responsiveness)
+            const opts = { enableHighAccuracy: true, timeout: 3000, maximumAge: 0 };
+            watchId = navigator.geolocation.watchPosition(onPosition, onError, opts);
+        }
         
         // Start heading/compass tracking
         startHeadingTracking();

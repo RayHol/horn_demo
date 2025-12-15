@@ -16,8 +16,24 @@ video.setAttribute('autoplay', '');
 video.setAttribute('muted', '');
 video.setAttribute('playsinline', '');
 
-navigator.mediaDevices.getUserMedia(constraints)
-    .then((stream) => {video.srcObject = stream});
+// Request camera permission using centralized permission system
+(async function() {
+    if (typeof requestPermission === 'function') {
+        const granted = await requestPermission('camera', { constraints: constraints });
+        if (granted && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then((stream) => {video.srcObject = stream})
+                .catch((err) => console.warn('Camera access failed:', err));
+        }
+    } else {
+        // Fallback if permission system not loaded
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then((stream) => {video.srcObject = stream})
+                .catch((err) => console.warn('Camera access failed:', err));
+        }
+    }
+})();
 
 window.flowersgrown = 0
 window.currentMode = 2
