@@ -228,7 +228,7 @@
         "url": "../../assets/wayfinding/model/snowy_owl.glb",
         "usdz": "../../assets/wayfinding/model/snowy_owl.usdz",
         "scale": "1 1 1",
-        "rotation": "0 180 0"
+        "rotation": "0 0 0"
       },
       "ping": { "cooldownMinutes": 3 },
       "badge": {
