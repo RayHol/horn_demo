@@ -92,6 +92,7 @@
     let instructionsDismissed = false; // Track if instructions overlay has been dismissed
     let currentRouteAnimalId = null; // Track which animal the current route is for
     let isUpdatingDotPosition = false; // Flag to prevent concurrent dot position updates
+    let hasValidGpsPosition = false; // Flag to track if we have a valid GPS position with good accuracy
     
     // Message buffer for heading debug (stores messages even when debug UI isn't visible)
     const headingDebugMessages = [];
@@ -851,8 +852,12 @@
                 
                 // Always update user location dot position in animation loop for smooth updates
                 // Only update if we have the necessary elements and not being updated by updateUserLocation()
-                if (userLocationDot && currentUserLocation && self.mapContainer && self.mapImage && !isUpdatingDotPosition) {
-                    // Always ensure dot is visible
+                // Also check that map image has loaded and we have valid GPS position
+                if (userLocationDot && currentUserLocation && hasValidGpsPosition && 
+                    self.mapContainer && self.mapImage && !isUpdatingDotPosition && 
+                    self.mapImage.complete && self.mapImage.naturalWidth > 0 && 
+                    self.mapImage.naturalHeight > 0) {
+                    // Only show dot if we have valid GPS position
                     userLocationDot.style.display = 'block';
                     
                     let dotX, dotY;
@@ -1266,6 +1271,31 @@
     function updateUserLocation(location) {
         if (!location) return;
         
+        // Check GPS accuracy - only accept positions with reasonable accuracy
+        // This prevents showing the dot with inaccurate/cached positions on first load
+        const accuracy = location.accuracy != null ? location.accuracy : (location.acc != null ? location.acc : null);
+        const MIN_ACCURACY_THRESHOLD = 100; // Don't show dot if accuracy is worse than 100m
+        const PREFERRED_ACCURACY_THRESHOLD = 50; // Prefer accuracy better than 50m
+        
+        // Check if this is a valid GPS position (has reasonable accuracy)
+        // If accuracy is not available, only accept if we've already established a valid position
+        const hasAccuracy = accuracy != null && isFinite(accuracy);
+        const isValidPosition = hasAccuracy && accuracy <= MIN_ACCURACY_THRESHOLD;
+        const isGoodPosition = hasAccuracy && accuracy <= PREFERRED_ACCURACY_THRESHOLD;
+        
+        // Only mark as valid if:
+        // 1. We have good accuracy (better than 50m), OR
+        // 2. We have acceptable accuracy (better than 100m) and we've already had a valid position, OR
+        // 3. We've already established a valid position and accuracy is not available (allow updates)
+        if (isGoodPosition || (hasValidGpsPosition && (isValidPosition || !hasAccuracy))) {
+            hasValidGpsPosition = true;
+        } else if (!hasValidGpsPosition) {
+            // Don't show dot yet - waiting for better GPS accuracy
+            // Store the location but don't display it
+            currentUserLocation = location;
+            return;
+        }
+        
         // Check if location has changed significantly
         if (currentUserLocation) {
             const distance = haversineMeters(
@@ -1293,6 +1323,48 @@
         // Check if map instance is ready
         if (!mapInstance) return;
         
+        // Check if map image has loaded - if not, defer position update until it's ready
+        // This prevents the dot from appearing in the wrong location on first load
+        if (mapImage && (!mapImage.complete || mapImage.naturalWidth === 0 || mapImage.naturalHeight === 0)) {
+            // Map image not ready yet - set up a one-time listener to update when it loads
+            // This prevents the dot from appearing in the wrong location on first load
+            const onImageLoad = () => {
+                // Update map config with actual image dimensions
+                if (MapConfig && MapConfig.updateDimensionsFromImage) {
+                    MapConfig.updateDimensionsFromImage(mapImage);
+                }
+                // Now that image is loaded, update the location dot position
+                // Use the stored currentUserLocation (which was already set above)
+                if (currentUserLocation && hasValidGpsPosition) {
+                    // Remove listener to prevent multiple calls
+                    mapImage.removeEventListener('load', onImageLoad);
+                    // Recursively call updateUserLocation now that image is ready
+                    updateUserLocation(currentUserLocation);
+                }
+            };
+            // Only add listener if not already added (check if image is still loading)
+            if (!mapImage.complete) {
+                mapImage.addEventListener('load', onImageLoad, { once: true });
+            } else {
+                // Image is marked complete but dimensions are 0 - might be a cached image issue
+                // Use a small delay and check again
+                setTimeout(() => {
+                    if (mapImage.naturalWidth > 0 && mapImage.naturalHeight > 0) {
+                        onImageLoad();
+                    }
+                }, 100);
+            }
+            return; // Exit early - will update once image loads
+        }
+        
+        // Don't show dot until we have valid GPS position AND map is ready
+        if (!hasValidGpsPosition) {
+            if (userLocationDot) {
+                userLocationDot.style.display = 'none';
+            }
+            return;
+        }
+        
         // Set flag to prevent animation loop from updating position simultaneously
         isUpdatingDotPosition = true;
         
@@ -1302,8 +1374,13 @@
             const keepUserCentered = mapInstance.keepUserCentered !== false;
             const cannotCenterAtBoundary = mapInstance.cannotCenterAtBoundary || false;
             
-            // Always ensure dot is visible
-            userLocationDot.style.display = 'block';
+            // Only show dot if we have valid GPS position with good accuracy
+            if (hasValidGpsPosition) {
+                userLocationDot.style.display = 'block';
+            } else {
+                userLocationDot.style.display = 'none';
+                return;
+            }
             
             // Determine position for both dot and accuracy circle
             let dotX, dotY;
@@ -3148,6 +3225,11 @@
         // Ensure heading indicator is hidden until we have a valid heading
         if (userLocationHeading) {
             userLocationHeading.style.display = 'none';
+        }
+        
+        // Hide location dot initially until we have valid GPS position and map is ready
+        if (userLocationDot) {
+            userLocationDot.style.display = 'none';
         }
         
         // Sync user data to Customer.io on page load (ensures latest badge status is synced)
